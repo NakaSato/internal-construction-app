@@ -235,7 +235,9 @@ class ApiAuthRepository implements AuthRepository {
       }
       return null;
     } catch (e) {
-      print('Failed to get cached user: $e');
+      if (kDebugMode) {
+        debugPrint('Failed to get cached user: $e');
+      }
       return null;
     }
   }
