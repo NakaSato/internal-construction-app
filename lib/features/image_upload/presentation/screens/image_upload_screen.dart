@@ -308,7 +308,7 @@ class _ImageUploadScreenState extends State<ImageUploadScreen> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
+            SizedBox(
               height: 100,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
@@ -427,7 +427,7 @@ class _ImageUploadScreenState extends State<ImageUploadScreen> {
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) => Container(
                   height: 300,
-                  color: Theme.of(context).colorScheme.surfaceVariant,
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
                   child: const Icon(Icons.error, size: 64),
                 ),
               ),
@@ -470,7 +470,7 @@ class _ImageUploadScreenState extends State<ImageUploadScreen> {
                 ],
               ),
             ),
-            ButtonBar(
+            OverflowBar(
               children: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),

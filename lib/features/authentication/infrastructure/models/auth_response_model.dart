@@ -5,31 +5,59 @@ import 'user_model.dart';
 part 'auth_response_model.freezed.dart';
 part 'auth_response_model.g.dart';
 
-/// Response model for authentication API calls
+/// Response model for login API calls
 @freezed
-class AuthResponseModel with _$AuthResponseModel {
-  const factory AuthResponseModel({
+class LoginResponseApiResponse with _$LoginResponseApiResponse {
+  const factory LoginResponseApiResponse({
     required bool success,
     required String message,
-    AuthDataModel? data,
+    LoginResponse? data,
     @Default([]) List<String> errors,
-  }) = _AuthResponseModel;
+  }) = _LoginResponseApiResponse;
 
-  factory AuthResponseModel.fromJson(Map<String, dynamic> json) =>
-      _$AuthResponseModelFromJson(json);
+  factory LoginResponseApiResponse.fromJson(Map<String, dynamic> json) =>
+      _$LoginResponseApiResponseFromJson(json);
 }
 
-/// Authentication data model
+/// Login response data model
 @freezed
-class AuthDataModel with _$AuthDataModel {
-  const factory AuthDataModel({
-    required String token,
+class LoginResponse with _$LoginResponse {
+  const factory LoginResponse({
+    String? token,
     String? refreshToken,
     required UserModel user,
-  }) = _AuthDataModel;
+  }) = _LoginResponse;
 
-  factory AuthDataModel.fromJson(Map<String, dynamic> json) =>
-      _$AuthDataModelFromJson(json);
+  factory LoginResponse.fromJson(Map<String, dynamic> json) =>
+      _$LoginResponseFromJson(json);
+}
+
+/// Response model for register API calls
+@freezed
+class UserDtoApiResponse with _$UserDtoApiResponse {
+  const factory UserDtoApiResponse({
+    required bool success,
+    required String message,
+    UserModel? data,
+    @Default([]) List<String> errors,
+  }) = _UserDtoApiResponse;
+
+  factory UserDtoApiResponse.fromJson(Map<String, dynamic> json) =>
+      _$UserDtoApiResponseFromJson(json);
+}
+
+/// Response model for refresh token API calls
+@freezed
+class StringApiResponse with _$StringApiResponse {
+  const factory StringApiResponse({
+    required bool success,
+    required String message,
+    String? data,
+    @Default([]) List<String> errors,
+  }) = _StringApiResponse;
+
+  factory StringApiResponse.fromJson(Map<String, dynamic> json) =>
+      _$StringApiResponseFromJson(json);
 }
 
 /// Login request model
@@ -42,8 +70,6 @@ class LoginRequestModel with _$LoginRequestModel {
 
   factory LoginRequestModel.fromJson(Map<String, dynamic> json) =>
       _$LoginRequestModelFromJson(json);
-
-  Map<String, dynamic> toJson() => _$LoginRequestModelToJson(this);
 }
 
 /// Register request model
@@ -59,32 +85,4 @@ class RegisterRequestModel with _$RegisterRequestModel {
 
   factory RegisterRequestModel.fromJson(Map<String, dynamic> json) =>
       _$RegisterRequestModelFromJson(json);
-
-  Map<String, dynamic> toJson() => _$RegisterRequestModelToJson(this);
-}
-
-/// Refresh token request model
-@freezed
-class RefreshTokenRequestModel with _$RefreshTokenRequestModel {
-  const factory RefreshTokenRequestModel({required String refreshToken}) =
-      _RefreshTokenRequestModel;
-
-  factory RefreshTokenRequestModel.fromJson(Map<String, dynamic> json) =>
-      _$RefreshTokenRequestModelFromJson(json);
-
-  Map<String, dynamic> toJson() => _$RefreshTokenRequestModelToJson(this);
-}
-
-/// Refresh token response model
-@freezed
-class RefreshTokenResponseModel with _$RefreshTokenResponseModel {
-  const factory RefreshTokenResponseModel({
-    required bool success,
-    required String message,
-    String? data,
-    @Default([]) List<String> errors,
-  }) = _RefreshTokenResponseModel;
-
-  factory RefreshTokenResponseModel.fromJson(Map<String, dynamic> json) =>
-      _$RefreshTokenResponseModelFromJson(json);
 }

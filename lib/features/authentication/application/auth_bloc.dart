@@ -12,8 +12,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthCheckRequested>(_onAuthCheckRequested);
     on<AuthSignInRequested>(_onSignInRequested);
     on<AuthRegisterRequested>(_onRegisterRequested);
-    on<AuthGoogleSignInRequested>(_onGoogleSignInRequested);
-    on<AuthAppleSignInRequested>(_onAppleSignInRequested);
     on<AuthPasswordResetRequested>(_onPasswordResetRequested);
     on<AuthSignOutRequested>(_onSignOutRequested);
     on<AuthEmailVerificationRequested>(_onEmailVerificationRequested);
@@ -24,7 +22,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepositoryFactory _authRepositoryFactory;
 
   /// Get the appropriate auth repository based on configuration
-  AuthRepository get _authRepository => _authRepositoryFactory.getAuthRepository();
+  AuthRepository get _authRepository =>
+      _authRepositoryFactory.getAuthRepository();
 
   /// Handle checking initial authentication state
   Future<void> _onAuthCheckRequested(
@@ -54,7 +53,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     try {
       final user = await _authRepository.signInWithEmailAndPassword(
-        email: event.email,
+        email: event.username, // username field contains email
         password: event.password,
       );
       emit(AuthAuthenticated(user: user));
@@ -74,38 +73,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final user = await _authRepository.registerWithEmailAndPassword(
         email: event.email,
         password: event.password,
-        name: event.name,
+        name: event.fullName,
       );
-      emit(AuthAuthenticated(user: user));
-    } catch (e) {
-      emit(AuthFailure(message: e.toString()));
-    }
-  }
-
-  /// Handle Google sign in
-  Future<void> _onGoogleSignInRequested(
-    AuthGoogleSignInRequested event,
-    Emitter<AuthState> emit,
-  ) async {
-    emit(const AuthLoading());
-
-    try {
-      final user = await _authRepository.signInWithGoogle();
-      emit(AuthAuthenticated(user: user));
-    } catch (e) {
-      emit(AuthFailure(message: e.toString()));
-    }
-  }
-
-  /// Handle Apple sign in
-  Future<void> _onAppleSignInRequested(
-    AuthAppleSignInRequested event,
-    Emitter<AuthState> emit,
-  ) async {
-    emit(const AuthLoading());
-
-    try {
-      final user = await _authRepository.signInWithApple();
       emit(AuthAuthenticated(user: user));
     } catch (e) {
       emit(AuthFailure(message: e.toString()));
@@ -147,6 +116,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthEmailVerificationRequested event,
     Emitter<AuthState> emit,
   ) async {
+    emit(const AuthLoading());
+
     try {
       await _authRepository.sendEmailVerification();
       emit(const AuthEmailVerificationSent());
@@ -163,13 +134,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(const AuthLoading());
 
     try {
-      await _authRepository.verifyEmail(event.verificationCode);
-      final user = await _authRepository.getCurrentUser();
-      if (user != null) {
-        emit(AuthEmailVerified(user: user));
-      } else {
-        emit(const AuthUnauthenticated());
-      }
+      final user = await _authRepository.verifyEmail(event.verificationCode);
+      emit(AuthAuthenticated(user: user));
     } catch (e) {
       emit(AuthFailure(message: e.toString()));
     }
@@ -188,7 +154,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         phoneNumber: event.phoneNumber,
         profileImageUrl: event.profileImageUrl,
       );
-      emit(AuthProfileUpdated(user: user));
+      emit(AuthAuthenticated(user: user));
     } catch (e) {
       emit(AuthFailure(message: e.toString()));
     }

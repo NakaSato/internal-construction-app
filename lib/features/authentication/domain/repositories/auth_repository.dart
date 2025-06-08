@@ -15,12 +15,6 @@ abstract class AuthRepository {
     required String name,
   });
 
-  /// Sign in with Google
-  Future<User> signInWithGoogle();
-
-  /// Sign in with Apple (iOS only)
-  Future<User> signInWithApple();
-
   /// Send password reset email
   Future<void> sendPasswordResetEmail(String email);
 
@@ -46,7 +40,7 @@ abstract class AuthRepository {
   Future<void> sendEmailVerification();
 
   /// Verify email with verification code
-  Future<void> verifyEmail(String verificationCode);
+  Future<User> verifyEmail(String verificationCode);
 
   /// Update user profile
   Future<User> updateProfile({

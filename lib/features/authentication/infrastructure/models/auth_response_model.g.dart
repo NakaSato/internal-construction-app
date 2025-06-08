@@ -6,21 +6,21 @@ part of 'auth_response_model.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$AuthResponseModelImpl _$$AuthResponseModelImplFromJson(
+_$LoginResponseApiResponseImpl _$$LoginResponseApiResponseImplFromJson(
   Map<String, dynamic> json,
-) => _$AuthResponseModelImpl(
+) => _$LoginResponseApiResponseImpl(
   success: json['success'] as bool,
   message: json['message'] as String,
   data: json['data'] == null
       ? null
-      : AuthDataModel.fromJson(json['data'] as Map<String, dynamic>),
+      : LoginResponse.fromJson(json['data'] as Map<String, dynamic>),
   errors:
       (json['errors'] as List<dynamic>?)?.map((e) => e as String).toList() ??
       const [],
 );
 
-Map<String, dynamic> _$$AuthResponseModelImplToJson(
-  _$AuthResponseModelImpl instance,
+Map<String, dynamic> _$$LoginResponseApiResponseImplToJson(
+  _$LoginResponseApiResponseImpl instance,
 ) => <String, dynamic>{
   'success': instance.success,
   'message': instance.message,
@@ -28,19 +28,61 @@ Map<String, dynamic> _$$AuthResponseModelImplToJson(
   'errors': instance.errors,
 };
 
-_$AuthDataModelImpl _$$AuthDataModelImplFromJson(Map<String, dynamic> json) =>
-    _$AuthDataModelImpl(
-      token: json['token'] as String,
+_$LoginResponseImpl _$$LoginResponseImplFromJson(Map<String, dynamic> json) =>
+    _$LoginResponseImpl(
+      token: json['token'] as String?,
       refreshToken: json['refreshToken'] as String?,
       user: UserModel.fromJson(json['user'] as Map<String, dynamic>),
     );
 
-Map<String, dynamic> _$$AuthDataModelImplToJson(_$AuthDataModelImpl instance) =>
+Map<String, dynamic> _$$LoginResponseImplToJson(_$LoginResponseImpl instance) =>
     <String, dynamic>{
       'token': instance.token,
       'refreshToken': instance.refreshToken,
       'user': instance.user,
     };
+
+_$UserDtoApiResponseImpl _$$UserDtoApiResponseImplFromJson(
+  Map<String, dynamic> json,
+) => _$UserDtoApiResponseImpl(
+  success: json['success'] as bool,
+  message: json['message'] as String,
+  data: json['data'] == null
+      ? null
+      : UserModel.fromJson(json['data'] as Map<String, dynamic>),
+  errors:
+      (json['errors'] as List<dynamic>?)?.map((e) => e as String).toList() ??
+      const [],
+);
+
+Map<String, dynamic> _$$UserDtoApiResponseImplToJson(
+  _$UserDtoApiResponseImpl instance,
+) => <String, dynamic>{
+  'success': instance.success,
+  'message': instance.message,
+  'data': instance.data,
+  'errors': instance.errors,
+};
+
+_$StringApiResponseImpl _$$StringApiResponseImplFromJson(
+  Map<String, dynamic> json,
+) => _$StringApiResponseImpl(
+  success: json['success'] as bool,
+  message: json['message'] as String,
+  data: json['data'] as String?,
+  errors:
+      (json['errors'] as List<dynamic>?)?.map((e) => e as String).toList() ??
+      const [],
+);
+
+Map<String, dynamic> _$$StringApiResponseImplToJson(
+  _$StringApiResponseImpl instance,
+) => <String, dynamic>{
+  'success': instance.success,
+  'message': instance.message,
+  'data': instance.data,
+  'errors': instance.errors,
+};
 
 _$LoginRequestModelImpl _$$LoginRequestModelImplFromJson(
   Map<String, dynamic> json,
@@ -74,34 +116,4 @@ Map<String, dynamic> _$$RegisterRequestModelImplToJson(
   'password': instance.password,
   'fullName': instance.fullName,
   'roleId': instance.roleId,
-};
-
-_$RefreshTokenRequestModelImpl _$$RefreshTokenRequestModelImplFromJson(
-  Map<String, dynamic> json,
-) => _$RefreshTokenRequestModelImpl(
-  refreshToken: json['refreshToken'] as String,
-);
-
-Map<String, dynamic> _$$RefreshTokenRequestModelImplToJson(
-  _$RefreshTokenRequestModelImpl instance,
-) => <String, dynamic>{'refreshToken': instance.refreshToken};
-
-_$RefreshTokenResponseModelImpl _$$RefreshTokenResponseModelImplFromJson(
-  Map<String, dynamic> json,
-) => _$RefreshTokenResponseModelImpl(
-  success: json['success'] as bool,
-  message: json['message'] as String,
-  data: json['data'] as String?,
-  errors:
-      (json['errors'] as List<dynamic>?)?.map((e) => e as String).toList() ??
-      const [],
-);
-
-Map<String, dynamic> _$$RefreshTokenResponseModelImplToJson(
-  _$RefreshTokenResponseModelImpl instance,
-) => <String, dynamic>{
-  'success': instance.success,
-  'message': instance.message,
-  'data': instance.data,
-  'errors': instance.errors,
 };

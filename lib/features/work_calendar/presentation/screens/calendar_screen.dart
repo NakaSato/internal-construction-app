@@ -139,8 +139,8 @@ class _CalendarScreenState extends State<CalendarScreen>
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showCreateEventDialog(),
-        child: const Icon(Icons.add),
         tooltip: 'Create Event',
+        child: const Icon(Icons.add),
       ),
     );
   }

@@ -1,31 +1,32 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 /// Environment configuration for different build environments
 enum Environment { development, staging, production }
 
-enum AuthMode { firebase, api }
-
 class EnvironmentConfig {
   static const Environment _currentEnvironment = Environment.development;
-  static const AuthMode _authMode =
-      AuthMode.firebase; // Change to AuthMode.api to use API auth
 
   static Environment get currentEnvironment => _currentEnvironment;
-  static AuthMode get authMode => _authMode;
 
   static bool get isDevelopment =>
       _currentEnvironment == Environment.development;
   static bool get isStaging => _currentEnvironment == Environment.staging;
   static bool get isProduction => _currentEnvironment == Environment.production;
 
-  static bool get useFirebaseAuth => _authMode == AuthMode.firebase;
-  static bool get useApiAuth => _authMode == AuthMode.api;
-
-  // API Configuration
+  // API Configuration - Now reads from .env file
   static String get apiBaseUrl {
+    // First try to get from .env file
+    final envUrl = dotenv.env['API_BASE_URL'];
+    if (envUrl != null && envUrl.isNotEmpty) {
+      return envUrl;
+    }
+
+    // Fallback to compile-time environment variables
     switch (_currentEnvironment) {
       case Environment.development:
         return const String.fromEnvironment(
           'DEV_API_URL',
-          defaultValue: 'https://dev-api.example.com',
+          defaultValue: 'http://localhost:5002',
         );
       case Environment.staging:
         return const String.fromEnvironment(
@@ -36,27 +37,6 @@ class EnvironmentConfig {
         return const String.fromEnvironment(
           'PROD_API_URL',
           defaultValue: 'https://api.example.com',
-        );
-    }
-  }
-
-  // Firebase Configuration
-  static String get firebaseProjectId {
-    switch (_currentEnvironment) {
-      case Environment.development:
-        return const String.fromEnvironment(
-          'DEV_FIREBASE_PROJECT_ID',
-          defaultValue: 'flutter-app-dev',
-        );
-      case Environment.staging:
-        return const String.fromEnvironment(
-          'STAGING_FIREBASE_PROJECT_ID',
-          defaultValue: 'flutter-app-staging',
-        );
-      case Environment.production:
-        return const String.fromEnvironment(
-          'PROD_FIREBASE_PROJECT_ID',
-          defaultValue: 'flutter-app-prod',
         );
     }
   }

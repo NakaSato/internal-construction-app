@@ -11,24 +11,14 @@ abstract class AuthApiService {
   factory AuthApiService(Dio dio, {String baseUrl}) = _AuthApiService;
 
   /// Login with username and password
-  @POST('/api/v1/auth/login')
-  Future<AuthResponseModel> login(@Body() LoginRequestModel request);
+  @POST('/api/v1/Auth/login')
+  Future<LoginResponseApiResponse> login(@Body() LoginRequestModel request);
 
   /// Register a new user
-  @POST('/api/v1/auth/register')
-  Future<AuthResponseModel> register(@Body() RegisterRequestModel request);
+  @POST('/api/v1/Auth/register')
+  Future<UserDtoApiResponse> register(@Body() RegisterRequestModel request);
 
   /// Refresh authentication token
-  @POST('/api/v1/auth/refresh')
-  Future<RefreshTokenResponseModel> refreshToken(
-    @Body() RefreshTokenRequestModel request,
-  );
-
-  /// Logout user (if endpoint exists)
-  @POST('/api/v1/auth/logout')
-  Future<void> logout();
-
-  /// Get current user profile
-  @GET('/api/v1/auth/profile')
-  Future<AuthResponseModel> getProfile();
+  @POST('/api/v1/Auth/refresh')
+  Future<StringApiResponse> refreshToken(@Body() String refreshToken);
 }

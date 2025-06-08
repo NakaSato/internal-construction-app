@@ -44,16 +44,6 @@ class AuthRegisterRequested extends AuthEvent {
   List<Object?> get props => [username, email, password, fullName, roleId];
 }
 
-/// Event to sign in with Google
-class AuthGoogleSignInRequested extends AuthEvent {
-  const AuthGoogleSignInRequested();
-}
-
-/// Event to sign in with Apple
-class AuthAppleSignInRequested extends AuthEvent {
-  const AuthAppleSignInRequested();
-}
-
 /// Event to send password reset email
 class AuthPasswordResetRequested extends AuthEvent {
   const AuthPasswordResetRequested({required this.email});

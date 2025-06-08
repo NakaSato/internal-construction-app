@@ -168,3 +168,13 @@ class StartLocationStreamEvent extends LocationTrackingEvent {
 class StopLocationStreamEvent extends LocationTrackingEvent {
   const StopLocationStreamEvent();
 }
+
+/// Event when a location tracking error occurs
+class LocationTrackingErrorOccurred extends LocationTrackingEvent {
+  const LocationTrackingErrorOccurred(this.message);
+
+  final String message;
+
+  @override
+  List<Object> get props => [message];
+}

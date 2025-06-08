@@ -59,7 +59,7 @@ class _LoginScreenState extends State<LoginScreen> {
           }
         },
         child: SafeArea(
-          child: Padding(
+          child: SingleChildScrollView(
             padding: const EdgeInsets.all(24.0),
             child: Form(
               key: _formKey,
@@ -170,39 +170,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           )
                         : const Text('Sign In'),
                   ),
-                  const SizedBox(height: 16),
-
-                  // Divider
-                  const Row(
-                    children: [
-                      Expanded(child: Divider()),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16),
-                        child: Text('OR'),
-                      ),
-                      Expanded(child: Divider()),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Social sign in buttons
-                  OutlinedButton.icon(
-                    onPressed: _isLoading ? null : _signInWithGoogle,
-                    icon: const Icon(
-                      Icons.g_mobiledata,
-                    ), // Replace with Google icon
-                    label: const Text('Continue with Google'),
-                  ),
-                  const SizedBox(height: 12),
-
-                  if (Theme.of(context).platform == TargetPlatform.iOS)
-                    OutlinedButton.icon(
-                      onPressed: _isLoading ? null : _signInWithApple,
-                      icon: const Icon(Icons.apple), // Replace with Apple icon
-                      label: const Text('Continue with Apple'),
-                    ),
-
-                  const Spacer(),
+                  const SizedBox(height: 32),
 
                   // Sign up link
                   Row(
@@ -231,18 +199,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
     context.read<AuthBloc>().add(
       AuthSignInRequested(
-        email: _emailController.text.trim(),
+        username: _emailController.text.trim(),
         password: _passwordController.text,
       ),
     );
-  }
-
-  void _signInWithGoogle() {
-    context.read<AuthBloc>().add(const AuthGoogleSignInRequested());
-  }
-
-  void _signInWithApple() {
-    context.read<AuthBloc>().add(const AuthAppleSignInRequested());
   }
 
   void _showForgotPasswordDialog() {

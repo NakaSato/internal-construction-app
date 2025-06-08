@@ -237,11 +237,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void _handleRegister() {
     if (!_formKey.currentState!.validate()) return;
 
+    final email = _emailController.text.trim();
+    final username = email.split('@').first; // Extract username from email
+
     context.read<AuthBloc>().add(
       AuthRegisterRequested(
-        email: _emailController.text.trim(),
+        username: username,
+        email: email,
         password: _passwordController.text,
-        name: _nameController.text.trim(),
+        fullName: _nameController.text.trim(),
+        roleId: 2, // Default role ID for user
       ),
     );
   }

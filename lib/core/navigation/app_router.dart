@@ -2,12 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/authentication/presentation/screens/forgot_password_screen.dart';
-import '../../features/authentication/presentation/screens/home_screen.dart';
 import '../../features/authentication/presentation/screens/login_screen.dart';
 import '../../features/authentication/presentation/screens/register_screen.dart';
 import '../../features/image_upload/presentation/screens/image_upload_screen.dart';
-import '../../features/location_tracking/presentation/screens/location_tracking_screen.dart';
-import '../../features/work_calendar/presentation/screens/calendar_screen.dart';
+import '../widgets/main_app_screen.dart';
 
 /// Application route names
 class AppRoutes {
@@ -19,6 +17,10 @@ class AppRoutes {
   // Main app routes
   static const String home = '/';
   static const String profile = '/profile';
+
+  // Bottom navigation routes
+  static const String dashboard = '/dashboard';
+  static const String featured = '/featured';
 
   // Feature routes
   static const String imageUpload = '/image-upload';
@@ -61,16 +63,28 @@ class AppRouter {
       GoRoute(
         path: AppRoutes.home,
         name: 'home',
-        builder: (context, state) => const HomeScreen(),
+        builder: (context, state) => const MainAppScreen(),
         routes: [
           // Nested routes
           GoRoute(
             path: 'profile',
             name: 'profile',
             builder: (context, state) =>
-                const Placeholder(), // TODO: Replace with ProfileScreen
+                const MainAppScreen(initialTabIndex: 4), // Profile tab
           ),
         ],
+      ),
+
+      // Bottom navigation tab routes for deep linking
+      GoRoute(
+        path: AppRoutes.dashboard,
+        name: 'dashboard',
+        builder: (context, state) => const MainAppScreen(initialTabIndex: 0),
+      ),
+      GoRoute(
+        path: AppRoutes.featured,
+        name: 'featured',
+        builder: (context, state) => const MainAppScreen(initialTabIndex: 1),
       ),
 
       // Feature routes
@@ -82,12 +96,12 @@ class AppRouter {
       GoRoute(
         path: AppRoutes.locationTracking,
         name: 'location',
-        builder: (context, state) => const LocationTrackingScreen(),
+        builder: (context, state) => const MainAppScreen(initialTabIndex: 3),
       ),
       GoRoute(
         path: AppRoutes.calendar,
         name: 'calendar',
-        builder: (context, state) => const CalendarScreen(),
+        builder: (context, state) => const MainAppScreen(initialTabIndex: 2),
       ),
       GoRoute(
         path: AppRoutes.calendarDetail,

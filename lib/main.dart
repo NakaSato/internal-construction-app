@@ -1,4 +1,3 @@
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -10,16 +9,16 @@ import 'features/authentication/application/auth_event.dart';
 import 'features/image_upload/application/image_upload_bloc.dart';
 import 'features/location_tracking/application/location_tracking_bloc.dart';
 import 'features/work_calendar/application/work_calendar_bloc.dart';
-import 'firebase_options.dart';
+import 'utils/api_config_verifier.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Firebase
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
   // Initialize dependencies
   await initializeDependencies();
+
+  // Verify API configuration
+  ApiConfigVerifier.verifyConfiguration();
 
   runApp(const MyApp());
 }

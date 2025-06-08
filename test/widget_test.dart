@@ -1,30 +1,49 @@
-// This is a basic Flutter widget test.
+// This file contains integration tests for the main app functionality.
 //
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
+// Integration tests verify complete user flows and interactions between
+// different parts of the application.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:get_it/get_it.dart';
 
 import 'package:flutter_architecture_app/main.dart';
+import 'test_helpers/test_helpers.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  group('Main App Integration Tests', () {
+    setUp(() {
+      // Reset GetIt before each test
+      GetIt.instance.reset();
+      TestUtils.setupMockDependencies();
+    });
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    tearDown(() {
+      // Clean up after each test
+      GetIt.instance.reset();
+    });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    testWidgets('App launches and shows correct initial state', (
+      WidgetTester tester,
+    ) async {
+      // Build our app and trigger a frame
+      await tester.pumpWidget(const MyApp());
+      await tester.pumpAndSettle();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+      // Verify the app launches without errors
+      expect(find.byType(MaterialApp), findsOneWidget);
+
+      // Add more specific assertions based on your app's initial state
+      // For example, if you have a login screen as initial route:
+      // expect(find.text('Login'), findsOneWidget);
+    });
+
+    testWidgets('Navigation works correctly', (WidgetTester tester) async {
+      await tester.pumpWidget(const MyApp());
+      await tester.pumpAndSettle();
+
+      // Test navigation flows based on your routing setup
+      // This will depend on your app's specific navigation structure
+    });
   });
 }

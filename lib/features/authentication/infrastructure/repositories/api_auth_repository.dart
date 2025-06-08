@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:injectable/injectable.dart';
@@ -5,6 +7,7 @@ import 'package:injectable/injectable.dart';
 import '../../domain/entities/user.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../models/auth_response_model.dart';
+import '../models/user_model.dart';
 import '../services/auth_api_service.dart';
 
 /// API-based implementation of AuthRepository
@@ -37,7 +40,9 @@ class ApiAuthRepository implements AuthRepository {
       final authData = response.data!;
 
       // Store tokens securely
-      await _secureStorage.write(key: _tokenKey, value: authData.token);
+      if (authData.token != null) {
+        await _secureStorage.write(key: _tokenKey, value: authData.token!);
+      }
       if (authData.refreshToken != null) {
         await _secureStorage.write(
           key: _refreshTokenKey,
@@ -84,19 +89,9 @@ class ApiAuthRepository implements AuthRepository {
         throw Exception(response.message);
       }
 
-      // For registration, we might need to login after successful registration
-      // Or the API might return tokens directly
-      if (response.data!.token.isNotEmpty) {
-        await _secureStorage.write(key: _tokenKey, value: response.data!.token);
-        if (response.data!.refreshToken != null) {
-          await _secureStorage.write(
-            key: _refreshTokenKey,
-            value: response.data!.refreshToken!,
-          );
-        }
-      }
-
-      final user = response.data!.user.toEntity();
+      // Registration only returns user data, not tokens
+      // User needs to login after registration
+      final user = response.data!.toEntity();
       await _cacheUser(user);
 
       return user;
@@ -111,20 +106,6 @@ class ApiAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<User> signInWithGoogle() async {
-    // API might not support Google Sign-In directly
-    // This would typically involve OAuth2 flow
-    throw UnimplementedError('Google Sign-In not supported in API mode');
-  }
-
-  @override
-  Future<User> signInWithApple() async {
-    // API might not support Apple Sign-In directly
-    // This would typically involve OAuth2 flow
-    throw UnimplementedError('Apple Sign-In not supported in API mode');
-  }
-
-  @override
   Future<void> sendPasswordResetEmail(String email) async {
     // This would need a password reset endpoint
     throw UnimplementedError('Password reset not implemented for API mode');
@@ -132,14 +113,6 @@ class ApiAuthRepository implements AuthRepository {
 
   @override
   Future<void> signOut() async {
-    try {
-      // Try to call logout endpoint if available
-      await _apiService.logout();
-    } catch (e) {
-      // Continue with local cleanup even if API call fails
-      print('Logout API call failed: $e');
-    }
-
     // Clear stored tokens and user data
     await _secureStorage.delete(key: _tokenKey);
     await _secureStorage.delete(key: _refreshTokenKey);
@@ -155,17 +128,9 @@ class ApiAuthRepository implements AuthRepository {
         return cachedUser;
       }
 
-      // If no cached user but we have a token, fetch from API
-      final token = await getAuthToken();
-      if (token != null) {
-        final response = await _apiService.getProfile();
-        if (response.success && response.data != null) {
-          final user = response.data!.user.toEntity();
-          await _cacheUser(user);
-          return user;
-        }
-      }
-
+      // If no cached user but we have a token, we can't fetch from API
+      // since there's no profile endpoint in the spec
+      // Return null and let the app handle re-authentication
       return null;
     } catch (e) {
       print('Get current user failed: $e');
@@ -201,12 +166,12 @@ class ApiAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<void> verifyEmail(String verificationCode) async {
+  Future<User> verifyEmail(String verificationCode) async {
     throw UnimplementedError('Email verification not implemented for API mode');
   }
 
   @override
-  Future<void> updateUserProfile({
+  Future<User> updateProfile({
     String? name,
     String? phoneNumber,
     String? profileImageUrl,
@@ -215,11 +180,12 @@ class ApiAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<void> changePassword({
-    required String currentPassword,
-    required String newPassword,
-  }) async {
-    throw UnimplementedError('Password change not implemented for API mode');
+  Stream<User?> get authStateChanges {
+    // For API auth, we can't easily stream auth state changes like Firebase
+    // Return a simple stream that checks current user periodically
+    return Stream.periodic(const Duration(seconds: 30), (_) async {
+      return await getCurrentUser();
+    }).asyncMap((future) => future);
   }
 
   @override
@@ -233,8 +199,7 @@ class ApiAuthRepository implements AuthRepository {
       final refreshToken = await _secureStorage.read(key: _refreshTokenKey);
       if (refreshToken == null) return null;
 
-      final request = RefreshTokenRequestModel(refreshToken: refreshToken);
-      final response = await _apiService.refreshToken(request);
+      final response = await _apiService.refreshToken(refreshToken);
 
       if (response.success && response.data != null) {
         await _secureStorage.write(key: _tokenKey, value: response.data!);
@@ -251,20 +216,21 @@ class ApiAuthRepository implements AuthRepository {
   /// Cache user data locally
   Future<void> _cacheUser(User user) async {
     final userJson = user.toModel().toJson();
-    await _secureStorage.write(key: _userKey, value: userJson.toString());
+    await _secureStorage.write(key: _userKey, value: jsonEncode(userJson));
   }
 
   /// Get cached user data
   Future<User?> _getCachedUser() async {
     try {
       final userJsonString = await _secureStorage.read(key: _userKey);
-      if (userJsonString != null) {
-        // Note: This is a simplified approach. In production, you'd use proper JSON parsing
-        // For now, we'll return null and rely on API calls
-        return null;
+      if (userJsonString != null && userJsonString.isNotEmpty) {
+        final userJson = jsonDecode(userJsonString) as Map<String, dynamic>;
+        final userModel = UserModel.fromJson(userJson);
+        return userModel.toEntity();
       }
       return null;
     } catch (e) {
+      print('Failed to get cached user: $e');
       return null;
     }
   }

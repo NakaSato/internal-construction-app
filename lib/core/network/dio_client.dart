@@ -4,7 +4,6 @@ import 'package:injectable/injectable.dart';
 
 import '../config/app_constants.dart';
 import '../config/environment_config.dart';
-import '../di/injection.dart';
 
 @module
 abstract class NetworkModule {
@@ -118,7 +117,7 @@ class AuthInterceptor extends Interceptor {
     try {
       final dio = Dio();
       final response = await dio.post(
-        '${EnvironmentConfig.apiBaseUrl}/api/v1/auth/refresh',
+        '${EnvironmentConfig.apiBaseUrl}/api/v1/Auth/refresh',
         data: {'refreshToken': refreshToken},
       );
 
