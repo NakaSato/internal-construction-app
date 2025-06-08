@@ -134,7 +134,9 @@ class ApiAuthRepository implements AuthRepository {
       // Return null and let the app handle re-authentication
       return null;
     } catch (e) {
-      print('Get current user failed: $e');
+      if (kDebugMode) {
+        debugPrint('Get current user failed: $e');
+      }
       return null;
     }
   }
@@ -209,7 +211,9 @@ class ApiAuthRepository implements AuthRepository {
 
       return null;
     } catch (e) {
-      print('Token refresh failed: $e');
+      if (kDebugMode) {
+        debugPrint('Token refresh failed: $e');
+      }
       return null;
     }
   }
