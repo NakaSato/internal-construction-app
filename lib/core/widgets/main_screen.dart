@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'google_bottom_bar.dart';
-import 'featured_screen.dart';
+import 'custom_bottom_bar.dart';
 
 /// Main app screen with bottom navigation
 class MainScreen extends StatefulWidget {
@@ -16,7 +15,6 @@ class _MainScreenState extends State<MainScreen> {
   // Sample pages for each navigation item
   final List<Widget> _pages = [
     const DashboardPage(),
-    const FeaturedScreen(),
     const CalendarPage(),
     const LocationPage(),
     const ProfilePage(),
@@ -26,7 +24,7 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: _pages[_currentIndex],
-      bottomNavigationBar: GoogleBottomBar(
+      bottomNavigationBar: CustomBottomBar(
         currentIndex: _currentIndex,
         onTap: (index) {
           setState(() {

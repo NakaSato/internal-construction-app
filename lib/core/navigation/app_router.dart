@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/authentication/application/auth_bloc.dart';
+import '../../features/authentication/application/auth_state.dart';
 import '../../features/authentication/presentation/screens/forgot_password_screen.dart';
 import '../../features/authentication/presentation/screens/login_screen.dart';
 import '../../features/authentication/presentation/screens/register_screen.dart';
@@ -20,7 +23,6 @@ class AppRoutes {
 
   // Bottom navigation routes
   static const String dashboard = '/dashboard';
-  static const String featured = '/featured';
 
   // Feature routes
   static const String imageUpload = '/image-upload';
@@ -39,7 +41,8 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 class AppRouter {
   static final GoRouter router = GoRouter(
     navigatorKey: navigatorKey,
-    initialLocation: AppRoutes.home,
+    initialLocation: AppRoutes
+        .login, // Start with login screen for authentication-first approach
     debugLogDiagnostics: true,
     routes: [
       // Authentication routes
@@ -59,7 +62,7 @@ class AppRouter {
         builder: (context, state) => const ForgotPasswordScreen(),
       ),
 
-      // Main app routes
+      // Protected main app routes
       GoRoute(
         path: AppRoutes.home,
         name: 'home',
@@ -70,24 +73,19 @@ class AppRouter {
             path: 'profile',
             name: 'profile',
             builder: (context, state) =>
-                const MainAppScreen(initialTabIndex: 4), // Profile tab
+                const MainAppScreen(initialTabIndex: 3), // Profile tab
           ),
         ],
       ),
 
-      // Bottom navigation tab routes for deep linking
+      // Protected bottom navigation tab routes for deep linking
       GoRoute(
         path: AppRoutes.dashboard,
         name: 'dashboard',
         builder: (context, state) => const MainAppScreen(initialTabIndex: 0),
       ),
-      GoRoute(
-        path: AppRoutes.featured,
-        name: 'featured',
-        builder: (context, state) => const MainAppScreen(initialTabIndex: 1),
-      ),
 
-      // Feature routes
+      // Protected feature routes
       GoRoute(
         path: AppRoutes.imageUpload,
         name: 'image-upload',
@@ -96,12 +94,12 @@ class AppRouter {
       GoRoute(
         path: AppRoutes.locationTracking,
         name: 'location',
-        builder: (context, state) => const MainAppScreen(initialTabIndex: 3),
+        builder: (context, state) => const MainAppScreen(initialTabIndex: 2),
       ),
       GoRoute(
         path: AppRoutes.calendar,
         name: 'calendar',
-        builder: (context, state) => const MainAppScreen(initialTabIndex: 2),
+        builder: (context, state) => const MainAppScreen(initialTabIndex: 1),
       ),
       GoRoute(
         path: AppRoutes.calendarDetail,
@@ -131,32 +129,50 @@ class AppRouter {
             Text('Page not found: ${state.matchedLocation}'),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () => context.go(AppRoutes.home),
-              child: const Text('Go Home'),
+              onPressed: () => context.go(AppRoutes.login),
+              child: const Text('Go to Login'),
             ),
           ],
         ),
       ),
     ),
 
-    // Redirect logic (e.g., authentication checks)
+    // Authentication-first redirect logic
     redirect: (context, state) {
-      // TODO: Implement authentication redirect logic
-      // Example:
-      // final isLoggedIn = AuthService.isLoggedIn;
-      // final isLoginRoute = state.matchedLocation.startsWith('/login');
-      //
-      // if (!isLoggedIn && !isLoginRoute) {
-      //   return AppRoutes.login;
-      // }
-      //
-      // if (isLoggedIn && isLoginRoute) {
-      //   return AppRoutes.home;
-      // }
+      // Get the current authentication state
+      try {
+        final authBloc = context.read<AuthBloc>();
+        final authState = authBloc.state;
 
-      return null; // No redirect needed
+        final currentLocation = state.matchedLocation;
+        final isAuthRoute = _isAuthenticationRoute(currentLocation);
+        final isAuthenticated = authState is AuthAuthenticated;
+
+        // If user is not authenticated and trying to access protected routes
+        if (!isAuthenticated && !isAuthRoute) {
+          return AppRoutes.login;
+        }
+
+        // If user is authenticated and on auth routes, redirect to home
+        if (isAuthenticated && isAuthRoute) {
+          return AppRoutes.home;
+        }
+
+        // No redirect needed
+        return null;
+      } catch (e) {
+        // If auth context is not available, redirect to login
+        return AppRoutes.login;
+      }
     },
   );
+
+  /// Check if the current route is an authentication route
+  static bool _isAuthenticationRoute(String location) {
+    return location.startsWith(AppRoutes.login) ||
+        location.startsWith(AppRoutes.register) ||
+        location.startsWith(AppRoutes.forgotPassword);
+  }
 
   // Private constructor to prevent instantiation
   AppRouter._();

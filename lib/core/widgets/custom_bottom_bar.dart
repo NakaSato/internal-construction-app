@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:salomon_bottom_bar/salomon_bottom_bar.dart';
 
-/// A custom bottom navigation bar using Salomon Bottom Bar with Google-style design
-class GoogleBottomBar extends StatelessWidget {
-  /// Creates a GoogleBottomBar
-  const GoogleBottomBar({
+class CustomBottomBar extends StatelessWidget {
+  /// Creates a CustomBottomBar
+  const CustomBottomBar({
     super.key,
     required this.currentIndex,
     required this.onTap,
@@ -62,13 +61,6 @@ class GoogleBottomBar extends StatelessWidget {
             icon: const Icon(Icons.dashboard_outlined),
             activeIcon: const Icon(Icons.dashboard),
             title: const Text('Home'),
-          ),
-
-          /// Featured Partners
-          SalomonBottomBarItem(
-            icon: const Icon(Icons.star_outline),
-            activeIcon: const Icon(Icons.star),
-            title: const Text('Featured'),
           ),
 
           /// Calendar

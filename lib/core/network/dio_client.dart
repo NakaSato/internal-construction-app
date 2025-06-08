@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:injectable/injectable.dart';
 
@@ -102,7 +103,9 @@ class AuthInterceptor extends Interceptor {
         await _secureStorage.delete(key: _refreshTokenKey);
         // TODO: Navigate to login screen
       } catch (e) {
-        print('Token refresh failed: $e');
+        if (kDebugMode) {
+          debugPrint('Token refresh failed: $e');
+        }
         // Clear tokens on refresh failure
         await _secureStorage.delete(key: _tokenKey);
         await _secureStorage.delete(key: _refreshTokenKey);
@@ -126,7 +129,9 @@ class AuthInterceptor extends Interceptor {
       }
       return null;
     } catch (e) {
-      print('Token refresh API call failed: $e');
+      if (kDebugMode) {
+        debugPrint('Token refresh API call failed: $e');
+      }
       return null;
     }
   }

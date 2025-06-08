@@ -9,8 +9,7 @@ import '../../features/authentication/application/auth_event.dart';
 import '../../features/location_tracking/presentation/screens/location_tracking_screen.dart';
 import '../../features/work_calendar/presentation/screens/calendar_screen.dart';
 import '../../utils/api_config_verifier.dart';
-import 'google_bottom_bar.dart';
-import 'featured_screen.dart';
+import 'custom_bottom_bar.dart';
 import 'common_widgets.dart';
 import 'app_header.dart';
 
@@ -67,8 +66,6 @@ class _MainAppScreenState extends State<MainAppScreen> {
         children: [
           // Home/Dashboard - uses the existing authenticated home
           _buildDashboardTab(context, state),
-          // Featured Partners
-          const FeaturedScreen(),
           // Calendar
           const CalendarScreen(),
           // Location Tracking
@@ -77,7 +74,7 @@ class _MainAppScreenState extends State<MainAppScreen> {
           _buildProfileTab(context, state),
         ],
       ),
-      bottomNavigationBar: GoogleBottomBar(
+      bottomNavigationBar: CustomBottomBar(
         currentIndex: _currentIndex,
         onTap: (index) {
           if (mounted) {
@@ -101,7 +98,7 @@ class _MainAppScreenState extends State<MainAppScreen> {
         onProfileTap: () {
           // Navigate to profile tab
           setState(() {
-            _currentIndex = 4;
+            _currentIndex = 3;
           });
         },
         actions: [
@@ -200,24 +197,18 @@ class _MainAppScreenState extends State<MainAppScreen> {
         title: 'Image Upload',
         subtitle: 'Manage your images',
         onTap: () =>
-            setState(() => _currentIndex = 4), // Navigate to profile for now
+            setState(() => _currentIndex = 3), // Navigate to profile for now
       ),
       _FeatureItem(
         icon: Icons.location_on,
         title: 'Location Tracking',
         subtitle: 'Track your location',
-        onTap: () => setState(() => _currentIndex = 3),
+        onTap: () => setState(() => _currentIndex = 2),
       ),
       _FeatureItem(
         icon: Icons.calendar_today,
         title: 'Work Calendar',
         subtitle: 'Manage your schedule',
-        onTap: () => setState(() => _currentIndex = 2),
-      ),
-      _FeatureItem(
-        icon: Icons.restaurant,
-        title: 'Featured Partners',
-        subtitle: 'Explore restaurants',
         onTap: () => setState(() => _currentIndex = 1),
       ),
     ];
@@ -227,7 +218,7 @@ class _MainAppScreenState extends State<MainAppScreen> {
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        childAspectRatio: 1.1,
+        childAspectRatio: 1.3, // Increased from 1.1 to 1.3 for more height
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
       ),
@@ -246,28 +237,34 @@ class _MainAppScreenState extends State<MainAppScreen> {
         onTap: feature.onTap,
         borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(12.0), // Reduced from 16.0 to 12.0
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
                 feature.icon,
-                size: 48,
+                size: 40, // Reduced from 48 to 40
                 color: Theme.of(context).colorScheme.primary,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8), // Reduced from 12 to 8
               Text(
                 feature.title,
-                style: Theme.of(context).textTheme.titleMedium,
+                style: Theme.of(context)
+                    .textTheme
+                    .titleSmall, // Changed from titleMedium to titleSmall
                 textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 2), // Reduced from 4 to 2
               Text(
                 feature.subtitle,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
                 textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),

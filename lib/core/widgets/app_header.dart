@@ -179,21 +179,6 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
       ),
     );
 
-    // Search icon
-    rightSideActions.add(
-      IconButton(
-        icon: Icon(
-          Icons.search_outlined,
-          color: Theme.of(context).colorScheme.onSurface,
-        ),
-        onPressed: () {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Search coming soon!')));
-        },
-      ),
-    );
-
     // Menu/More options
     rightSideActions.add(
       PopupMenuButton<String>(
@@ -211,11 +196,6 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
             case 'help':
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Help center coming soon!')),
-              );
-              break;
-            case 'feedback':
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Feedback form coming soon!')),
               );
               break;
           }
@@ -244,19 +224,6 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                 ),
                 const SizedBox(width: 12),
                 const Text('Help & Support'),
-              ],
-            ),
-          ),
-          PopupMenuItem<String>(
-            value: 'feedback',
-            child: Row(
-              children: [
-                Icon(
-                  Icons.feedback_outlined,
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-                const SizedBox(width: 12),
-                const Text('Send Feedback'),
               ],
             ),
           ),
