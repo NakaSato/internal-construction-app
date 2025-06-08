@@ -9,7 +9,7 @@ import '../../features/authentication/application/auth_event.dart';
 import '../../features/location_tracking/presentation/screens/location_tracking_screen.dart';
 import '../../features/work_calendar/presentation/screens/calendar_screen.dart';
 import '../../utils/api_config_verifier.dart';
-import 'custom_bottom_bar.dart';
+import 'app_bottom_bar.dart';
 import 'common_widgets.dart';
 import 'app_header.dart';
 
@@ -169,11 +169,6 @@ class _MainAppScreenState extends State<MainAppScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Welcome back!',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-            const SizedBox(height: 8),
             Text(
               user.email,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(

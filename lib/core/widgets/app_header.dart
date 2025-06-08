@@ -179,58 +179,6 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
       ),
     );
 
-    // Menu/More options
-    rightSideActions.add(
-      PopupMenuButton<String>(
-        icon: Icon(
-          Icons.more_vert,
-          color: Theme.of(context).colorScheme.onSurface,
-        ),
-        onSelected: (value) {
-          switch (value) {
-            case 'settings':
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Settings coming soon!')),
-              );
-              break;
-            case 'help':
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Help center coming soon!')),
-              );
-              break;
-          }
-        },
-        itemBuilder: (BuildContext context) => [
-          PopupMenuItem<String>(
-            value: 'settings',
-            child: Row(
-              children: [
-                Icon(
-                  Icons.settings_outlined,
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-                const SizedBox(width: 12),
-                const Text('Settings'),
-              ],
-            ),
-          ),
-          PopupMenuItem<String>(
-            value: 'help',
-            child: Row(
-              children: [
-                Icon(
-                  Icons.help_outline,
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-                const SizedBox(width: 12),
-                const Text('Help & Support'),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-
     // Add any custom actions passed in
     if (actions != null) {
       rightSideActions.addAll(actions!);

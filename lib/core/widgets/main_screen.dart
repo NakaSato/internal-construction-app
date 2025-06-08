@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'custom_bottom_bar.dart';
+import 'app_bottom_bar.dart';
 
 /// Main app screen with bottom navigation
 class MainScreen extends StatefulWidget {

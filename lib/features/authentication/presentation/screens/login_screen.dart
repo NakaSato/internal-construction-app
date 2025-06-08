@@ -77,13 +77,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 24),
 
                   Text(
-                    'Welcome Back',
-                    style: Theme.of(context).textTheme.headlineMedium,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 8),
-
-                  Text(
                     'Sign in to your account',
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       color: Theme.of(
