@@ -6,6 +6,7 @@ import '../../../core/config/app_constants.dart';
 import '../domain/entities/user.dart';
 import '../domain/repositories/auth_repository.dart';
 
+@Named('firebase')
 @LazySingleton(as: AuthRepository)
 class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl(this._firebaseAuth, this._secureStorage);
@@ -250,9 +251,11 @@ class AuthRepositoryImpl implements AuthRepository {
   /// Map Firebase User to domain User entity
   User _mapFirebaseUserToUser(firebase_auth.User firebaseUser) {
     return User(
-      id: firebaseUser.uid,
+      userId: firebaseUser.uid,
+      username: firebaseUser.email?.split('@').first ?? '',
       email: firebaseUser.email ?? '',
-      name: firebaseUser.displayName ?? '',
+      fullName: firebaseUser.displayName ?? '',
+      roleName: 'user', // Default role for Firebase users
       profileImageUrl: firebaseUser.photoURL,
       phoneNumber: firebaseUser.phoneNumber,
       isEmailVerified: firebaseUser.emailVerified,

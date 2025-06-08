@@ -1,15 +1,23 @@
 /// Environment configuration for different build environments
 enum Environment { development, staging, production }
 
+enum AuthMode { firebase, api }
+
 class EnvironmentConfig {
   static const Environment _currentEnvironment = Environment.development;
+  static const AuthMode _authMode =
+      AuthMode.firebase; // Change to AuthMode.api to use API auth
 
   static Environment get currentEnvironment => _currentEnvironment;
+  static AuthMode get authMode => _authMode;
 
   static bool get isDevelopment =>
       _currentEnvironment == Environment.development;
   static bool get isStaging => _currentEnvironment == Environment.staging;
   static bool get isProduction => _currentEnvironment == Environment.production;
+
+  static bool get useFirebaseAuth => _authMode == AuthMode.firebase;
+  static bool get useApiAuth => _authMode == AuthMode.api;
 
   // API Configuration
   static String get apiBaseUrl {

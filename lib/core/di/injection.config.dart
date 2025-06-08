@@ -21,8 +21,14 @@ import 'package:location/location.dart' as _i645;
 import '../../features/authentication/application/auth_bloc.dart' as _i574;
 import '../../features/authentication/domain/repositories/auth_repository.dart'
     as _i742;
+import '../../features/authentication/infrastructure/auth_repository_factory.dart'
+    as _i202;
 import '../../features/authentication/infrastructure/auth_repository_impl.dart'
     as _i238;
+import '../../features/authentication/infrastructure/repositories/api_auth_repository.dart'
+    as _i793;
+import '../../features/authentication/infrastructure/services/auth_api_service.dart'
+    as _i378;
 import '../../features/image_upload/application/image_upload_bloc.dart'
     as _i1043;
 import '../../features/image_upload/domain/repositories/image_upload_repository.dart'
@@ -40,6 +46,7 @@ import '../../features/work_calendar/application/work_calendar_bloc.dart'
 import '../../features/work_calendar/domain/repositories/work_calendar_repository.dart'
     as _i503;
 import '../network/dio_client.dart' as _i667;
+import 'auth_module.dart' as _i784;
 import 'injection.dart' as _i464;
 import 'work_calendar_module.dart' as _i300;
 
@@ -53,6 +60,7 @@ extension GetItInjectableX on _i174.GetIt {
     final externalDependenciesModule = _$ExternalDependenciesModule();
     final networkModule = _$NetworkModule();
     final workCalendarModule = _$WorkCalendarModule();
+    final authModule = _$AuthModule();
     gh.lazySingleton<_i59.FirebaseAuth>(
       () => externalDependenciesModule.firebaseAuth,
     );
@@ -73,16 +81,13 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i59.FirebaseAuth>(),
       ),
     );
+    gh.lazySingleton<_i378.AuthApiService>(
+      () => authModule.authApiService(gh<_i361.Dio>()),
+    );
     gh.lazySingleton<_i316.LocationTrackingRepository>(
       () => _i950.FirebaseLocationTrackingRepository(
         gh<_i974.FirebaseFirestore>(),
         gh<_i645.Location>(),
-      ),
-    );
-    gh.lazySingleton<_i742.AuthRepository>(
-      () => _i238.AuthRepositoryImpl(
-        gh<_i59.FirebaseAuth>(),
-        gh<_i558.FlutterSecureStorage>(),
       ),
     );
     gh.factory<_i937.WorkCalendarBloc>(
@@ -95,11 +100,31 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i974.FirebaseFirestore>(),
       ),
     );
+    gh.lazySingleton<_i742.AuthRepository>(
+      () => _i238.AuthRepositoryImpl(
+        gh<_i59.FirebaseAuth>(),
+        gh<_i558.FlutterSecureStorage>(),
+      ),
+      instanceName: 'firebase',
+    );
     gh.factory<_i574.AuthBloc>(
       () => _i574.AuthBloc(gh<_i742.AuthRepository>()),
     );
+    gh.lazySingleton<_i742.AuthRepository>(
+      () => _i793.ApiAuthRepository(
+        gh<_i378.AuthApiService>(),
+        gh<_i558.FlutterSecureStorage>(),
+      ),
+      instanceName: 'api',
+    );
     gh.factory<_i1043.ImageUploadBloc>(
       () => _i1043.ImageUploadBloc(gh<_i138.ImageUploadRepository>()),
+    );
+    gh.lazySingleton<_i202.AuthRepositoryFactory>(
+      () => _i202.AuthRepositoryFactory(
+        gh<_i742.AuthRepository>(instanceName: 'firebase'),
+        gh<_i742.AuthRepository>(instanceName: 'api'),
+      ),
     );
     gh.factory<_i251.LocationTrackingBloc>(
       () => _i251.LocationTrackingBloc(gh<_i316.LocationTrackingRepository>()),
@@ -113,3 +138,5 @@ class _$ExternalDependenciesModule extends _i464.ExternalDependenciesModule {}
 class _$NetworkModule extends _i667.NetworkModule {}
 
 class _$WorkCalendarModule extends _i300.WorkCalendarModule {}
+
+class _$AuthModule extends _i784.AuthModule {}

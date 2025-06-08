@@ -2,12 +2,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 
 import '../domain/repositories/auth_repository.dart';
+import '../infrastructure/auth_repository_factory.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
 
 @injectable
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
-  AuthBloc(this._authRepository) : super(const AuthInitial()) {
+  AuthBloc(this._authRepositoryFactory) : super(const AuthInitial()) {
     on<AuthCheckRequested>(_onAuthCheckRequested);
     on<AuthSignInRequested>(_onSignInRequested);
     on<AuthRegisterRequested>(_onRegisterRequested);
@@ -20,7 +21,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthProfileUpdateRequested>(_onProfileUpdateRequested);
   }
 
-  final AuthRepository _authRepository;
+  final AuthRepositoryFactory _authRepositoryFactory;
+
+  /// Get the appropriate auth repository based on configuration
+  AuthRepository get _authRepository => _authRepositoryFactory.getAuthRepository();
 
   /// Handle checking initial authentication state
   Future<void> _onAuthCheckRequested(
