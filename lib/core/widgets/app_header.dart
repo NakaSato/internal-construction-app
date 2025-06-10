@@ -33,18 +33,6 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
       automaticallyImplyLeading: false,
       title: _buildLeftSide(context),
       actions: _buildRightSide(context),
-      flexibleSpace: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Theme.of(context).colorScheme.primary.withOpacity(0.05),
-              Theme.of(context).colorScheme.surface,
-            ],
-          ),
-        ),
-      ),
     );
   }
 

@@ -101,12 +101,6 @@ class _MainAppScreenState extends State<MainAppScreen> {
             _currentIndex = 3;
           });
         },
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () => _showLogoutDialog(context),
-          ),
-        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),

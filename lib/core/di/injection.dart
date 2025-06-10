@@ -5,6 +5,7 @@ import 'package:injectable/injectable.dart';
 import 'package:location/location.dart';
 
 import 'injection.config.dart';
+import '../../features/authorization/config/authorization_di.dart';
 
 final GetIt getIt = GetIt.instance;
 
@@ -21,6 +22,9 @@ Future<void> initializeDependencies() async {
   await dotenv.load(fileName: ".env");
 
   configureDependencies();
+
+  // Configure authorization dependencies
+  configureAuthorizationDependencies();
 }
 
 @module

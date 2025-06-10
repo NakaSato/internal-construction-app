@@ -6,6 +6,7 @@ import '../../features/authentication/application/auth_bloc.dart';
 import '../../features/authentication/application/auth_state.dart';
 import '../../features/authentication/presentation/screens/forgot_password_screen.dart';
 import '../../features/authentication/presentation/screens/login_screen.dart';
+import '../../features/authentication/presentation/screens/enhanced_login_screen.dart';
 import '../../features/authentication/presentation/screens/register_screen.dart';
 import '../../features/image_upload/presentation/screens/image_upload_screen.dart';
 import '../widgets/main_app_screen.dart';
@@ -14,6 +15,7 @@ import '../widgets/main_app_screen.dart';
 class AppRoutes {
   // Authentication routes
   static const String login = '/login';
+  static const String enhancedLogin = '/enhanced-login';
   static const String register = '/register';
   static const String forgotPassword = '/forgot-password';
 
@@ -49,7 +51,19 @@ class AppRouter {
       GoRoute(
         path: AppRoutes.login,
         name: 'login',
-        builder: (context, state) => const LoginScreen(),
+        builder: (context, state) =>
+            const EnhancedLoginScreen(), // Use enhanced version by default
+      ),
+      GoRoute(
+        path: AppRoutes.enhancedLogin,
+        name: 'enhanced-login',
+        builder: (context, state) => const EnhancedLoginScreen(),
+      ),
+      GoRoute(
+        path: '/classic-login',
+        name: 'classic-login',
+        builder: (context, state) =>
+            const LoginScreen(), // Keep original as alternative
       ),
       GoRoute(
         path: AppRoutes.register,

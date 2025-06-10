@@ -6,6 +6,7 @@ import 'core/di/injection.dart';
 import 'core/navigation/app_router.dart';
 import 'features/authentication/application/auth_bloc.dart';
 import 'features/authentication/application/auth_event.dart';
+import 'features/authorization/application/authorization_bloc.dart';
 import 'features/image_upload/application/image_upload_bloc.dart';
 import 'features/location_tracking/application/location_tracking_bloc.dart';
 import 'features/work_calendar/application/work_calendar_bloc.dart';
@@ -34,6 +35,9 @@ class MyApp extends StatelessWidget {
           create: (context) =>
               getIt<AuthBloc>()..add(const AuthCheckRequested()),
         ),
+        BlocProvider<AuthorizationBloc>(
+          create: (context) => getIt<AuthorizationBloc>(),
+        ),
         BlocProvider<ImageUploadBloc>(
           create: (context) => getIt<ImageUploadBloc>(),
         ),
@@ -45,7 +49,7 @@ class MyApp extends StatelessWidget {
         ),
       ],
       child: MaterialApp.router(
-        title: 'Flutter Architecture App',
+        title: '',
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         themeMode: ThemeMode.system,
