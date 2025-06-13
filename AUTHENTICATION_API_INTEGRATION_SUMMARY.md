@@ -44,7 +44,7 @@ class RegisterRequestModel {
   final String email;
   final String password;
   final String fullName;
-  final int roleId;         // Default: 2 (Technician)
+  final int roleId;         // Default: 3 (User)
 }
 ```
 

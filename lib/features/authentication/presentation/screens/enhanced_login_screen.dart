@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/navigation/app_router.dart';
 import '../../../../core/utils/extensions.dart';
+import '../../../../core/widgets/error_message_widget.dart';
 import '../../application/auth_bloc.dart';
 import '../../application/auth_event.dart';
 import '../../application/auth_state.dart';
@@ -654,9 +655,9 @@ class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
     if (state is AuthAuthenticated) {
       context.go(AppRoutes.home);
     } else if (state is AuthFailure) {
-      _showErrorSnackBar(state.message);
+      ApiErrorSnackBar.show(context, state.message);
     } else if (state is AuthPasswordResetSent) {
-      _showSuccessSnackBar('Password reset email sent!');
+      ApiErrorSnackBar.showSuccess(context, 'Password reset email sent!');
     }
   }
 
@@ -675,52 +676,6 @@ class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
       AuthSignInRequested(
         username: _emailController.text.trim(),
         password: _passwordController.text,
-      ),
-    );
-  }
-
-  void _showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(
-              Icons.error_outline,
-              color: Theme.of(context).colorScheme.onError,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                message,
-                style: TextStyle(color: Theme.of(context).colorScheme.onError),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: Theme.of(context).colorScheme.error,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: const EdgeInsets.all(16),
-      ),
-    );
-  }
-
-  void _showSuccessSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.check_circle_outline, color: Colors.white),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(message, style: const TextStyle(color: Colors.white)),
-            ),
-          ],
-        ),
-        backgroundColor: Colors.green,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: const EdgeInsets.all(16),
       ),
     );
   }

@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:injectable/injectable.dart';
 
+import '../../../../core/utils/api_error_parser.dart';
 import '../../domain/entities/user.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../models/auth_response_model.dart';
@@ -60,7 +61,9 @@ class ApiAuthRepository implements AuthRepository {
       if (e.response?.statusCode == 401) {
         throw Exception('Invalid email or password');
       }
-      throw Exception('Login failed: ${e.message}');
+      // Use ApiErrorParser to extract meaningful error messages
+      final errorMessage = ApiErrorParser.parseError(e);
+      throw Exception(errorMessage);
     } catch (e) {
       throw Exception('Login failed: $e');
     }
@@ -81,7 +84,7 @@ class ApiAuthRepository implements AuthRepository {
         email: email,
         password: password,
         fullName: name,
-        roleId: 2, // Default role ID for Technician
+        roleId: 3, // Default role ID for Users
       );
 
       final response = await _apiService.register(request);
@@ -100,7 +103,19 @@ class ApiAuthRepository implements AuthRepository {
       if (e.response?.statusCode == 409) {
         throw Exception('User already exists');
       }
-      throw Exception('Registration failed: ${e.message}');
+
+      // Debug logging for API responses
+      if (kDebugMode) {
+        debugPrint('=== Registration API Error Debug ===');
+        debugPrint('Status Code: ${e.response?.statusCode}');
+        debugPrint('Response Data: ${e.response?.data}');
+        debugPrint('Response Headers: ${e.response?.headers}');
+        debugPrint('=====================================');
+      }
+
+      // Use ApiErrorParser to extract meaningful error messages from validation responses
+      final errorMessage = ApiErrorParser.parseError(e);
+      throw Exception(errorMessage);
     } catch (e) {
       throw Exception('Registration failed: $e');
     }

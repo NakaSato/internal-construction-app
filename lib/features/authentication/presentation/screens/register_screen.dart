@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/navigation/app_router.dart';
 import '../../../../core/utils/extensions.dart';
+import '../../../../core/widgets/error_message_widget.dart';
 import '../../application/auth_bloc.dart';
 import '../../application/auth_event.dart';
 import '../../application/auth_state.dart';
@@ -47,12 +48,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         if (state is AuthAuthenticated) {
           context.go(AppRoutes.home);
         } else if (state is AuthFailure) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
-          );
+          ApiErrorSnackBar.show(context, state.message);
         }
       },
       child: Scaffold(
@@ -246,7 +242,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         email: email,
         password: _passwordController.text,
         fullName: _nameController.text.trim(),
-        roleId: 2, // Default role ID for user
+        roleId: 3, // Default role ID for user
       ),
     );
   }

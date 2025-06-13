@@ -46,14 +46,14 @@ class AuthTestScreen extends StatefulWidget {
 class _AuthTestScreenState extends State<AuthTestScreen> {
   final _emailController = TextEditingController(text: 'john.doe@example.com');
   final _passwordController = TextEditingController(text: 'SecurePassword123!');
-  final _usernameController = TextEditingController(text: 'jane.smith');
+  final _usernameController = TextEditingController(text: 'testvalidation');
   final _registerEmailController = TextEditingController(
-    text: 'jane.smith@example.com',
+    text: 'testvalidation@example.com',
   );
   final _registerPasswordController = TextEditingController(
-    text: 'SecurePassword123!',
+    text: 'weak', // Intentionally weak password to test validation
   );
-  final _fullNameController = TextEditingController(text: 'Jane Smith');
+  final _fullNameController = TextEditingController(text: 'Test Validation');
 
   @override
   Widget build(BuildContext context) {
@@ -250,7 +250,7 @@ class _AuthTestScreenState extends State<AuthTestScreen> {
                     email: _registerEmailController.text,
                     password: _registerPasswordController.text,
                     fullName: _fullNameController.text,
-                    roleId: 2, // Technician role
+                    roleId: 3, // Default user role
                   ),
                 );
               },
