@@ -8,6 +8,7 @@ import '../../features/authentication/presentation/screens/forgot_password_scree
 import '../../features/authentication/presentation/screens/login_screen.dart';
 import '../../features/authentication/presentation/screens/enhanced_login_screen.dart';
 import '../../features/authentication/presentation/screens/register_screen.dart';
+import '../../features/calendar_management/presentation/screens/calendar_management_screen.dart';
 import '../../features/image_upload/presentation/screens/image_upload_screen.dart';
 import '../widgets/main_app_screen.dart';
 
@@ -31,6 +32,7 @@ class AppRoutes {
   static const String locationTracking = '/location';
   static const String calendar = '/calendar';
   static const String calendarDetail = '/calendar/:id';
+  static const String calendarManagement = '/calendar-management';
 
   // Private constructor to prevent instantiation
   AppRoutes._();
@@ -114,6 +116,11 @@ class AppRouter {
         path: AppRoutes.calendar,
         name: 'calendar',
         builder: (context, state) => const MainAppScreen(initialTabIndex: 1),
+      ),
+      GoRoute(
+        path: AppRoutes.calendarManagement,
+        name: 'calendar-management',
+        builder: (context, state) => const CalendarManagementScreen(),
       ),
       GoRoute(
         path: AppRoutes.calendarDetail,

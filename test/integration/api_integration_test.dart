@@ -31,7 +31,7 @@ void main() {
       try {
         // Test with invalid credentials to check endpoint structure
         final response = await dio.post(
-          '/api/v1/Auth/login',
+          '/api/v1/auth/login',
           data: {'username': 'test@example.com', 'password': 'invalid'},
           options: Options(
             validateStatus: (status) => true, // Accept any status
@@ -60,7 +60,7 @@ void main() {
       try {
         // Test with incomplete data to check endpoint structure
         final response = await dio.post(
-          '/api/v1/Auth/register',
+          '/api/v1/auth/register',
           data: {
             'username': 'test',
             'email': 'test@example.com',

@@ -24,6 +24,14 @@ import '../../features/authentication/infrastructure/repositories/api_auth_repos
     as _i793;
 import '../../features/authentication/infrastructure/services/auth_api_service.dart'
     as _i378;
+import '../../features/calendar_management/application/calendar_management_bloc.dart'
+    as _i185;
+import '../../features/calendar_management/domain/repositories/calendar_management_repository.dart'
+    as _i646;
+import '../../features/calendar_management/infrastructure/repositories/api_calendar_management_repository.dart'
+    as _i43;
+import '../../features/calendar_management/infrastructure/services/calendar_api_service.dart'
+    as _i1036;
 import '../../features/image_upload/application/image_upload_bloc.dart'
     as _i1043;
 import '../../features/image_upload/domain/repositories/image_upload_repository.dart'
@@ -82,6 +90,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i937.WorkCalendarBloc>(
       () => _i937.WorkCalendarBloc(gh<_i503.WorkCalendarRepository>()),
     );
+    gh.factory<_i1036.CalendarApiService>(
+      () => _i1036.CalendarApiService(gh<_i361.Dio>(), baseUrl: gh<String>()),
+    );
     gh.lazySingleton<_i742.AuthRepository>(
       () => _i793.ApiAuthRepository(
         gh<_i378.AuthApiService>(),
@@ -97,8 +108,17 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i251.LocationTrackingBloc>(
       () => _i251.LocationTrackingBloc(gh<_i316.LocationTrackingRepository>()),
     );
+    gh.lazySingleton<_i646.CalendarManagementRepository>(
+      () =>
+          _i43.ApiCalendarManagementRepository(gh<_i1036.CalendarApiService>()),
+    );
     gh.factory<_i574.AuthBloc>(
       () => _i574.AuthBloc(gh<_i202.AuthRepositoryFactory>()),
+    );
+    gh.factory<_i185.CalendarManagementBloc>(
+      () => _i185.CalendarManagementBloc(
+        gh<_i646.CalendarManagementRepository>(),
+      ),
     );
     return this;
   }

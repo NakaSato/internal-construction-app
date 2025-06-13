@@ -120,7 +120,7 @@ class AuthInterceptor extends Interceptor {
     try {
       final dio = Dio();
       final response = await dio.post(
-        '${EnvironmentConfig.apiBaseUrl}/api/v1/Auth/refresh',
+        '${EnvironmentConfig.apiBaseUrl}/api/v1/auth/refresh',
         data: {'refreshToken': refreshToken},
       );
 

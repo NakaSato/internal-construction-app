@@ -2,11 +2,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'core/di/injection.dart';
-import 'features/authentication/application/auth_bloc.dart';
-import 'features/authentication/application/auth_event.dart';
-import 'features/authentication/application/auth_state.dart';
-import 'features/authentication/presentation/screens/enhanced_login_screen.dart';
+import 'lib/core/di/injection.dart';
+import 'lib/features/authentication/application/auth_bloc.dart';
+import 'lib/features/authentication/application/auth_event.dart';
+import 'lib/features/authentication/application/auth_state.dart';
+import 'lib/features/authentication/presentation/screens/enhanced_login_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

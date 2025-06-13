@@ -5,10 +5,12 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i3;
 
-import 'package:flutter_architecture_app/features/authorization/domain/entities/permission.dart'
-    as _i5;
-import 'package:flutter_architecture_app/features/authorization/domain/entities/role.dart'
+import 'package:flutter_architecture_app/features/authentication/domain/entities/user.dart'
     as _i4;
+import 'package:flutter_architecture_app/features/authorization/domain/entities/permission.dart'
+    as _i6;
+import 'package:flutter_architecture_app/features/authorization/domain/entities/role.dart'
+    as _i5;
 import 'package:flutter_architecture_app/features/authorization/domain/services/authorization_service.dart'
     as _i2;
 import 'package:mockito/mockito.dart' as _i1;
@@ -38,7 +40,7 @@ class MockAuthorizationService extends _i1.Mock
 
   @override
   _i3.Future<bool> hasPermission(
-    dynamic user,
+    _i4.User? user,
     String? resource,
     String? action,
   ) =>
@@ -49,7 +51,7 @@ class MockAuthorizationService extends _i1.Mock
           as _i3.Future<bool>);
 
   @override
-  _i3.Future<bool> hasResourceAccess(dynamic user, String? resource) =>
+  _i3.Future<bool> hasResourceAccess(_i4.User? user, String? resource) =>
       (super.noSuchMethod(
             Invocation.method(#hasResourceAccess, [user, resource]),
             returnValue: _i3.Future<bool>.value(false),
@@ -57,39 +59,39 @@ class MockAuthorizationService extends _i1.Mock
           as _i3.Future<bool>);
 
   @override
-  _i3.Future<_i4.Role?> getUserRole(dynamic user) =>
+  _i3.Future<_i5.Role?> getUserRole(_i4.User? user) =>
       (super.noSuchMethod(
             Invocation.method(#getUserRole, [user]),
-            returnValue: _i3.Future<_i4.Role?>.value(),
+            returnValue: _i3.Future<_i5.Role?>.value(),
           )
-          as _i3.Future<_i4.Role?>);
+          as _i3.Future<_i5.Role?>);
 
   @override
-  _i3.Future<List<_i5.Permission>> getUserPermissions(dynamic user) =>
+  _i3.Future<List<_i6.Permission>> getUserPermissions(_i4.User? user) =>
       (super.noSuchMethod(
             Invocation.method(#getUserPermissions, [user]),
-            returnValue: _i3.Future<List<_i5.Permission>>.value(
-              <_i5.Permission>[],
+            returnValue: _i3.Future<List<_i6.Permission>>.value(
+              <_i6.Permission>[],
             ),
           )
-          as _i3.Future<List<_i5.Permission>>);
+          as _i3.Future<List<_i6.Permission>>);
 
   @override
-  _i3.Future<List<_i5.Permission>> getUserResourcePermissions(
-    dynamic user,
+  _i3.Future<List<_i6.Permission>> getUserResourcePermissions(
+    _i4.User? user,
     String? resource,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#getUserResourcePermissions, [user, resource]),
-            returnValue: _i3.Future<List<_i5.Permission>>.value(
-              <_i5.Permission>[],
+            returnValue: _i3.Future<List<_i6.Permission>>.value(
+              <_i6.Permission>[],
             ),
           )
-          as _i3.Future<List<_i5.Permission>>);
+          as _i3.Future<List<_i6.Permission>>);
 
   @override
   _i3.Future<bool> hasMultiplePermissions(
-    dynamic user,
+    _i4.User? user,
     String? resource,
     List<String>? actions,
   ) =>
@@ -105,7 +107,7 @@ class MockAuthorizationService extends _i1.Mock
 
   @override
   _i3.Future<bool> hasAnyPermission(
-    dynamic user,
+    _i4.User? user,
     String? resource,
     List<String>? actions,
   ) =>
@@ -116,7 +118,7 @@ class MockAuthorizationService extends _i1.Mock
           as _i3.Future<bool>);
 
   @override
-  _i3.Future<bool> isUserRoleActive(dynamic user) =>
+  _i3.Future<bool> isUserRoleActive(_i4.User? user) =>
       (super.noSuchMethod(
             Invocation.method(#isUserRoleActive, [user]),
             returnValue: _i3.Future<bool>.value(false),
@@ -124,20 +126,20 @@ class MockAuthorizationService extends _i1.Mock
           as _i3.Future<bool>);
 
   @override
-  _i3.Future<List<_i4.Role>> getAllRoles() =>
+  _i3.Future<List<_i5.Role>> getAllRoles() =>
       (super.noSuchMethod(
             Invocation.method(#getAllRoles, []),
-            returnValue: _i3.Future<List<_i4.Role>>.value(<_i4.Role>[]),
+            returnValue: _i3.Future<List<_i5.Role>>.value(<_i5.Role>[]),
           )
-          as _i3.Future<List<_i4.Role>>);
+          as _i3.Future<List<_i5.Role>>);
 
   @override
-  _i3.Future<List<_i5.Permission>> getAllPermissions() =>
+  _i3.Future<List<_i6.Permission>> getAllPermissions() =>
       (super.noSuchMethod(
             Invocation.method(#getAllPermissions, []),
-            returnValue: _i3.Future<List<_i5.Permission>>.value(
-              <_i5.Permission>[],
+            returnValue: _i3.Future<List<_i6.Permission>>.value(
+              <_i6.Permission>[],
             ),
           )
-          as _i3.Future<List<_i5.Permission>>);
+          as _i3.Future<List<_i6.Permission>>);
 }

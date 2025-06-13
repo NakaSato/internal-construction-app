@@ -171,10 +171,6 @@ class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
           _buildOptionsRow(),
           const SizedBox(height: 32),
           _buildSignInButton(),
-          const SizedBox(height: 24),
-          _buildDivider(),
-          const SizedBox(height: 24),
-          _buildSocialLoginButtons(),
           const SizedBox(height: 32),
           _buildSignUpSection(),
           const Spacer(flex: 1),
@@ -478,103 +474,6 @@ class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
     );
   }
 
-  Widget _buildDivider() {
-    return Row(
-      children: [
-        Expanded(
-          child: Container(
-            height: 1,
-            color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Text(
-            'OR',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-        Expanded(
-          child: Container(
-            height: 1,
-            color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSocialLoginButtons() {
-    return Row(
-      children: [
-        Expanded(
-          child: _buildSocialButton(
-            icon: Icons.g_mobiledata,
-            label: 'Google',
-            onPressed: () {
-              _showComingSoonSnackBar('Google Sign In');
-            },
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _buildSocialButton(
-            icon: Icons.apple,
-            label: 'Apple',
-            onPressed: () {
-              _showComingSoonSnackBar('Apple Sign In');
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSocialButton({
-    required IconData icon,
-    required String label,
-    required VoidCallback onPressed,
-  }) {
-    return Container(
-      height: 48,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
-        ),
-      ),
-      child: TextButton(
-        onPressed: _isLoading ? null : onPressed,
-        style: TextButton.styleFrom(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              size: 20,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildSignUpSection() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -819,34 +718,6 @@ class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
           ],
         ),
         backgroundColor: Colors.green,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: const EdgeInsets.all(16),
-      ),
-    );
-  }
-
-  void _showComingSoonSnackBar(String feature) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(
-              Icons.info_outline,
-              color: Theme.of(context).colorScheme.onPrimaryContainer,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                '$feature coming soon!',
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onPrimaryContainer,
-                ),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         margin: const EdgeInsets.all(16),

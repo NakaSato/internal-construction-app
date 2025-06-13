@@ -200,6 +200,12 @@ class _MainAppScreenState extends State<MainAppScreen> {
         subtitle: 'Manage your schedule',
         onTap: () => setState(() => _currentIndex = 1),
       ),
+      _FeatureItem(
+        icon: Icons.event_note,
+        title: 'Calendar Management',
+        subtitle: 'Advanced calendar features',
+        onTap: () => context.push(AppRoutes.calendarManagement),
+      ),
     ];
 
     return GridView.builder(
