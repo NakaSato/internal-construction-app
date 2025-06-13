@@ -15,6 +15,7 @@ import '../../features/project_management/application/project_bloc.dart';
 import '../../features/project_list_style_demo.dart';
 import '../widgets/main_app_screen.dart';
 import '../../features/calendar_api_demo.dart';
+import '../../features/daily_reports_api_demo.dart';
 
 /// Application route names
 class AppRoutes {
@@ -157,6 +158,11 @@ class AppRouter {
         path: '/calendar-api-demo',
         name: 'calendar-api-demo',
         builder: (context, state) => const CalendarManagementApiDemo(),
+      ),
+      GoRoute(
+        path: '/daily-reports-demo',
+        name: 'daily-reports-demo',
+        builder: (context, state) => const DailyReportsApiDemo(),
       ),
     ],
 

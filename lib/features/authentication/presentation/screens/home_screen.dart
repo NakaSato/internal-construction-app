@@ -277,6 +277,12 @@ class HomeScreen extends StatelessWidget {
         subtitle: 'Full calendar management',
         route: '/calendar-api-demo',
       ),
+      _FeatureItem(
+        icon: Icons.assignment,
+        title: 'Daily Reports',
+        subtitle: 'Field reports management',
+        route: '/daily-reports-demo',
+      ),
     ];
 
     return Column(
