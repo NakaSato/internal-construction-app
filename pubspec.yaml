@@ -62,6 +62,7 @@ dependencies:
   
   # Calendar
   syncfusion_flutter_calendar: ^29.2.9
+  table_calendar: ^3.1.2
   
   # Authentication & Security
   flutter_secure_storage: ^9.2.2

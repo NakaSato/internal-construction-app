@@ -7,7 +7,7 @@ import '../../../../core/widgets/common_widgets.dart';
 import '../../../project_management/application/project_bloc.dart';
 import '../../../project_management/application/project_event.dart';
 import '../../../project_management/application/project_state.dart';
-import '../../../project_management/presentation/widgets/project_card.dart';
+import '../../../project_management/domain/entities/project.dart';
 import '../../application/auth_bloc.dart';
 import '../../application/auth_event.dart';
 import '../../application/auth_state.dart';
@@ -105,14 +105,17 @@ class HomeScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Recent Projects',
+                'All Projects',
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
-              TextButton(
+              IconButton(
                 onPressed: () {
-                  // TODO: Navigate to full projects list
+                  context.read<ProjectBloc>().add(
+                    const ProjectRefreshRequested(),
+                  );
                 },
-                child: const Text('View All'),
+                icon: const Icon(Icons.refresh),
+                tooltip: 'Refresh projects',
               ),
             ],
           ),
@@ -189,18 +192,36 @@ class HomeScreen extends StatelessWidget {
                   );
                 }
 
-                // Show only first 3 projects on home screen
-                final recentProjects = projects.take(3).toList();
-
                 return Column(
-                  children: recentProjects.map((project) {
-                    return ProjectCard(
-                      project: project,
-                      onTap: () {
-                        // TODO: Navigate to project details
-                      },
-                    );
-                  }).toList(),
+                  children: [
+                    // Project count and status summary
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.folder,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              '${projects.length} Projects',
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.bold),
+                            ),
+                            const Spacer(),
+                            _buildProjectStats(context, projects),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // Project list with colored vertical bars
+                    _buildProjectList(projects),
+                    // New project list with colored vertical bars
+                    _buildProjectList(projects),
+                  ],
                 );
               }
 
@@ -233,10 +254,28 @@ class HomeScreen extends StatelessWidget {
         route: AppRoutes.calendar,
       ),
       _FeatureItem(
+        icon: Icons.calendar_view_month,
+        title: 'Enhanced Calendar',
+        subtitle: 'Interactive project calendar',
+        route: '/calendar-demo',
+      ),
+      _FeatureItem(
         icon: Icons.person,
         title: 'Profile',
         subtitle: 'Manage your profile',
         route: AppRoutes.profile,
+      ),
+      _FeatureItem(
+        icon: Icons.view_list,
+        title: 'Project List Demo',
+        subtitle: 'New styled project list',
+        route: '/project-list-demo',
+      ),
+      _FeatureItem(
+        icon: Icons.calendar_month,
+        title: 'Calendar API Demo',
+        subtitle: 'Full calendar management',
+        route: '/calendar-api-demo',
       ),
     ];
 
@@ -297,6 +336,189 @@ class HomeScreen extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildProjectStats(BuildContext context, List<Project> projects) {
+    final completedCount = projects
+        .where((p) => p.status == ProjectStatus.completed)
+        .length;
+    final inProgressCount = projects
+        .where((p) => p.status == ProjectStatus.inProgress)
+        .length;
+    final overdueCount = projects.where((p) => p.isOverdue).length;
+
+    return Row(
+      children: [
+        _buildStatChip(
+          context,
+          'Completed',
+          completedCount.toString(),
+          Colors.green,
+        ),
+        const SizedBox(width: 8),
+        _buildStatChip(
+          context,
+          'In Progress',
+          inProgressCount.toString(),
+          Colors.orange,
+        ),
+        if (overdueCount > 0) ...[
+          const SizedBox(width: 8),
+          _buildStatChip(
+            context,
+            'Overdue',
+            overdueCount.toString(),
+            Colors.red,
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildStatChip(
+    BuildContext context,
+    String label,
+    String count,
+    Color color,
+  ) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            count,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+          const SizedBox(width: 2),
+          Text(
+            label,
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: color),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Builds a project list with colored vertical bars as described
+  Widget _buildProjectList(List<Project> projects) {
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: projects.length,
+      itemBuilder: (context, index) {
+        final project = projects[index];
+
+        // Sample colors for demonstration - in real app, could be from project data
+        final colors = [
+          Colors.blue,
+          Colors.green,
+          Colors.orange,
+          Colors.red,
+          Colors.purple,
+          Colors.teal,
+        ];
+        final color = colors[index % colors.length];
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.1),
+                  spreadRadius: 1,
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: IntrinsicHeight(
+              child: Row(
+                children: [
+                  // Colored vertical bar
+                  Container(
+                    width: 8,
+                    decoration: BoxDecoration(
+                      color: color,
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(12),
+                        bottomLeft: Radius.circular(12),
+                      ),
+                    ),
+                  ),
+                  // Project details
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'Project',
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(color: Colors.grey[600]),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  project.name,
+                                  style: Theme.of(context).textTheme.titleMedium
+                                      ?.copyWith(fontWeight: FontWeight.bold),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                if (project.description.isNotEmpty) ...[
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    project.description,
+                                    style: Theme.of(context).textTheme.bodySmall
+                                        ?.copyWith(color: Colors.grey[600]),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                          // Arrow icon
+                          const Icon(
+                            Icons.arrow_forward_ios,
+                            size: 16,
+                            color: Colors.grey,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 

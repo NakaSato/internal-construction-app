@@ -404,8 +404,8 @@ extension CalendarEventStatusX on CalendarEventStatus {
 
 /// Extension for CalendarEventPriority
 extension CalendarEventPriorityX on CalendarEventPriority {
-  /// Get color for priority
-  String get color {
+  /// Get hex color string for priority
+  String get hexColor {
     switch (this) {
       case CalendarEventPriority.low:
         return '#4CAF50'; // Green

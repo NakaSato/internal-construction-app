@@ -8,9 +8,13 @@ import '../../features/authentication/presentation/screens/forgot_password_scree
 import '../../features/authentication/presentation/screens/login_screen.dart';
 import '../../features/authentication/presentation/screens/enhanced_login_screen.dart';
 import '../../features/authentication/presentation/screens/register_screen.dart';
+import '../../features/calendar_integration/calendar_project_demo_screen.dart';
 import '../../features/calendar_management/presentation/screens/calendar_management_screen.dart';
 import '../../features/image_upload/presentation/screens/image_upload_screen.dart';
+import '../../features/project_management/application/project_bloc.dart';
+import '../../features/project_list_style_demo.dart';
 import '../widgets/main_app_screen.dart';
+import '../../features/calendar_api_demo.dart';
 
 /// Application route names
 class AppRoutes {
@@ -123,6 +127,14 @@ class AppRouter {
         builder: (context, state) => const CalendarManagementScreen(),
       ),
       GoRoute(
+        path: '/calendar-demo',
+        name: 'calendar-demo',
+        builder: (context, state) => BlocProvider.value(
+          value: context.read<ProjectBloc>(),
+          child: const CalendarProjectDemoScreen(),
+        ),
+      ),
+      GoRoute(
         path: AppRoutes.calendarDetail,
         name: 'calendar-detail',
         builder: (context, state) {
@@ -135,6 +147,16 @@ class AppRouter {
             ), // TODO: Replace with CalendarDetailScreen(id: id)
           );
         },
+      ),
+      GoRoute(
+        path: '/project-list-demo',
+        name: 'project-list-demo',
+        builder: (context, state) => const ProjectListStyleDemo(),
+      ),
+      GoRoute(
+        path: '/calendar-api-demo',
+        name: 'calendar-api-demo',
+        builder: (context, state) => const CalendarManagementApiDemo(),
       ),
     ],
 
