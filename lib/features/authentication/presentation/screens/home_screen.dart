@@ -4,6 +4,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/navigation/app_router.dart';
 import '../../../../core/widgets/common_widgets.dart';
+import '../../../project_management/application/project_bloc.dart';
+import '../../../project_management/application/project_event.dart';
+import '../../../project_management/application/project_state.dart';
+import '../../../project_management/presentation/widgets/project_card.dart';
 import '../../application/auth_bloc.dart';
 import '../../application/auth_event.dart';
 import '../../application/auth_state.dart';
@@ -58,6 +62,8 @@ class HomeScreen extends StatelessWidget {
           children: [
             _buildWelcomeSection(context, state.user),
             const SizedBox(height: 24),
+            _buildProjectsSection(context),
+            const SizedBox(height: 24),
             _buildFeatureGrid(context),
           ],
         ),
@@ -84,6 +90,124 @@ class HomeScreen extends StatelessWidget {
             ],
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildProjectsSection(BuildContext context) {
+    return BlocProvider(
+      create: (context) =>
+          ProjectBloc(context.read())..add(const ProjectLoadRequested()),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Recent Projects',
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              TextButton(
+                onPressed: () {
+                  // TODO: Navigate to full projects list
+                },
+                child: const Text('View All'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          BlocBuilder<ProjectBloc, ProjectState>(
+            builder: (context, state) {
+              if (state is ProjectLoading) {
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(32.0),
+                    child: CircularProgressIndicator(),
+                  ),
+                );
+              }
+
+              if (state is ProjectError) {
+                return Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      children: [
+                        const Icon(Icons.error_outline, size: 48),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Failed to load projects',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          state.message,
+                          style: Theme.of(context).textTheme.bodySmall,
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 8),
+                        ElevatedButton(
+                          onPressed: () {
+                            context.read<ProjectBloc>().add(
+                              const ProjectLoadRequested(),
+                            );
+                          },
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+
+              if (state is ProjectLoaded || state is ProjectOperationSuccess) {
+                final projects = state is ProjectLoaded
+                    ? state.projects
+                    : (state as ProjectOperationSuccess).projects;
+
+                if (projects.isEmpty) {
+                  return Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(32.0),
+                      child: Column(
+                        children: [
+                          const Icon(Icons.folder_open, size: 48),
+                          const SizedBox(height: 8),
+                          Text(
+                            'No projects yet',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Create your first project to get started',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+
+                // Show only first 3 projects on home screen
+                final recentProjects = projects.take(3).toList();
+
+                return Column(
+                  children: recentProjects.map((project) {
+                    return ProjectCard(
+                      project: project,
+                      onTap: () {
+                        // TODO: Navigate to project details
+                      },
+                    );
+                  }).toList(),
+                );
+              }
+
+              return const SizedBox.shrink();
+            },
+          ),
+        ],
       ),
     );
   }

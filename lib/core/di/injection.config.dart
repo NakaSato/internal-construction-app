@@ -16,6 +16,7 @@ import 'package:injectable/injectable.dart' as _i526;
 import 'package:location/location.dart' as _i645;
 
 import '../../features/authentication/application/auth_bloc.dart' as _i574;
+import '../../features/authentication/application/auth_cubit.dart' as _i153;
 import '../../features/authentication/domain/repositories/auth_repository.dart'
     as _i742;
 import '../../features/authentication/infrastructure/auth_repository_factory.dart'
@@ -44,6 +45,12 @@ import '../../features/location_tracking/domain/repositories/location_tracking_r
     as _i316;
 import '../../features/location_tracking/infrastructure/repositories/api_location_tracking_repository.dart'
     as _i913;
+import '../../features/project_management/application/project_bloc.dart'
+    as _i1062;
+import '../../features/project_management/domain/repositories/project_repository.dart'
+    as _i475;
+import '../../features/project_management/infrastructure/repositories/mock_project_repository.dart'
+    as _i284;
 import '../../features/work_calendar/application/work_calendar_bloc.dart'
     as _i937;
 import '../../features/work_calendar/domain/repositories/work_calendar_repository.dart'
@@ -69,6 +76,10 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i645.Location>(() => externalDependenciesModule.location);
     gh.lazySingleton<_i361.Dio>(() => networkModule.dio());
+    gh.lazySingleton<_i475.ProjectRepository>(
+      () => _i284.MockProjectRepository(),
+      instanceName: 'mock',
+    );
     gh.lazySingleton<_i503.WorkCalendarRepository>(
       () => _i743.ApiWorkCalendarRepository(gh<_i361.Dio>()),
     );
@@ -100,6 +111,10 @@ extension GetItInjectableX on _i174.GetIt {
       ),
       instanceName: 'api',
     );
+    gh.factory<_i1062.ProjectBloc>(
+      () =>
+          _i1062.ProjectBloc(gh<_i475.ProjectRepository>(instanceName: 'mock')),
+    );
     gh.lazySingleton<_i202.AuthRepositoryFactory>(
       () => _i202.AuthRepositoryFactory(
         gh<_i742.AuthRepository>(instanceName: 'api'),
@@ -114,6 +129,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i574.AuthBloc>(
       () => _i574.AuthBloc(gh<_i202.AuthRepositoryFactory>()),
+    );
+    gh.factory<_i153.AuthCubit>(
+      () => _i153.AuthCubit(gh<_i202.AuthRepositoryFactory>()),
     );
     gh.factory<_i185.CalendarManagementBloc>(
       () => _i185.CalendarManagementBloc(

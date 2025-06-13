@@ -7,6 +7,7 @@ import 'package:location/location.dart';
 import 'injection.config.dart';
 import '../../features/authorization/config/authorization_di.dart';
 import '../../features/calendar_management/config/calendar_management_di.dart';
+import '../../features/project_management/config/project_management_di.dart';
 
 final GetIt getIt = GetIt.instance;
 
@@ -29,6 +30,9 @@ Future<void> initializeDependencies() async {
 
   // Configure calendar management dependencies
   configureCalendarManagementDependencies();
+
+  // Configure project management dependencies
+  configureProjectManagementDependencies();
 }
 
 @module
