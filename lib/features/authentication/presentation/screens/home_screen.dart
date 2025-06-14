@@ -281,6 +281,12 @@ class HomeScreen extends StatelessWidget {
         subtitle: 'Field reports management',
         route: '/daily-reports-demo',
       ),
+      _FeatureItem(
+        icon: Icons.photo_library,
+        title: 'Project Gallery',
+        subtitle: 'Visual project cards',
+        route: '/image-project-cards',
+      ),
     ];
 
     return Column(
@@ -422,7 +428,10 @@ class HomeScreen extends StatelessWidget {
   }
 
   /// Builds an enhanced project list with more detailed information
-  Widget _buildEnhancedProjectList(BuildContext context, List<Project> projects) {
+  Widget _buildEnhancedProjectList(
+    BuildContext context,
+    List<Project> projects,
+  ) {
     return Column(
       children: [
         // Show "View All" button if there are more than 3 projects
@@ -432,9 +441,9 @@ class HomeScreen extends StatelessWidget {
             children: [
               Text(
                 'Recent Projects',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
               ),
               TextButton.icon(
                 onPressed: () => context.go('/project-list-demo'),
@@ -445,7 +454,7 @@ class HomeScreen extends StatelessWidget {
           ),
           const SizedBox(height: 8),
         ],
-        
+
         // Show only first 3 projects on home screen
         ListView.builder(
           shrinkWrap: true,
@@ -456,7 +465,7 @@ class HomeScreen extends StatelessWidget {
             return _buildEnhancedProjectCard(context, project, index);
           },
         ),
-        
+
         // Add project button
         const SizedBox(height: 16),
         SizedBox(
@@ -482,7 +491,11 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildEnhancedProjectCard(BuildContext context, Project project, int index) {
+  Widget _buildEnhancedProjectCard(
+    BuildContext context,
+    Project project,
+    int index,
+  ) {
     // Get color based on project status
     Color getStatusColor() {
       switch (project.status) {
@@ -523,9 +536,9 @@ class HomeScreen extends StatelessWidget {
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isOverdue 
-            ? Colors.red.withValues(alpha: 0.3)
-            : Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+          color: isOverdue
+              ? Colors.red.withValues(alpha: 0.3)
+              : Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
         ),
         boxShadow: [
           BoxShadow(
@@ -550,7 +563,7 @@ class HomeScreen extends StatelessWidget {
                 ),
               ),
             ),
-            
+
             // Project content
             Expanded(
               child: Padding(
@@ -564,19 +577,23 @@ class HomeScreen extends StatelessWidget {
                         Expanded(
                           child: Text(
                             project.name,
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: isOverdue 
-                                ? Colors.red 
-                                : Theme.of(context).colorScheme.onSurface,
-                            ),
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: isOverdue
+                                      ? Colors.red
+                                      : Theme.of(context).colorScheme.onSurface,
+                                ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         // Priority indicator
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: priorityColor.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
@@ -587,18 +604,19 @@ class HomeScreen extends StatelessWidget {
                           ),
                           child: Text(
                             project.priority.name.toUpperCase(),
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: priorityColor,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 10,
-                            ),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: priorityColor,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 10,
+                                ),
                           ),
                         ),
                       ],
                     ),
-                    
+
                     const SizedBox(height: 8),
-                    
+
                     // Description
                     if (project.description.isNotEmpty) ...[
                       Text(
@@ -611,7 +629,7 @@ class HomeScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 12),
                     ],
-                    
+
                     // Progress and status row
                     Row(
                       children: [
@@ -622,39 +640,48 @@ class HomeScreen extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
                                     'Progress',
-                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                    ),
+                                    style: Theme.of(context).textTheme.bodySmall
+                                        ?.copyWith(
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.onSurfaceVariant,
+                                        ),
                                   ),
                                   Text(
                                     '${project.completionPercentage}%',
-                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                      color: Theme.of(context).colorScheme.primary,
-                                    ),
+                                    style: Theme.of(context).textTheme.bodySmall
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.w600,
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.primary,
+                                        ),
                                   ),
                                 ],
                               ),
                               const SizedBox(height: 4),
                               LinearProgressIndicator(
                                 value: project.completionPercentage / 100,
-                                backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                                backgroundColor: Theme.of(
+                                  context,
+                                ).colorScheme.surfaceContainerHighest,
                                 valueColor: AlwaysStoppedAnimation<Color>(
-                                  project.completionPercentage == 100 
-                                    ? Colors.green 
-                                    : Theme.of(context).colorScheme.primary,
+                                  project.completionPercentage == 100
+                                      ? Colors.green
+                                      : Theme.of(context).colorScheme.primary,
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        
+
                         const SizedBox(width: 16),
-                        
+
                         // Status and due date
                         Expanded(
                           flex: 1,
@@ -663,7 +690,10 @@ class HomeScreen extends StatelessWidget {
                             children: [
                               // Status badge
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
                                 decoration: BoxDecoration(
                                   color: statusColor.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(8),
@@ -672,26 +702,32 @@ class HomeScreen extends StatelessWidget {
                                   ),
                                 ),
                                 child: Text(
-                                  project.status.name.replaceAll('_', ' ').toUpperCase(),
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: statusColor,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 10,
-                                  ),
+                                  project.status.name
+                                      .replaceAll('_', ' ')
+                                      .toUpperCase(),
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        color: statusColor,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 10,
+                                      ),
                                 ),
                               ),
-                              
+
                               // Due date
                               if (project.dueDate != null) ...[
                                 const SizedBox(height: 4),
                                 Text(
                                   'Due: ${_formatDate(project.dueDate!)}',
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: isOverdue 
-                                      ? Colors.red 
-                                      : Theme.of(context).colorScheme.onSurfaceVariant,
-                                    fontSize: 10,
-                                  ),
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        color: isOverdue
+                                            ? Colors.red
+                                            : Theme.of(
+                                                context,
+                                              ).colorScheme.onSurfaceVariant,
+                                        fontSize: 10,
+                                      ),
                                 ),
                               ],
                             ],
@@ -703,7 +739,7 @@ class HomeScreen extends StatelessWidget {
                 ),
               ),
             ),
-            
+
             // Action button
             Padding(
               padding: const EdgeInsets.only(right: 8.0),
@@ -730,7 +766,7 @@ class HomeScreen extends StatelessWidget {
   String _formatDate(DateTime date) {
     final now = DateTime.now();
     final difference = date.difference(now).inDays;
-    
+
     if (difference < 0) {
       return '${difference.abs()}d ago';
     } else if (difference == 0) {

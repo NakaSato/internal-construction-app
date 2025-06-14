@@ -12,6 +12,7 @@ import '../../features/calendar_integration/calendar_project_demo_screen.dart';
 import '../../features/calendar_management/presentation/screens/calendar_management_screen.dart';
 import '../../features/image_upload/presentation/screens/image_upload_screen.dart';
 import '../../features/project_management/application/project_bloc.dart';
+import '../../features/project_management/presentation/screens/image_project_card_list_screen.dart';
 import '../../features/project_list_style_demo.dart';
 import '../widgets/main_app_screen.dart';
 import '../../features/calendar_api_demo.dart';
@@ -163,6 +164,11 @@ class AppRouter {
         path: '/daily-reports-demo',
         name: 'daily-reports-demo',
         builder: (context, state) => const DailyReportsApiDemo(),
+      ),
+      GoRoute(
+        path: '/image-project-cards',
+        name: 'image-project-cards',
+        builder: (context, state) => const ImageProjectCardListScreen(),
       ),
     ],
 

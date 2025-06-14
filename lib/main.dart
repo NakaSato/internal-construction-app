@@ -9,6 +9,7 @@ import 'features/authentication/application/auth_event.dart';
 import 'features/authorization/application/authorization_bloc.dart';
 import 'features/image_upload/application/image_upload_bloc.dart';
 import 'features/location_tracking/application/location_tracking_bloc.dart';
+import 'features/project_management/application/project_bloc.dart';
 import 'features/work_calendar/application/work_calendar_bloc.dart';
 import 'utils/api_config_verifier.dart';
 
@@ -46,6 +47,9 @@ class MyApp extends StatelessWidget {
         ),
         BlocProvider<WorkCalendarBloc>(
           create: (context) => getIt<WorkCalendarBloc>(),
+        ),
+        BlocProvider<ProjectBloc>(
+          create: (context) => getIt<ProjectBloc>(),
         ),
       ],
       child: MaterialApp.router(
