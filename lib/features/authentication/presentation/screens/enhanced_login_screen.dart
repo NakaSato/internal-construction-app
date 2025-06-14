@@ -147,8 +147,8 @@ class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: [
-          Theme.of(context).colorScheme.primary.withOpacity(0.1),
-          Theme.of(context).colorScheme.primaryContainer.withOpacity(0.05),
+          Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+          Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.05),
           Theme.of(context).colorScheme.surface,
         ],
         stops: const [0.0, 0.5, 1.0],
@@ -200,7 +200,7 @@ class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
@@ -255,7 +255,7 @@ class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide(
-            color: Theme.of(context).colorScheme.outline.withOpacity(0.5),
+            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
           ),
         ),
         focusedBorder: OutlineInputBorder(
@@ -270,7 +270,7 @@ class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
           borderSide: BorderSide(color: Theme.of(context).colorScheme.error),
         ),
         filled: true,
-        fillColor: Theme.of(context).colorScheme.surface.withOpacity(0.8),
+        fillColor: Theme.of(context).colorScheme.surface.withValues(alpha: 0.8),
       ),
       validator: (value) {
         if (value == null || value.isEmpty) {
@@ -322,7 +322,7 @@ class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide(
-            color: Theme.of(context).colorScheme.outline.withOpacity(0.5),
+            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
           ),
         ),
         focusedBorder: OutlineInputBorder(
@@ -337,7 +337,7 @@ class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
           borderSide: BorderSide(color: Theme.of(context).colorScheme.error),
         ),
         filled: true,
-        fillColor: Theme.of(context).colorScheme.surface.withOpacity(0.8),
+        fillColor: Theme.of(context).colorScheme.surface.withValues(alpha: 0.8),
       ),
       validator: (value) {
         if (value == null || value.isEmpty) {
@@ -422,7 +422,7 @@ class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
                   blurRadius: 15,
                   offset: const Offset(0, 5),
                 ),
@@ -504,10 +504,10 @@ class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
       margin: const EdgeInsets.only(top: 16, bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.8),
+        color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
         ),
       ),
       child: Row(
@@ -539,7 +539,7 @@ class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Theme.of(
                       context,
-                    ).colorScheme.onPrimaryContainer.withOpacity(0.7),
+                    ).colorScheme.onPrimaryContainer.withValues(alpha: 0.7),
                   ),
                 ),
                 Text(

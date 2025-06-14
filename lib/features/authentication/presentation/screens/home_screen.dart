@@ -217,10 +217,8 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    // Project list with colored vertical bars
-                    _buildProjectList(projects),
-                    // New project list with colored vertical bars
-                    _buildProjectList(projects),
+                    // Enhanced project list
+                    _buildEnhancedProjectList(context, projects),
                   ],
                 );
               }
@@ -391,9 +389,9 @@ class HomeScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -423,109 +421,325 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  /// Builds a project list with colored vertical bars as described
-  Widget _buildProjectList(List<Project> projects) {
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: projects.length,
-      itemBuilder: (context, index) {
-        final project = projects[index];
-
-        // Sample colors for demonstration - in real app, could be from project data
-        final colors = [
-          Colors.blue,
-          Colors.green,
-          Colors.orange,
-          Colors.red,
-          Colors.purple,
-          Colors.teal,
-        ];
-        final color = colors[index % colors.length];
-
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.1),
-                  spreadRadius: 1,
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
+  /// Builds an enhanced project list with more detailed information
+  Widget _buildEnhancedProjectList(BuildContext context, List<Project> projects) {
+    return Column(
+      children: [
+        // Show "View All" button if there are more than 3 projects
+        if (projects.length > 3) ...[
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Recent Projects',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
                 ),
-              ],
-            ),
-            child: IntrinsicHeight(
-              child: Row(
-                children: [
-                  // Colored vertical bar
-                  Container(
-                    width: 8,
-                    decoration: BoxDecoration(
-                      color: color,
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(12),
-                        bottomLeft: Radius.circular(12),
-                      ),
-                    ),
-                  ),
-                  // Project details
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  'Project',
-                                  style: Theme.of(context).textTheme.bodySmall
-                                      ?.copyWith(color: Colors.grey[600]),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  project.name,
-                                  style: Theme.of(context).textTheme.titleMedium
-                                      ?.copyWith(fontWeight: FontWeight.bold),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                if (project.description.isNotEmpty) ...[
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    project.description,
-                                    style: Theme.of(context).textTheme.bodySmall
-                                        ?.copyWith(color: Colors.grey[600]),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
-                          // Arrow icon
-                          const Icon(
-                            Icons.arrow_forward_ios,
-                            size: 16,
-                            color: Colors.grey,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
               ),
+              TextButton.icon(
+                onPressed: () => context.go('/project-list-demo'),
+                icon: const Icon(Icons.arrow_forward, size: 16),
+                label: const Text('View All'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+        ],
+        
+        // Show only first 3 projects on home screen
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: projects.length > 3 ? 3 : projects.length,
+          itemBuilder: (context, index) {
+            final project = projects[index];
+            return _buildEnhancedProjectCard(context, project, index);
+          },
+        ),
+        
+        // Add project button
+        const SizedBox(height: 16),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: () {
+              // TODO: Navigate to add project screen
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Add Project feature coming soon!'),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            },
+            icon: const Icon(Icons.add),
+            label: const Text('Add New Project'),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 12),
             ),
           ),
-        );
-      },
+        ),
+      ],
     );
+  }
+
+  Widget _buildEnhancedProjectCard(BuildContext context, Project project, int index) {
+    // Get color based on project status
+    Color getStatusColor() {
+      switch (project.status) {
+        case ProjectStatus.planning:
+          return Colors.grey;
+        case ProjectStatus.inProgress:
+          return Colors.orange;
+        case ProjectStatus.completed:
+          return Colors.green;
+        case ProjectStatus.onHold:
+          return Colors.amber;
+        case ProjectStatus.cancelled:
+          return Colors.red;
+      }
+    }
+
+    // Get priority color
+    Color getPriorityColor() {
+      switch (project.priority) {
+        case ProjectPriority.low:
+          return Colors.blue;
+        case ProjectPriority.medium:
+          return Colors.orange;
+        case ProjectPriority.high:
+          return Colors.red;
+        case ProjectPriority.urgent:
+          return Colors.purple;
+      }
+    }
+
+    final statusColor = getStatusColor();
+    final priorityColor = getPriorityColor();
+    final isOverdue = project.isOverdue;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isOverdue 
+            ? Colors.red.withValues(alpha: 0.3)
+            : Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.05),
+            spreadRadius: 1,
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: IntrinsicHeight(
+        child: Row(
+          children: [
+            // Status indicator bar
+            Container(
+              width: 4,
+              decoration: BoxDecoration(
+                color: statusColor,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(12),
+                  bottomLeft: Radius.circular(12),
+                ),
+              ),
+            ),
+            
+            // Project content
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Project name and priority
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            project.name,
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: isOverdue 
+                                ? Colors.red 
+                                : Theme.of(context).colorScheme.onSurface,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        // Priority indicator
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: priorityColor.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: priorityColor.withValues(alpha: 0.3),
+                              width: 1,
+                            ),
+                          ),
+                          child: Text(
+                            project.priority.name.toUpperCase(),
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: priorityColor,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 10,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    
+                    const SizedBox(height: 8),
+                    
+                    // Description
+                    if (project.description.isNotEmpty) ...[
+                      Text(
+                        project.description,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                    
+                    // Progress and status row
+                    Row(
+                      children: [
+                        // Progress indicator
+                        Expanded(
+                          flex: 2,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Progress',
+                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                  Text(
+                                    '${project.completionPercentage}%',
+                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color: Theme.of(context).colorScheme.primary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              LinearProgressIndicator(
+                                value: project.completionPercentage / 100,
+                                backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  project.completionPercentage == 100 
+                                    ? Colors.green 
+                                    : Theme.of(context).colorScheme.primary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        
+                        const SizedBox(width: 16),
+                        
+                        // Status and due date
+                        Expanded(
+                          flex: 1,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              // Status badge
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: statusColor.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: statusColor.withValues(alpha: 0.3),
+                                  ),
+                                ),
+                                child: Text(
+                                  project.status.name.replaceAll('_', ' ').toUpperCase(),
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: statusColor,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 10,
+                                  ),
+                                ),
+                              ),
+                              
+                              // Due date
+                              if (project.dueDate != null) ...[
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Due: ${_formatDate(project.dueDate!)}',
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: isOverdue 
+                                      ? Colors.red 
+                                      : Theme.of(context).colorScheme.onSurfaceVariant,
+                                    fontSize: 10,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            
+            // Action button
+            Padding(
+              padding: const EdgeInsets.only(right: 8.0),
+              child: IconButton(
+                onPressed: () {
+                  // TODO: Navigate to project details
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Opening ${project.name} details...'),
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.arrow_forward_ios, size: 16),
+                tooltip: 'View project details',
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    final difference = date.difference(now).inDays;
+    
+    if (difference < 0) {
+      return '${difference.abs()}d ago';
+    } else if (difference == 0) {
+      return 'Today';
+    } else if (difference == 1) {
+      return 'Tomorrow';
+    } else {
+      return '${difference}d left';
+    }
   }
 
   void _showLogoutDialog(BuildContext context) {

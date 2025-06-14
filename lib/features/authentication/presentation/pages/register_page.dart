@@ -5,6 +5,8 @@ import '../../application/auth_state.dart';
 import '../widgets/alert_dialog_widget.dart';
 
 class RegisterPage extends StatelessWidget {
+  const RegisterPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

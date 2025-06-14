@@ -183,7 +183,7 @@ class CalendarEventListWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: _parseColor(type.defaultColor).withOpacity(0.1),
+        color: _parseColor(type.defaultColor).withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Icon(
@@ -200,7 +200,7 @@ class CalendarEventListWidget extends StatelessWidget {
         status.displayName,
         style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
       ),
-      backgroundColor: _parseColor(status.color).withOpacity(0.1),
+      backgroundColor: _parseColor(status.color).withValues(alpha: 0.1),
       side: BorderSide(color: _parseColor(status.color)),
       padding: const EdgeInsets.symmetric(horizontal: 4),
       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,

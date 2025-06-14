@@ -344,7 +344,7 @@ class AppTheme {
             backgroundColor: primaryColor,
             foregroundColor: Colors.white,
             elevation: 2,
-            shadowColor: primaryColor.withOpacity(0.3),
+            shadowColor: primaryColor.withValues(alpha: 0.3),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(radiusM),
             ),
@@ -357,22 +357,22 @@ class AppTheme {
               fontWeight: FontWeight.w600,
             ),
           ).copyWith(
-            backgroundColor: MaterialStateProperty.resolveWith<Color>((
-              Set<MaterialState> states,
+            backgroundColor: WidgetStateProperty.resolveWith<Color>((
+              Set<WidgetState> states,
             ) {
-              if (states.contains(MaterialState.pressed)) {
+              if (states.contains(WidgetState.pressed)) {
                 return primaryDark;
               }
-              if (states.contains(MaterialState.disabled)) {
-                return outline.withOpacity(0.12);
+              if (states.contains(WidgetState.disabled)) {
+                return outline.withValues(alpha: 0.12);
               }
               return primaryColor;
             }),
-            foregroundColor: MaterialStateProperty.resolveWith<Color>((
-              Set<MaterialState> states,
+            foregroundColor: WidgetStateProperty.resolveWith<Color>((
+              Set<WidgetState> states,
             ) {
-              if (states.contains(MaterialState.disabled)) {
-                return onSurface.withOpacity(0.38);
+              if (states.contains(WidgetState.disabled)) {
+                return onSurface.withValues(alpha: 0.38);
               }
               return Colors.white;
             }),
@@ -411,25 +411,25 @@ class AppTheme {
               fontWeight: FontWeight.w600,
             ),
           ).copyWith(
-            side: MaterialStateProperty.resolveWith<BorderSide>((
-              Set<MaterialState> states,
+            side: WidgetStateProperty.resolveWith<BorderSide>((
+              Set<WidgetState> states,
             ) {
-              if (states.contains(MaterialState.pressed)) {
+              if (states.contains(WidgetState.pressed)) {
                 return const BorderSide(color: primaryColor, width: 1);
               }
-              if (states.contains(MaterialState.focused)) {
+              if (states.contains(WidgetState.focused)) {
                 return const BorderSide(color: primaryColor, width: 1);
               }
-              if (states.contains(MaterialState.disabled)) {
-                return BorderSide(color: onSurface.withOpacity(0.12), width: 1);
+              if (states.contains(WidgetState.disabled)) {
+                return BorderSide(color: onSurface.withValues(alpha: 0.12), width: 1);
               }
               return const BorderSide(color: outline, width: 1);
             }),
-            foregroundColor: MaterialStateProperty.resolveWith<Color>((
-              Set<MaterialState> states,
+            foregroundColor: WidgetStateProperty.resolveWith<Color>((
+              Set<WidgetState> states,
             ) {
-              if (states.contains(MaterialState.disabled)) {
-                return onSurface.withOpacity(0.38);
+              if (states.contains(WidgetState.disabled)) {
+                return onSurface.withValues(alpha: 0.38);
               }
               return primaryColor;
             }),
@@ -453,11 +453,11 @@ class AppTheme {
               fontWeight: FontWeight.w600,
             ),
           ).copyWith(
-            foregroundColor: MaterialStateProperty.resolveWith<Color>((
-              Set<MaterialState> states,
+            foregroundColor: WidgetStateProperty.resolveWith<Color>((
+              Set<WidgetState> states,
             ) {
-              if (states.contains(MaterialState.disabled)) {
-                return onSurface.withOpacity(0.38);
+              if (states.contains(WidgetState.disabled)) {
+                return onSurface.withValues(alpha: 0.38);
               }
               return primaryColor;
             }),
@@ -474,14 +474,14 @@ class AppTheme {
             ),
             minimumSize: const Size(40, 40),
           ).copyWith(
-            foregroundColor: MaterialStateProperty.resolveWith<Color>((
-              Set<MaterialState> states,
+            foregroundColor: WidgetStateProperty.resolveWith<Color>((
+              Set<WidgetState> states,
             ) {
-              if (states.contains(MaterialState.pressed)) {
+              if (states.contains(WidgetState.pressed)) {
                 return primaryColor;
               }
-              if (states.contains(MaterialState.disabled)) {
-                return onSurface.withOpacity(0.38);
+              if (states.contains(WidgetState.disabled)) {
+                return onSurface.withValues(alpha: 0.38);
               }
               return onSurfaceVariant;
             }),
@@ -491,8 +491,8 @@ class AppTheme {
     // === CARD THEME ===
     cardTheme: CardThemeData(
       elevation: 1,
-      shadowColor: Colors.black.withOpacity(0.1),
-      surfaceTintColor: primaryColor.withOpacity(0.05),
+      shadowColor: Colors.black.withValues(alpha: 0.1),
+      surfaceTintColor: primaryColor.withValues(alpha: 0.05),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(radiusM),
       ),
@@ -526,7 +526,7 @@ class AppTheme {
       ),
       disabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(radiusS),
-        borderSide: BorderSide(color: onSurface.withOpacity(0.12), width: 1),
+        borderSide: BorderSide(color: onSurface.withValues(alpha: 0.12), width: 1),
       ),
       contentPadding: const EdgeInsets.symmetric(
         horizontal: spacingL,
@@ -575,7 +575,7 @@ class AppTheme {
     chipTheme: ChipThemeData(
       backgroundColor: surfaceContainerLow,
       selectedColor: secondaryContainer,
-      disabledColor: onSurface.withOpacity(0.12),
+      disabledColor: onSurface.withValues(alpha: 0.12),
       deleteIconColor: onSurfaceVariant,
       labelStyle: _textTheme.labelLarge?.copyWith(color: onSurfaceVariant),
       shape: RoundedRectangleBorder(
@@ -614,7 +614,7 @@ class AppTheme {
         borderRadius: BorderRadius.circular(radiusS),
       ),
       tileColor: Colors.transparent,
-      selectedTileColor: primaryContainer.withOpacity(0.5),
+      selectedTileColor: primaryContainer.withValues(alpha: 0.5),
       titleTextStyle: _textTheme.titleMedium?.copyWith(color: onSurface),
       subtitleTextStyle: _textTheme.bodyMedium?.copyWith(
         color: onSurfaceVariant,
@@ -628,18 +628,18 @@ class AppTheme {
 
     // === SWITCH THEME ===
     switchTheme: SwitchThemeData(
-      thumbColor: MaterialStateProperty.resolveWith<Color>((
-        Set<MaterialState> states,
+      thumbColor: WidgetStateProperty.resolveWith<Color>((
+        Set<WidgetState> states,
       ) {
-        if (states.contains(MaterialState.selected)) {
+        if (states.contains(WidgetState.selected)) {
           return Colors.white;
         }
         return surfaceContainerHighest;
       }),
-      trackColor: MaterialStateProperty.resolveWith<Color>((
-        Set<MaterialState> states,
+      trackColor: WidgetStateProperty.resolveWith<Color>((
+        Set<WidgetState> states,
       ) {
-        if (states.contains(MaterialState.selected)) {
+        if (states.contains(WidgetState.selected)) {
           return primaryColor;
         }
         return outline;
@@ -648,15 +648,15 @@ class AppTheme {
 
     // === CHECKBOX THEME ===
     checkboxTheme: CheckboxThemeData(
-      fillColor: MaterialStateProperty.resolveWith<Color>((
-        Set<MaterialState> states,
+      fillColor: WidgetStateProperty.resolveWith<Color>((
+        Set<WidgetState> states,
       ) {
-        if (states.contains(MaterialState.selected)) {
+        if (states.contains(WidgetState.selected)) {
           return primaryColor;
         }
         return Colors.transparent;
       }),
-      checkColor: MaterialStateProperty.all(Colors.white),
+      checkColor: WidgetStateProperty.all(Colors.white),
       side: const BorderSide(color: outline, width: 2),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(radiusXS),
@@ -665,10 +665,10 @@ class AppTheme {
 
     // === RADIO THEME ===
     radioTheme: RadioThemeData(
-      fillColor: MaterialStateProperty.resolveWith<Color>((
-        Set<MaterialState> states,
+      fillColor: WidgetStateProperty.resolveWith<Color>((
+        Set<WidgetState> states,
       ) {
-        if (states.contains(MaterialState.selected)) {
+        if (states.contains(WidgetState.selected)) {
           return primaryColor;
         }
         return outline;
@@ -805,7 +805,7 @@ class AppTheme {
         backgroundColor: primaryLight,
         foregroundColor: Color(0xFF003258),
         elevation: 2,
-        shadowColor: primaryLight.withOpacity(0.3),
+        shadowColor: primaryLight.withValues(alpha: 0.3),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radiusM),
         ),
@@ -879,8 +879,8 @@ class AppTheme {
     // === CARD THEME ===
     cardTheme: CardThemeData(
       elevation: 1,
-      shadowColor: Colors.black.withOpacity(0.2),
-      surfaceTintColor: primaryLight.withOpacity(0.05),
+      shadowColor: Colors.black.withValues(alpha: 0.2),
+      surfaceTintColor: primaryLight.withValues(alpha: 0.05),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(radiusM),
       ),
@@ -915,7 +915,7 @@ class AppTheme {
       disabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(radiusS),
         borderSide: BorderSide(
-          color: darkOnSurface.withOpacity(0.12),
+          color: darkOnSurface.withValues(alpha: 0.12),
           width: 1,
         ),
       ),
@@ -966,7 +966,7 @@ class AppTheme {
     chipTheme: ChipThemeData(
       backgroundColor: darkSurfaceContainer,
       selectedColor: Color(0xFF005048),
-      disabledColor: darkOnSurface.withOpacity(0.12),
+      disabledColor: darkOnSurface.withValues(alpha: 0.12),
       deleteIconColor: darkOnSurfaceVariant,
       labelStyle: _textTheme.labelLarge?.copyWith(color: darkOnSurfaceVariant),
       shape: RoundedRectangleBorder(
@@ -1005,7 +1005,7 @@ class AppTheme {
         borderRadius: BorderRadius.circular(radiusS),
       ),
       tileColor: Colors.transparent,
-      selectedTileColor: Color(0xFF004881).withOpacity(0.5),
+      selectedTileColor: Color(0xFF004881).withValues(alpha: 0.5),
       titleTextStyle: _textTheme.titleMedium?.copyWith(color: darkOnSurface),
       subtitleTextStyle: _textTheme.bodyMedium?.copyWith(
         color: darkOnSurfaceVariant,
@@ -1019,18 +1019,18 @@ class AppTheme {
 
     // === SWITCH THEME ===
     switchTheme: SwitchThemeData(
-      thumbColor: MaterialStateProperty.resolveWith<Color>((
-        Set<MaterialState> states,
+      thumbColor: WidgetStateProperty.resolveWith<Color>((
+        Set<WidgetState> states,
       ) {
-        if (states.contains(MaterialState.selected)) {
+        if (states.contains(WidgetState.selected)) {
           return Color(0xFF003258);
         }
         return darkSurfaceContainerHighest;
       }),
-      trackColor: MaterialStateProperty.resolveWith<Color>((
-        Set<MaterialState> states,
+      trackColor: WidgetStateProperty.resolveWith<Color>((
+        Set<WidgetState> states,
       ) {
-        if (states.contains(MaterialState.selected)) {
+        if (states.contains(WidgetState.selected)) {
           return primaryLight;
         }
         return darkOutline;
@@ -1039,15 +1039,15 @@ class AppTheme {
 
     // === CHECKBOX THEME ===
     checkboxTheme: CheckboxThemeData(
-      fillColor: MaterialStateProperty.resolveWith<Color>((
-        Set<MaterialState> states,
+      fillColor: WidgetStateProperty.resolveWith<Color>((
+        Set<WidgetState> states,
       ) {
-        if (states.contains(MaterialState.selected)) {
+        if (states.contains(WidgetState.selected)) {
           return primaryLight;
         }
         return Colors.transparent;
       }),
-      checkColor: MaterialStateProperty.all(Color(0xFF003258)),
+      checkColor: WidgetStateProperty.all(Color(0xFF003258)),
       side: const BorderSide(color: darkOutline, width: 2),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(radiusXS),
@@ -1056,10 +1056,10 @@ class AppTheme {
 
     // === RADIO THEME ===
     radioTheme: RadioThemeData(
-      fillColor: MaterialStateProperty.resolveWith<Color>((
-        Set<MaterialState> states,
+      fillColor: WidgetStateProperty.resolveWith<Color>((
+        Set<WidgetState> states,
       ) {
-        if (states.contains(MaterialState.selected)) {
+        if (states.contains(WidgetState.selected)) {
           return primaryLight;
         }
         return darkOutline;

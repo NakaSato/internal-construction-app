@@ -164,10 +164,10 @@ class _CalendarProjectDemoScreenState extends State<CalendarProjectDemoScreen> {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: isOverdue
-            ? theme.colorScheme.errorContainer.withOpacity(0.3)
+            ? theme.colorScheme.errorContainer.withValues(alpha: 0.3)
             : isUrgent
-            ? theme.colorScheme.tertiary.withOpacity(0.3)
-            : theme.colorScheme.surfaceVariant.withOpacity(0.5),
+            ? theme.colorScheme.tertiary.withValues(alpha: 0.3)
+            : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(8),
         border: Border(
           left: BorderSide(
@@ -275,7 +275,7 @@ class _CalendarProjectDemoScreenState extends State<CalendarProjectDemoScreen> {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(

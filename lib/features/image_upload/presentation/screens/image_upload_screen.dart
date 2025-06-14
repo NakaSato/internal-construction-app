@@ -158,7 +158,7 @@ class _ImageUploadScreenState extends State<ImageUploadScreen> {
           Icon(
             Icons.photo_library_outlined,
             size: 64,
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.6),
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.6),
           ),
           const SizedBox(height: 16),
           Text('No images yet', style: Theme.of(context).textTheme.titleLarge),
@@ -166,7 +166,7 @@ class _ImageUploadScreenState extends State<ImageUploadScreen> {
           Text(
             'Tap the camera button to add your first image',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
             ),
             textAlign: TextAlign.center,
           ),

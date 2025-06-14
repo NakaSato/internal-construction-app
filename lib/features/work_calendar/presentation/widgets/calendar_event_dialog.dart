@@ -355,7 +355,11 @@ class _CalendarEventDialogState extends State<CalendarEventDialog> {
           spacing: 8,
           runSpacing: 8,
           children: _eventColors.map((color) {
-            final colorHex = '#${color.value.toRadixString(16).substring(2)}';
+            final colorValue = (color.a * 255).round() << 24 | 
+                              (color.r * 255).round() << 16 | 
+                              (color.g * 255).round() << 8 | 
+                              (color.b * 255).round();
+            final colorHex = '#${colorValue.toRadixString(16).padLeft(8, '0').substring(2)}';
             final isSelected = _selectedColor == colorHex;
 
             return GestureDetector(

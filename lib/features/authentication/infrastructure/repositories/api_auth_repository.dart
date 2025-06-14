@@ -6,6 +6,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../../core/utils/api_error_parser.dart';
+import '../../../../core/utils/username_utils.dart';
 import '../../domain/entities/user.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../models/auth_response_model.dart';
@@ -76,8 +77,8 @@ class ApiAuthRepository implements AuthRepository {
     required String name,
   }) async {
     try {
-      // Extract username from email (before @)
-      final username = email.split('@').first;
+      // Generate a valid username from email using utility function
+      final username = UsernameUtils.generateUsernameFromEmail(email);
 
       final request = RegisterRequestModel(
         username: username,

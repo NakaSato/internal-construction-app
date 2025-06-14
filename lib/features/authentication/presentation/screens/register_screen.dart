@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/navigation/app_router.dart';
 import '../../../../core/utils/extensions.dart';
+import '../../../../core/utils/username_utils.dart';
 import '../../../../core/widgets/error_message_widget.dart';
 import '../../application/auth_bloc.dart';
 import '../../application/auth_event.dart';
@@ -234,7 +235,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     final email = _emailController.text.trim();
-    final username = email.split('@').first; // Extract username from email
+    
+    // Generate a valid username from email using utility function
+    final username = UsernameUtils.generateUsernameFromEmail(email);
 
     context.read<AuthBloc>().add(
       AuthRegisterRequested(

@@ -112,7 +112,7 @@ class RestaurantInfoBigCard extends StatelessWidget {
                 colorFilter: ColorFilter.mode(
                   Theme.of(
                     context,
-                  ).textTheme.bodyLarge!.color!.withOpacity(0.5),
+                  ).textTheme.bodyLarge!.color!.withValues(alpha: 0.5),
                   BlendMode.srcIn,
                 ),
               ),
@@ -132,7 +132,7 @@ class RestaurantInfoBigCard extends StatelessWidget {
                 colorFilter: ColorFilter.mode(
                   Theme.of(
                     context,
-                  ).textTheme.bodyLarge!.color!.withOpacity(0.5),
+                  ).textTheme.bodyLarge!.color!.withValues(alpha: 0.5),
                   BlendMode.srcIn,
                 ),
               ),
@@ -269,7 +269,7 @@ class RatingWithCounter extends StatelessWidget {
         Text(
           rating.toString(),
           style: Theme.of(context).textTheme.labelSmall!.copyWith(
-            color: const Color(0xFF010F07).withOpacity(0.74),
+            color: const Color(0xFF010F07).withValues(alpha: 0.74),
           ),
         ),
         const SizedBox(width: 8),
@@ -286,7 +286,7 @@ class RatingWithCounter extends StatelessWidget {
         Text(
           "$numOfRating+ Ratings",
           style: Theme.of(context).textTheme.labelSmall!.copyWith(
-            color: const Color(0xFF010F07).withOpacity(0.74),
+            color: const Color(0xFF010F07).withValues(alpha: 0.74),
           ),
         ),
       ],
@@ -303,7 +303,7 @@ class SmallDot extends StatelessWidget {
       height: 4,
       width: 4,
       decoration: BoxDecoration(
-        color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.4),
+        color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha: 0.4),
         shape: BoxShape.circle,
       ),
     );
@@ -339,7 +339,7 @@ class BigCardImageSlideScalton extends StatelessWidget {
       children: [
         Container(
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             borderRadius: const BorderRadius.all(Radius.circular(12)),
           ),
         ),
@@ -374,7 +374,7 @@ class DotIndicator extends StatelessWidget {
       height: 5,
       width: 8,
       decoration: BoxDecoration(
-        color: isActive ? activeColor : inActiveColor.withOpacity(0.25),
+        color: isActive ? activeColor : inActiveColor.withValues(alpha: 0.25),
         borderRadius: const BorderRadius.all(Radius.circular(20)),
       ),
     );
@@ -395,7 +395,7 @@ class ScaltonLine extends StatelessWidget {
     return Container(
       height: height,
       width: width,
-      color: Colors.black.withOpacity(0.08),
+      color: Colors.black.withValues(alpha: 0.08),
     );
   }
 }

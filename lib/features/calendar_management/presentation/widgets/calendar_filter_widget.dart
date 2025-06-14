@@ -336,7 +336,7 @@ class _CalendarFilterWidgetState extends State<CalendarFilterWidget> {
         ),
         child: Text(
           value != null
-              ? '${value!.day}/${value!.month}/${value!.year}'
+              ? '${value.day}/${value.month}/${value.year}'
               : 'Select date',
           style: value != null
               ? null

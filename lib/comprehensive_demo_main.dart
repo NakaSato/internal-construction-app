@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-import 'core/config/environment_config.dart';
 import 'core/widgets/google_bottom_bar.dart';
 import 'core/widgets/featured_screen.dart';
 import 'utils/api_config_verifier.dart';

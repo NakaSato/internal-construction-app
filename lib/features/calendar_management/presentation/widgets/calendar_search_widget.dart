@@ -79,7 +79,7 @@ class _CalendarSearchWidgetState extends State<CalendarSearchWidget> {
 
               // Search tips
               Card(
-                color: Theme.of(context).colorScheme.surfaceVariant,
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
