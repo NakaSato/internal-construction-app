@@ -61,8 +61,7 @@ lib/
 │   ├── project_management/  # Project CRUD operations
 │   ├── calendar_management/ # Calendar events and filtering
 │   ├── daily_reports/       # Field reports system
-│   ├── image_upload/        # Image handling
-│   └── location_tracking/   # GPS functionality
+│   └── image_upload/        # Image handling
 └── utils/                   # Utility functions
 ```
 

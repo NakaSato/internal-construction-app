@@ -284,7 +284,7 @@ class _CalendarProjectDemoScreenState extends State<CalendarProjectDemoScreen> {
             width: 12,
             height: 12,
             decoration: BoxDecoration(
-              color: _getStatusColor(project.status),
+              color: _getStatusColor(project.projectStatus),
               shape: BoxShape.circle,
             ),
           ),
@@ -300,7 +300,7 @@ class _CalendarProjectDemoScreenState extends State<CalendarProjectDemoScreen> {
                   ),
                 ),
                 Text(
-                  '${project.status.displayName} • ${project.completionPercentage}% complete',
+                  '${project.projectStatus.displayName} • ${project.completionPercentage}% complete',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),

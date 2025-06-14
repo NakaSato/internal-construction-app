@@ -13,7 +13,6 @@ import 'package:dio/dio.dart' as _i361;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart' as _i558;
 import 'package:get_it/get_it.dart' as _i174;
 import 'package:injectable/injectable.dart' as _i526;
-import 'package:location/location.dart' as _i645;
 
 import '../../features/authentication/application/auth_bloc.dart' as _i574;
 import '../../features/authentication/application/auth_cubit.dart' as _i153;
@@ -33,18 +32,6 @@ import '../../features/calendar_management/infrastructure/repositories/api_calen
     as _i43;
 import '../../features/calendar_management/infrastructure/services/calendar_api_service.dart'
     as _i1036;
-import '../../features/image_upload/application/image_upload_bloc.dart'
-    as _i1043;
-import '../../features/image_upload/domain/repositories/image_upload_repository.dart'
-    as _i138;
-import '../../features/image_upload/infrastructure/repositories/api_image_upload_repository.dart'
-    as _i367;
-import '../../features/location_tracking/application/location_tracking_bloc.dart'
-    as _i251;
-import '../../features/location_tracking/domain/repositories/location_tracking_repository.dart'
-    as _i316;
-import '../../features/location_tracking/infrastructure/repositories/api_location_tracking_repository.dart'
-    as _i913;
 import '../../features/project_management/application/project_bloc.dart'
     as _i1062;
 import '../../features/project_management/domain/repositories/project_repository.dart'
@@ -74,29 +61,21 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i558.FlutterSecureStorage>(
       () => externalDependenciesModule.secureStorage,
     );
-    gh.lazySingleton<_i645.Location>(() => externalDependenciesModule.location);
+    gh.lazySingleton<String>(() => externalDependenciesModule.baseUrl);
     gh.lazySingleton<_i361.Dio>(() => networkModule.dio());
     gh.lazySingleton<_i475.ProjectRepository>(
-      () => _i284.MockProjectRepository(),
+      () => const _i284.MockProjectRepository(),
       instanceName: 'mock',
     );
     gh.lazySingleton<_i503.WorkCalendarRepository>(
       () => _i743.ApiWorkCalendarRepository(gh<_i361.Dio>()),
     );
-    gh.lazySingleton<_i138.ImageUploadRepository>(
-      () => _i367.ApiImageUploadRepository(gh<_i361.Dio>()),
+    gh.factory<_i1062.ProjectBloc>(
+      () =>
+          _i1062.ProjectBloc(gh<_i475.ProjectRepository>(instanceName: 'api')),
     );
     gh.lazySingleton<_i378.AuthApiService>(
       () => authModule.authApiService(gh<_i361.Dio>()),
-    );
-    gh.factory<_i1043.ImageUploadBloc>(
-      () => _i1043.ImageUploadBloc(gh<_i138.ImageUploadRepository>()),
-    );
-    gh.lazySingleton<_i316.LocationTrackingRepository>(
-      () => _i913.ApiLocationTrackingRepository(
-        gh<_i361.Dio>(),
-        gh<_i645.Location>(),
-      ),
     );
     gh.factory<_i937.WorkCalendarBloc>(
       () => _i937.WorkCalendarBloc(gh<_i503.WorkCalendarRepository>()),
@@ -111,27 +90,20 @@ extension GetItInjectableX on _i174.GetIt {
       ),
       instanceName: 'api',
     );
-    gh.factory<_i1062.ProjectBloc>(
-      () =>
-          _i1062.ProjectBloc(gh<_i475.ProjectRepository>(instanceName: 'mock')),
-    );
     gh.lazySingleton<_i202.AuthRepositoryFactory>(
       () => _i202.AuthRepositoryFactory(
         gh<_i742.AuthRepository>(instanceName: 'api'),
       ),
     );
-    gh.factory<_i251.LocationTrackingBloc>(
-      () => _i251.LocationTrackingBloc(gh<_i316.LocationTrackingRepository>()),
-    );
     gh.lazySingleton<_i646.CalendarManagementRepository>(
       () =>
           _i43.ApiCalendarManagementRepository(gh<_i1036.CalendarApiService>()),
     );
-    gh.factory<_i574.AuthBloc>(
-      () => _i574.AuthBloc(gh<_i202.AuthRepositoryFactory>()),
-    );
     gh.factory<_i153.AuthCubit>(
       () => _i153.AuthCubit(gh<_i202.AuthRepositoryFactory>()),
+    );
+    gh.factory<_i574.AuthBloc>(
+      () => _i574.AuthBloc(gh<_i202.AuthRepositoryFactory>()),
     );
     gh.factory<_i185.CalendarManagementBloc>(
       () => _i185.CalendarManagementBloc(

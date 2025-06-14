@@ -10,7 +10,7 @@ import '../../features/authentication/presentation/screens/enhanced_login_screen
 import '../../features/authentication/presentation/screens/register_screen.dart';
 import '../../features/calendar_integration/calendar_project_demo_screen.dart';
 import '../../features/calendar_management/presentation/screens/calendar_management_screen.dart';
-import '../../features/image_upload/presentation/screens/image_upload_screen.dart';
+
 import '../../features/project_management/application/project_bloc.dart';
 import '../../features/project_management/presentation/screens/image_project_card_list_screen.dart';
 import '../../features/project_list_style_demo.dart';
@@ -34,8 +34,6 @@ class AppRoutes {
   static const String dashboard = '/dashboard';
 
   // Feature routes
-  static const String imageUpload = '/image-upload';
-  static const String locationTracking = '/location';
   static const String calendar = '/calendar';
   static const String calendarDetail = '/calendar/:id';
   static const String calendarManagement = '/calendar-management';
@@ -108,16 +106,6 @@ class AppRouter {
       ),
 
       // Protected feature routes
-      GoRoute(
-        path: AppRoutes.imageUpload,
-        name: 'image-upload',
-        builder: (context, state) => const ImageUploadScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.locationTracking,
-        name: 'location',
-        builder: (context, state) => const MainAppScreen(initialTabIndex: 2),
-      ),
       GoRoute(
         path: AppRoutes.calendar,
         name: 'calendar',

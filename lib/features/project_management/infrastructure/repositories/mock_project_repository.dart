@@ -7,105 +7,106 @@ import '../../domain/repositories/project_repository.dart';
 @Named('mock')
 @LazySingleton(as: ProjectRepository)
 class MockProjectRepository implements ProjectRepository {
+  const MockProjectRepository();
+
   static final List<Project> _projects = [
     Project(
-      id: '1',
-      name: 'Flutter Architecture App',
+      projectId: '1',
+      projectName: 'Mobile App Development',
+      address: '123 Tech Street, Silicon Valley, CA',
+      clientInfo: 'TechCorp Inc - Contact: John Smith (555-123-4567)',
+      status: 'In Progress',
+      startDate: DateTime(2024, 1, 15),
+      estimatedEndDate: DateTime(2024, 6, 15),
+      taskCount: 25,
+      completedTaskCount: 15,
       description:
-          'A comprehensive Flutter application showcasing clean architecture principles with authentication, image upload, location tracking, and calendar features.',
-      status: ProjectStatus.inProgress,
-      priority: ProjectPriority.high,
-      createdAt: DateTime.now().subtract(const Duration(days: 30)),
-      updatedAt: DateTime.now().subtract(const Duration(days: 2)),
-      dueDate: DateTime.now().add(const Duration(days: 15)),
-      completionPercentage: 75,
-      tags: ['Flutter', 'Clean Architecture', 'BLoC', 'Mobile Development'],
+          'Building a cross-platform mobile application with advanced features',
     ),
     Project(
-      id: '2',
-      name: 'API Integration',
-      description:
-          'Integrate with backend APIs for user authentication, data synchronization, and real-time updates.',
-      status: ProjectStatus.inProgress,
-      priority: ProjectPriority.high,
-      createdAt: DateTime.now().subtract(const Duration(days: 20)),
-      updatedAt: DateTime.now().subtract(const Duration(days: 1)),
-      dueDate: DateTime.now().add(const Duration(days: 10)),
-      completionPercentage: 60,
-      tags: ['API', 'Backend Integration', 'Authentication'],
+      projectId: '2',
+      projectName: 'E-commerce Website',
+      address: '456 Commerce Ave, New York, NY',
+      clientInfo: 'ShopSmart LLC - Contact: Jane Doe (555-987-6543)',
+      status: 'Planning',
+      startDate: DateTime(2024, 2, 1),
+      estimatedEndDate: DateTime(2024, 8, 1),
+      taskCount: 30,
+      completedTaskCount: 5,
+      description: 'Full-featured e-commerce platform with payment integration',
     ),
     Project(
-      id: '3',
-      name: 'UI/UX Enhancement',
-      description:
-          'Improve user interface design, add animations, and enhance user experience across all screens.',
-      status: ProjectStatus.planning,
-      priority: ProjectPriority.medium,
-      createdAt: DateTime.now().subtract(const Duration(days: 15)),
-      updatedAt: DateTime.now().subtract(const Duration(days: 5)),
-      dueDate: DateTime.now().add(const Duration(days: 25)),
-      completionPercentage: 15,
-      tags: ['UI/UX', 'Design', 'Animation'],
+      projectId: '3',
+      projectName: 'Data Analytics Dashboard',
+      address: '789 Data Drive, Austin, TX',
+      clientInfo: 'Analytics Pro - Contact: Bob Johnson (555-456-7890)',
+      status: 'Completed',
+      startDate: DateTime(2023, 9, 1),
+      estimatedEndDate: DateTime(2024, 1, 1),
+      actualEndDate: DateTime(2023, 12, 20),
+      taskCount: 20,
+      completedTaskCount: 20,
+      description: 'Real-time analytics dashboard with data visualization',
     ),
     Project(
-      id: '4',
-      name: 'Testing & QA',
-      description:
-          'Comprehensive testing including unit tests, widget tests, and integration tests for all features.',
-      status: ProjectStatus.planning,
-      priority: ProjectPriority.medium,
-      createdAt: DateTime.now().subtract(const Duration(days: 10)),
-      updatedAt: DateTime.now().subtract(const Duration(days: 3)),
-      dueDate: DateTime.now().add(const Duration(days: 20)),
-      completionPercentage: 25,
-      tags: ['Testing', 'QA', 'Unit Tests', 'Integration Tests'],
+      projectId: '4',
+      projectName: 'Cloud Migration',
+      address: '321 Cloud Lane, Seattle, WA',
+      clientInfo: 'CloudFirst Corp - Contact: Alice Brown (555-321-9876)',
+      status: 'On Hold',
+      startDate: DateTime(2024, 3, 1),
+      estimatedEndDate: DateTime(2024, 9, 1),
+      taskCount: 15,
+      completedTaskCount: 8,
+      description: 'Migrating legacy systems to cloud infrastructure',
     ),
     Project(
-      id: '5',
-      name: 'Performance Optimization',
-      description:
-          'Optimize app performance, reduce bundle size, and improve loading times.',
-      status: ProjectStatus.onHold,
-      priority: ProjectPriority.low,
-      createdAt: DateTime.now().subtract(const Duration(days: 45)),
-      updatedAt: DateTime.now().subtract(const Duration(days: 20)),
-      dueDate: DateTime.now().add(const Duration(days: 40)),
-      completionPercentage: 10,
-      tags: ['Performance', 'Optimization', 'Bundle Size'],
+      projectId: '5',
+      projectName: 'Security Audit',
+      address: '654 Security Blvd, Washington, DC',
+      clientInfo: 'SecureIt Inc - Contact: Charlie Wilson (555-654-3210)',
+      status: 'In Progress',
+      startDate: DateTime(2024, 1, 20),
+      estimatedEndDate: DateTime(2024, 4, 20),
+      taskCount: 12,
+      completedTaskCount: 7,
+      description: 'Comprehensive security audit and vulnerability assessment',
     ),
     Project(
-      id: '6',
-      name: 'Documentation',
-      description:
-          'Create comprehensive documentation for the project including API docs, user guides, and developer documentation.',
-      status: ProjectStatus.completed,
-      priority: ProjectPriority.medium,
-      createdAt: DateTime.now().subtract(const Duration(days: 60)),
-      updatedAt: DateTime.now().subtract(const Duration(days: 7)),
-      dueDate: DateTime.now().subtract(const Duration(days: 5)),
-      completionPercentage: 100,
-      tags: ['Documentation', 'API Docs', 'User Guide'],
+      projectId: '6',
+      projectName: 'API Development',
+      address: '987 API Street, San Francisco, CA',
+      clientInfo: 'DevTools Ltd - Contact: Diana Lee (555-789-0123)',
+      status: 'In Progress',
+      startDate: DateTime(2024, 2, 10),
+      estimatedEndDate: DateTime(2024, 5, 10),
+      taskCount: 18,
+      completedTaskCount: 12,
+      description: 'RESTful API development with microservices architecture',
     ),
   ];
 
   @override
   Future<List<Project>> getAllProjects() async {
-    // Simulate network delay
-    await Future.delayed(const Duration(milliseconds: 500));
+    await Future.delayed(
+      const Duration(milliseconds: 500),
+    ); // Simulate network delay
     return List.from(_projects);
   }
 
   @override
   Future<List<Project>> getProjectsByStatus(ProjectStatus status) async {
     await Future.delayed(const Duration(milliseconds: 300));
-    return _projects.where((project) => project.status == status).toList();
+    return _projects
+        .where((project) => project.projectStatus == status)
+        .toList();
   }
 
   @override
   Future<Project?> getProjectById(String id) async {
     await Future.delayed(const Duration(milliseconds: 200));
     try {
-      return _projects.firstWhere((project) => project.id == id);
+      return _projects.firstWhere((project) => project.projectId == id);
     } catch (e) {
       return null;
     }
@@ -113,50 +114,47 @@ class MockProjectRepository implements ProjectRepository {
 
   @override
   Future<Project> createProject(Project project) async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    final newProject = project.copyWith(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-    );
-    _projects.add(newProject);
-    return newProject;
+    await Future.delayed(const Duration(milliseconds: 800));
+    _projects.add(project);
+    return project;
   }
 
   @override
   Future<Project> updateProject(Project project) async {
-    await Future.delayed(const Duration(milliseconds: 400));
-    final index = _projects.indexWhere((p) => p.id == project.id);
+    await Future.delayed(const Duration(milliseconds: 600));
+    final index = _projects.indexWhere((p) => p.projectId == project.projectId);
     if (index != -1) {
-      final updatedProject = project.copyWith(updatedAt: DateTime.now());
-      _projects[index] = updatedProject;
-      return updatedProject;
+      _projects[index] = project;
     }
-    throw Exception('Project not found');
+    return project;
   }
 
   @override
   Future<void> deleteProject(String id) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    _projects.removeWhere((project) => project.id == id);
+    await Future.delayed(const Duration(milliseconds: 400));
+    _projects.removeWhere((project) => project.projectId == id);
   }
 
   @override
   Future<List<Project>> searchProjects(String query) async {
-    await Future.delayed(const Duration(milliseconds: 400));
+    await Future.delayed(const Duration(milliseconds: 300));
     final lowercaseQuery = query.toLowerCase();
-    return _projects.where((project) {
-      return project.name.toLowerCase().contains(lowercaseQuery) ||
-          project.description.toLowerCase().contains(lowercaseQuery) ||
-          project.tags.any((tag) => tag.toLowerCase().contains(lowercaseQuery));
-    }).toList();
+    return _projects
+        .where(
+          (project) =>
+              project.projectName.toLowerCase().contains(lowercaseQuery) ||
+              project.description.toLowerCase().contains(lowercaseQuery) ||
+              project.clientInfo.toLowerCase().contains(lowercaseQuery),
+        )
+        .toList();
   }
 
   @override
   Future<List<Project>> getProjectsByUserId(String userId) async {
     await Future.delayed(const Duration(milliseconds: 300));
+    // For mock data, return projects where the manager ID matches
     return _projects
-        .where((project) => project.assignedUserId == userId)
+        .where((project) => project.projectManager?.userId == userId)
         .toList();
   }
 }

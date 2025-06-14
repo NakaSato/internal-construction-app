@@ -11,44 +11,64 @@ class ProjectListStyleDemo extends StatelessWidget {
     // Sample project data for demonstration
     final sampleProjects = [
       Project(
-        id: '1',
-        name: 'Mobile App Development',
+        projectId: '1',
+        projectName: 'Mobile App Development',
+        address: '123 Main St, City, State',
+        clientInfo: 'Tech Corp Inc.',
+        status: 'in progress',
+        startDate: DateTime.now().subtract(const Duration(days: 30)),
+        estimatedEndDate: DateTime.now().add(const Duration(days: 60)),
+        taskCount: 10,
+        completedTaskCount: 7,
         description: 'Flutter mobile application with modern UI',
-        status: ProjectStatus.inProgress,
+        priority: ProjectPriority.high,
         createdAt: DateTime.now().subtract(const Duration(days: 30)),
         dueDate: DateTime.now().add(const Duration(days: 60)),
-        completionPercentage: 75,
-        priority: ProjectPriority.high,
       ),
       Project(
-        id: '2',
-        name: 'Website Redesign',
+        projectId: '2',
+        projectName: 'Website Redesign',
+        address: '456 Oak Ave, City, State',
+        clientInfo: 'Design Studio LLC',
+        status: 'in progress',
+        startDate: DateTime.now().subtract(const Duration(days: 15)),
+        estimatedEndDate: DateTime.now().add(const Duration(days: 45)),
+        taskCount: 8,
+        completedTaskCount: 4,
         description: 'Complete overhaul of company website',
-        status: ProjectStatus.inProgress,
+        priority: ProjectPriority.medium,
         createdAt: DateTime.now().subtract(const Duration(days: 15)),
         dueDate: DateTime.now().add(const Duration(days: 45)),
-        completionPercentage: 45,
-        priority: ProjectPriority.medium,
       ),
       Project(
-        id: '3',
-        name: 'API Integration',
+        projectId: '3',
+        projectName: 'API Integration',
+        address: '789 Pine Rd, City, State',
+        clientInfo: 'StartupXYZ',
+        status: 'planning',
+        startDate: DateTime.now().subtract(const Duration(days: 5)),
+        estimatedEndDate: DateTime.now().add(const Duration(days: 30)),
+        taskCount: 5,
+        completedTaskCount: 1,
         description: 'Integrate third-party APIs for enhanced functionality',
-        status: ProjectStatus.planning,
+        priority: ProjectPriority.medium,
         createdAt: DateTime.now().subtract(const Duration(days: 5)),
         dueDate: DateTime.now().add(const Duration(days: 30)),
-        completionPercentage: 20,
-        priority: ProjectPriority.medium,
       ),
       Project(
-        id: '4',
-        name: 'Database Migration',
+        projectId: '4',
+        projectName: 'Database Migration',
+        address: '321 Elm St, City, State',
+        clientInfo: 'Enterprise Solutions',
+        status: 'planning',
+        startDate: DateTime.now(),
+        estimatedEndDate: DateTime.now().add(const Duration(days: 90)),
+        taskCount: 12,
+        completedTaskCount: 0,
         description: 'Migrate legacy database to cloud infrastructure',
-        status: ProjectStatus.planning,
+        priority: ProjectPriority.low,
         createdAt: DateTime.now(),
         dueDate: DateTime.now().add(const Duration(days: 90)),
-        completionPercentage: 0,
-        priority: ProjectPriority.low,
       ),
     ];
 
@@ -65,15 +85,15 @@ class ProjectListStyleDemo extends StatelessWidget {
           children: [
             Text(
               'New Project List Style',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             Text(
               'With colored vertical bars, IntrinsicHeight layout, and modern card design',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[600],
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
             ),
             const SizedBox(height: 16),
             _buildProjectList(sampleProjects),
@@ -93,18 +113,25 @@ class ProjectListStyleDemo extends StatelessWidget {
                         const SizedBox(width: 8),
                         Text(
                           'Implementation Details',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),
                     const SizedBox(height: 12),
-                    _buildFeaturePoint('ListView.builder for efficient scrolling'),
-                    _buildFeaturePoint('IntrinsicHeight ensures proper row alignment'),
-                    _buildFeaturePoint('Colored vertical bars for visual distinction'),
+                    _buildFeaturePoint(
+                      'ListView.builder for efficient scrolling',
+                    ),
+                    _buildFeaturePoint(
+                      'IntrinsicHeight ensures proper row alignment',
+                    ),
+                    _buildFeaturePoint(
+                      'Colored vertical bars for visual distinction',
+                    ),
                     _buildFeaturePoint('Material Design 3 styling and shadows'),
-                    _buildFeaturePoint('Responsive layout with Expanded widgets'),
+                    _buildFeaturePoint(
+                      'Responsive layout with Expanded widgets',
+                    ),
                     _buildFeaturePoint('Arrow icons for navigation indication'),
                   ],
                 ),
@@ -131,12 +158,7 @@ class ProjectListStyleDemo extends StatelessWidget {
               shape: BoxShape.circle,
             ),
           ),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(fontSize: 14),
-            ),
-          ),
+          Expanded(child: Text(text, style: const TextStyle(fontSize: 14))),
         ],
       ),
     );
@@ -150,9 +172,9 @@ class ProjectListStyleDemo extends StatelessWidget {
       itemCount: projects.length,
       itemBuilder: (context, index) {
         final project = projects[index];
-        
+
         // Dynamic colors based on project status
-        final Color color = _getProjectColor(project.status);
+        final Color color = _getProjectColor(project.projectStatus);
 
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -196,16 +218,14 @@ class ProjectListStyleDemo extends StatelessWidget {
                               children: [
                                 Text(
                                   'Project',
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: Colors.grey[600],
-                                  ),
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(color: Colors.grey[600]),
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
                                   project.name,
-                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                  style: Theme.of(context).textTheme.titleMedium
+                                      ?.copyWith(fontWeight: FontWeight.bold),
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -213,9 +233,8 @@ class ProjectListStyleDemo extends StatelessWidget {
                                   const SizedBox(height: 4),
                                   Text(
                                     project.description,
-                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: Colors.grey[600],
-                                    ),
+                                    style: Theme.of(context).textTheme.bodySmall
+                                        ?.copyWith(color: Colors.grey[600]),
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -226,17 +245,25 @@ class ProjectListStyleDemo extends StatelessWidget {
                                   children: [
                                     Expanded(
                                       child: LinearProgressIndicator(
-                                        value: project.completionPercentage / 100.0,
+                                        value:
+                                            project.completionPercentage /
+                                            100.0,
                                         backgroundColor: Colors.grey[200],
-                                        valueColor: AlwaysStoppedAnimation<Color>(color),
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                              color,
+                                            ),
                                       ),
                                     ),
                                     const SizedBox(width: 8),
                                     Text(
                                       '${project.completionPercentage}%',
-                                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                        fontWeight: FontWeight.w500,
-                                      ),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w500,
+                                          ),
                                     ),
                                   ],
                                 ),
@@ -256,7 +283,7 @@ class ProjectListStyleDemo extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Text(
-                                  _getStatusText(project.status),
+                                  _getStatusText(project.projectStatus),
                                   style: TextStyle(
                                     color: color,
                                     fontSize: 12,

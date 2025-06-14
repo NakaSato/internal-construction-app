@@ -2,12 +2,11 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:injectable/injectable.dart';
-import 'package:location/location.dart';
-
 import 'injection.config.dart';
 import '../../features/authorization/config/authorization_di.dart';
-import '../../features/calendar_management/config/calendar_management_di.dart';
+import '../../features/calendar_management/config/mock_calendar_management_di.dart';
 import '../../features/project_management/config/project_management_di.dart';
+import '../../features/work_calendar/config/mock_work_calendar_di.dart';
 
 final GetIt getIt = GetIt.instance;
 
@@ -28,8 +27,11 @@ Future<void> initializeDependencies() async {
   // Configure authorization dependencies
   configureAuthorizationDependencies();
 
-  // Configure calendar management dependencies
+  // Configure calendar management dependencies with mock implementations
   configureCalendarManagementDependencies();
+
+  // Configure work calendar dependencies with mock implementations
+  configureWorkCalendarDependencies();
 
   // Configure project management dependencies
   configureProjectManagementDependencies();
@@ -41,5 +43,5 @@ abstract class ExternalDependenciesModule {
   FlutterSecureStorage get secureStorage => const FlutterSecureStorage();
 
   @lazySingleton
-  Location get location => Location();
+  String get baseUrl => 'http://localhost:5002'; // API base URL for services
 }

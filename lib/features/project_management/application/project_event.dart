@@ -65,6 +65,29 @@ class ProjectDeleteRequested extends ProjectEvent {
   List<Object?> get props => [projectId];
 }
 
+/// Event to load projects with pagination
+class ProjectLoadWithPaginationRequested extends ProjectEvent {
+  const ProjectLoadWithPaginationRequested({
+    this.pageNumber = 1,
+    this.pageSize = 10,
+    this.managerId,
+    this.refresh = false,
+  });
+
+  final int pageNumber;
+  final int pageSize;
+  final String? managerId;
+  final bool refresh;
+
+  @override
+  List<Object?> get props => [pageNumber, pageSize, managerId, refresh];
+}
+
+/// Event to load more projects (pagination)
+class ProjectLoadMoreRequested extends ProjectEvent {
+  const ProjectLoadMoreRequested();
+}
+
 /// Event to refresh projects
 class ProjectRefreshRequested extends ProjectEvent {
   const ProjectRefreshRequested();

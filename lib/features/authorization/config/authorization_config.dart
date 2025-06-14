@@ -13,12 +13,8 @@ class AuthorizationConfig {
   static const String workCalendarDelete = 'work_calendar:delete';
   static const String workCalendarManage = 'work_calendar:manage';
 
-  static const String imageUpload = 'image:upload';
-  static const String imageDelete = 'image:delete';
-  static const String imageView = 'image:view';
-
-  static const String locationView = 'location:view';
-  static const String locationTrack = 'location:track';
+  static const String calendarCreate = 'calendar:create';
+  static const String calendarManage = 'calendar:manage';
 
   static const String systemAdmin = 'system:admin';
   static const String systemConfig = 'system:config';
@@ -89,45 +85,6 @@ class AuthorizationConfig {
         resource: 'work_calendar',
         action: 'manage',
         description: 'Manage calendar settings and configurations',
-      ),
-
-      // Image permissions
-      const Permission(
-        id: 'perm_image_upload',
-        name: imageUpload,
-        resource: 'image',
-        action: 'upload',
-        description: 'Upload images',
-      ),
-      const Permission(
-        id: 'perm_image_delete',
-        name: imageDelete,
-        resource: 'image',
-        action: 'delete',
-        description: 'Delete images',
-      ),
-      const Permission(
-        id: 'perm_image_view',
-        name: imageView,
-        resource: 'image',
-        action: 'view',
-        description: 'View images',
-      ),
-
-      // Location permissions
-      const Permission(
-        id: 'perm_location_view',
-        name: locationView,
-        resource: 'location',
-        action: 'view',
-        description: 'View location information',
-      ),
-      const Permission(
-        id: 'perm_location_track',
-        name: locationTrack,
-        resource: 'location',
-        action: 'track',
-        description: 'Track user location',
       ),
 
       // System permissions
@@ -213,11 +170,6 @@ class AuthorizationConfig {
           permissionMap[workCalendarWrite]!,
           permissionMap[workCalendarDelete]!,
           permissionMap[workCalendarManage]!,
-          permissionMap[imageUpload]!,
-          permissionMap[imageView]!,
-          permissionMap[imageDelete]!,
-          permissionMap[locationView]!,
-          permissionMap[locationTrack]!,
           permissionMap[userManagement]!,
           permissionMap[reportView]!,
           permissionMap[reportGenerate]!,
@@ -234,9 +186,6 @@ class AuthorizationConfig {
           permissionMap[userRead]!,
           permissionMap[workCalendarRead]!,
           permissionMap[workCalendarWrite]!,
-          permissionMap[imageUpload]!,
-          permissionMap[imageView]!,
-          permissionMap[locationView]!,
           permissionMap[reportView]!,
         ],
       ),
@@ -246,10 +195,7 @@ class AuthorizationConfig {
         id: 'role_guest',
         name: guestRole,
         description: 'Limited read-only access',
-        permissions: [
-          permissionMap[workCalendarRead]!,
-          permissionMap[imageView]!,
-        ],
+        permissions: [permissionMap[workCalendarRead]!],
       ),
     ];
   }

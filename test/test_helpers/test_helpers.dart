@@ -9,17 +9,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
-import 'package:location/location.dart' as loc;
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 
 import 'package:flutter_architecture_app/features/authentication/domain/repositories/auth_repository.dart';
 import 'package:flutter_architecture_app/features/authentication/infrastructure/auth_repository_factory.dart';
 import 'package:flutter_architecture_app/features/authentication/application/auth_bloc.dart';
-import 'package:flutter_architecture_app/features/image_upload/domain/repositories/image_upload_repository.dart';
-import 'package:flutter_architecture_app/features/image_upload/application/image_upload_bloc.dart';
-import 'package:flutter_architecture_app/features/location_tracking/domain/repositories/location_tracking_repository.dart';
-import 'package:flutter_architecture_app/features/location_tracking/application/location_tracking_bloc.dart';
 import 'package:flutter_architecture_app/features/work_calendar/domain/repositories/work_calendar_repository.dart';
 import 'package:flutter_architecture_app/features/work_calendar/application/work_calendar_bloc.dart';
 
@@ -29,12 +24,9 @@ import 'test_helpers.mocks.dart';
 @GenerateMocks([
   AuthRepository,
   AuthRepositoryFactory,
-  ImageUploadRepository,
-  LocationTrackingRepository,
   WorkCalendarRepository,
   FlutterSecureStorage,
   Dio,
-  loc.Location,
 ])
 class TestHelpers {}
 
@@ -44,8 +36,6 @@ class TestUtils {
   static Widget createTestableWidget({
     required Widget child,
     AuthRepositoryFactory? authRepositoryFactory,
-    ImageUploadRepository? imageUploadRepository,
-    LocationTrackingRepository? locationTrackingRepository,
     WorkCalendarRepository? workCalendarRepository,
   }) {
     return MaterialApp(
@@ -71,23 +61,11 @@ class TestUtils {
     if (GetIt.instance.isRegistered<AuthRepositoryFactory>()) {
       GetIt.instance.unregister<AuthRepositoryFactory>();
     }
-    if (GetIt.instance.isRegistered<ImageUploadRepository>()) {
-      GetIt.instance.unregister<ImageUploadRepository>();
-    }
-    if (GetIt.instance.isRegistered<LocationTrackingRepository>()) {
-      GetIt.instance.unregister<LocationTrackingRepository>();
-    }
     if (GetIt.instance.isRegistered<WorkCalendarRepository>()) {
       GetIt.instance.unregister<WorkCalendarRepository>();
     }
     if (GetIt.instance.isRegistered<AuthBloc>()) {
       GetIt.instance.unregister<AuthBloc>();
-    }
-    if (GetIt.instance.isRegistered<ImageUploadBloc>()) {
-      GetIt.instance.unregister<ImageUploadBloc>();
-    }
-    if (GetIt.instance.isRegistered<LocationTrackingBloc>()) {
-      GetIt.instance.unregister<LocationTrackingBloc>();
     }
     if (GetIt.instance.isRegistered<WorkCalendarBloc>()) {
       GetIt.instance.unregister<WorkCalendarBloc>();
@@ -96,8 +74,6 @@ class TestUtils {
     // Register mock repository implementations
     final mockAuthRepository = MockAuthRepository();
     final mockAuthRepositoryFactory = MockAuthRepositoryFactory();
-    final mockImageUploadRepository = MockImageUploadRepository();
-    final mockLocationTrackingRepository = MockLocationTrackingRepository();
     final mockWorkCalendarRepository = MockWorkCalendarRepository();
 
     // Mock factory to return our mock repository
@@ -111,12 +87,6 @@ class TestUtils {
     GetIt.instance.registerLazySingleton<AuthRepositoryFactory>(
       () => mockAuthRepositoryFactory,
     );
-    GetIt.instance.registerLazySingleton<ImageUploadRepository>(
-      () => mockImageUploadRepository,
-    );
-    GetIt.instance.registerLazySingleton<LocationTrackingRepository>(
-      () => mockLocationTrackingRepository,
-    );
     GetIt.instance.registerLazySingleton<WorkCalendarRepository>(
       () => mockWorkCalendarRepository,
     );
@@ -124,12 +94,6 @@ class TestUtils {
     // Register BLoCs
     GetIt.instance.registerFactory<AuthBloc>(
       () => AuthBloc(mockAuthRepositoryFactory),
-    );
-    GetIt.instance.registerFactory<ImageUploadBloc>(
-      () => ImageUploadBloc(mockImageUploadRepository),
-    );
-    GetIt.instance.registerFactory<LocationTrackingBloc>(
-      () => LocationTrackingBloc(mockLocationTrackingRepository),
     );
     GetIt.instance.registerFactory<WorkCalendarBloc>(
       () => WorkCalendarBloc(mockWorkCalendarRepository),
@@ -163,22 +127,6 @@ class TestUtils {
     when(mockStorage.delete(key: anyNamed('key'))).thenAnswer((_) async {});
 
     return mockStorage;
-  }
-
-  /// Creates a mock Location service
-  static MockLocation createMockLocation() {
-    final mockLocation = MockLocation();
-
-    // Set up default behaviors
-    when(mockLocation.serviceEnabled()).thenAnswer((_) async => true);
-    when(
-      mockLocation.hasPermission(),
-    ).thenAnswer((_) async => loc.PermissionStatus.granted);
-    when(
-      mockLocation.requestPermission(),
-    ).thenAnswer((_) async => loc.PermissionStatus.granted);
-
-    return mockLocation;
   }
 
   /// Pumps the widget and waits for animations to settle
@@ -235,10 +183,6 @@ class TestData {
   static const String testEmail = 'test@example.com';
   static const String testPassword = 'password123';
   static const String testToken = 'mock_jwt_token';
-
-  // Location test data
-  static const double testLatitude = 37.7749;
-  static const double testLongitude = -122.4194;
 
   // Image test data
   static const String testImagePath = '/path/to/test/image.jpg';

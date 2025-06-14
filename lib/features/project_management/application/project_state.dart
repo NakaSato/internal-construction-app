@@ -38,6 +38,58 @@ class ProjectLoaded extends ProjectState {
   }
 }
 
+/// State when projects are successfully loaded with pagination
+class ProjectLoadedWithPagination extends ProjectState {
+  const ProjectLoadedWithPagination({
+    required this.projects,
+    required this.currentPage,
+    required this.totalPages,
+    required this.totalCount,
+    this.isLoadingMore = false,
+    this.isRefreshing = false,
+    this.hasReachedMax = false,
+  });
+
+  final List<Project> projects;
+  final int currentPage;
+  final int totalPages;
+  final int totalCount;
+  final bool isLoadingMore;
+  final bool isRefreshing;
+  final bool hasReachedMax;
+
+  @override
+  List<Object?> get props => [
+    projects,
+    currentPage,
+    totalPages,
+    totalCount,
+    isLoadingMore,
+    isRefreshing,
+    hasReachedMax,
+  ];
+
+  ProjectLoadedWithPagination copyWith({
+    List<Project>? projects,
+    int? currentPage,
+    int? totalPages,
+    int? totalCount,
+    bool? isLoadingMore,
+    bool? isRefreshing,
+    bool? hasReachedMax,
+  }) {
+    return ProjectLoadedWithPagination(
+      projects: projects ?? this.projects,
+      currentPage: currentPage ?? this.currentPage,
+      totalPages: totalPages ?? this.totalPages,
+      totalCount: totalCount ?? this.totalCount,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+      isRefreshing: isRefreshing ?? this.isRefreshing,
+      hasReachedMax: hasReachedMax ?? this.hasReachedMax,
+    );
+  }
+}
+
 /// State when project operation fails
 class ProjectError extends ProjectState {
   const ProjectError({required this.message, this.projects = const []});

@@ -93,7 +93,7 @@ class ProjectCard extends StatelessWidget {
               // Status and Priority row
               Row(
                 children: [
-                  _buildStatusChip(context, project.status),
+                  _buildStatusChip(context, project.projectStatus),
                   const SizedBox(width: 8),
                   _buildPriorityChip(context, project.priority),
                   const Spacer(),

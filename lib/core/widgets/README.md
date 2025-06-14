@@ -162,7 +162,6 @@ The GoogleBottomBar is designed to work seamlessly with the app's feature-based 
 
 - **Dashboard**: Overview and main navigation
 - **Calendar**: Integration with `work_calendar` feature
-- **Location**: Integration with `location_tracking` feature  
 - **Images**: Integration with `image_upload` feature
 - **Profile**: User authentication and settings
 
