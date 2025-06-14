@@ -141,19 +141,12 @@ class _ExtendLoginScreenState extends State<ExtendLoginScreen>
   }
 
   BoxDecoration _buildBackgroundDecoration(BuildContext context) {
-    return BoxDecoration(
-      gradient: LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [
-          Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
-          Theme.of(context).colorScheme.secondary.withValues(alpha: 0.1),
-          Theme.of(
-            context,
-          ).colorScheme.primaryContainer.withValues(alpha: 0.08),
-          Theme.of(context).colorScheme.surface,
-        ],
-        stops: const [0.0, 0.3, 0.7, 1.0],
+    return const BoxDecoration(
+      // Use bg.jpg as background image
+      image: DecorationImage(
+        image: AssetImage('assets/images/bg.jpg'),
+        fit: BoxFit.cover,
+        opacity: 0.45, // Set image opacity to 45%
       ),
     );
   }

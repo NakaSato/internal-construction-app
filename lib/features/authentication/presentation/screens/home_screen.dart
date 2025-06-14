@@ -120,15 +120,29 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildProjectsSection(context),
-            const SizedBox(height: 24),
-            _buildFeatureGrid(context),
-          ],
+      body: Container(
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/images/bg.jpg'),
+            fit: BoxFit.cover,
+            opacity: 0.45, // Set image opacity to 45%
+          ),
+        ),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.background.withOpacity(0.7),
+          ),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildProjectsSection(context),
+                const SizedBox(height: 24),
+                _buildFeatureGrid(context),
+              ],
+            ),
+          ),
         ),
       ),
     );

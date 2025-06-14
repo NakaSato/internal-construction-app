@@ -53,30 +53,48 @@ class _RegisterScreenState extends State<RegisterScreen> {
         }
       },
       child: Scaffold(
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        body: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: 40),
-                  _buildHeader(),
-                  const SizedBox(height: 48),
-                  _buildNameField(),
-                  const SizedBox(height: 16),
-                  _buildEmailField(),
-                  const SizedBox(height: 16),
-                  _buildPasswordField(),
-                  const SizedBox(height: 16),
-                  _buildConfirmPasswordField(),
-                  const SizedBox(height: 32),
-                  _buildRegisterButton(),
-                  const SizedBox(height: 24),
-                  _buildLoginLink(),
-                ],
+        body: Container(
+          decoration: const BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage('assets/images/bg.jpg'),
+              fit: BoxFit.cover,
+              opacity: 0.45, // Set image opacity to 45%
+            ),
+          ),
+          child: SafeArea(
+            child: Container(
+              // Add a semi-transparent overlay for better text readability over background image
+              decoration: BoxDecoration(
+                color: Theme.of(
+                  context,
+                ).colorScheme.surface.withValues(alpha: 0.9),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              margin: const EdgeInsets.all(16.0),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24.0),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const SizedBox(height: 40),
+                      _buildHeader(),
+                      const SizedBox(height: 48),
+                      _buildNameField(),
+                      const SizedBox(height: 16),
+                      _buildEmailField(),
+                      const SizedBox(height: 16),
+                      _buildPasswordField(),
+                      const SizedBox(height: 16),
+                      _buildConfirmPasswordField(),
+                      const SizedBox(height: 32),
+                      _buildRegisterButton(),
+                      const SizedBox(height: 24),
+                      _buildLoginLink(),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
@@ -235,7 +253,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     final email = _emailController.text.trim();
-    
+
     // Generate a valid username from email using utility function
     final username = UsernameUtils.generateUsernameFromEmail(email);
 
