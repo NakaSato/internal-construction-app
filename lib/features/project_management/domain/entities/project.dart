@@ -15,6 +15,7 @@ class Project extends Equatable {
     this.projectManager,
     this.taskCount = 0,
     this.completedTaskCount = 0,
+    this.imageUrl,
     // Legacy fields for backward compatibility
     this.description = '',
     this.priority = ProjectPriority.medium,
@@ -36,6 +37,7 @@ class Project extends Equatable {
   final User? projectManager;
   final int taskCount;
   final int completedTaskCount;
+  final String? imageUrl;
 
   // Legacy fields for backward compatibility
   final String description;
@@ -89,6 +91,7 @@ class Project extends Equatable {
     projectManager,
     taskCount,
     completedTaskCount,
+    imageUrl,
     description,
     priority,
     assignedUserId,
@@ -110,6 +113,7 @@ class Project extends Equatable {
     User? projectManager,
     int? taskCount,
     int? completedTaskCount,
+    String? imageUrl,
     String? description,
     ProjectPriority? priority,
     String? assignedUserId,
@@ -130,6 +134,7 @@ class Project extends Equatable {
       projectManager: projectManager ?? this.projectManager,
       taskCount: taskCount ?? this.taskCount,
       completedTaskCount: completedTaskCount ?? this.completedTaskCount,
+      imageUrl: imageUrl ?? this.imageUrl,
       description: description ?? this.description,
       priority: priority ?? this.priority,
       assignedUserId: assignedUserId ?? this.assignedUserId,

@@ -3,12 +3,17 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 
 import '../../domain/entities/work_event.dart';
+import '../../domain/entities/construction_task.dart';
 import '../../application/work_calendar_bloc.dart';
 import '../../application/work_calendar_event.dart';
 import '../../application/work_calendar_state.dart';
 import '../widgets/calendar_event_dialog.dart';
 import '../widgets/calendar_search_bar.dart';
 import '../widgets/event_list_widget.dart';
+import '../widgets/construction_calendar_widget.dart';
+import '../widgets/construction_task_dialog.dart';
+import '../widgets/construction_progress_overview.dart';
+import '../widgets/construction_timeline_view.dart';
 
 /// Main calendar screen with comprehensive event management
 class CalendarScreen extends StatefulWidget {
@@ -25,14 +30,22 @@ class _CalendarScreenState extends State<CalendarScreen>
   CalendarView _currentView = CalendarView.month;
   DateTime _selectedDate = DateTime.now();
 
+  // Sample construction tasks for demonstration
+  List<ConstructionTask> _constructionTasks = [];
+  final String _currentProjectId = 'solar_project_2024_001';
+
   @override
   void initState() {
     super.initState();
     _calendarController = CalendarController();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(
+      length: 5,
+      vsync: this,
+    ); // Added construction tab
 
-    // Load initial events
+    // Load initial events and demo data
     _loadEventsForCurrentMonth();
+    _loadSampleConstructionTasks();
   }
 
   @override
@@ -50,6 +63,130 @@ class _CalendarScreenState extends State<CalendarScreen>
     context.read<WorkCalendarBloc>().add(
       CalendarEventsRequested(startDate: startOfMonth, endDate: endOfMonth),
     );
+  }
+
+  void _loadSampleConstructionTasks() {
+    // Sample construction tasks for solar panel installation
+    _constructionTasks = [
+      ConstructionTask(
+        id: 'task_001',
+        title: 'Site Survey & Assessment',
+        startDate: DateTime.now(),
+        endDate: DateTime.now().add(const Duration(days: 2)),
+        projectId: _currentProjectId,
+        description: 'Initial site survey and structural assessment',
+        status: TaskStatus.completed,
+        progress: 1.0,
+        priority: TaskPriority.high,
+        assignedTeam: 'Survey Team',
+        estimatedHours: 16.0,
+        actualHours: 14.5,
+        materials: ['Measuring tools', 'Safety equipment'],
+      ),
+      ConstructionTask(
+        id: 'task_002',
+        title: 'Roof Preparation',
+        startDate: DateTime.now().add(const Duration(days: 2)),
+        endDate: DateTime.now().add(const Duration(days: 4)),
+        projectId: _currentProjectId,
+        description: 'Clean and prepare roof surface for panel installation',
+        status: TaskStatus.inProgress,
+        progress: 0.7,
+        priority: TaskPriority.medium,
+        assignedTeam: 'Installation Team A',
+        estimatedHours: 24.0,
+        actualHours: 18.0,
+        materials: ['Cleaning supplies', 'Roof sealant', 'Safety harnesses'],
+      ),
+      ConstructionTask(
+        id: 'task_003',
+        title: 'Panel Mounting System',
+        startDate: DateTime.now().add(const Duration(days: 5)),
+        endDate: DateTime.now().add(const Duration(days: 7)),
+        projectId: _currentProjectId,
+        description: 'Install mounting rails and hardware',
+        status: TaskStatus.notStarted,
+        progress: 0.0,
+        priority: TaskPriority.high,
+        assignedTeam: 'Installation Team B',
+        estimatedHours: 32.0,
+        materials: ['Mounting rails', 'Bolts', 'Flashing', 'Drill bits'],
+      ),
+      ConstructionTask(
+        id: 'task_004',
+        title: 'Solar Panel Installation',
+        startDate: DateTime.now().add(const Duration(days: 8)),
+        endDate: DateTime.now().add(const Duration(days: 10)),
+        projectId: _currentProjectId,
+        description: 'Mount solar panels to the racking system',
+        status: TaskStatus.notStarted,
+        progress: 0.0,
+        priority: TaskPriority.critical,
+        assignedTeam: 'Installation Team A & B',
+        estimatedHours: 40.0,
+        materials: ['Solar panels', 'Clamps', 'MC4 connectors'],
+      ),
+      ConstructionTask(
+        id: 'task_005',
+        title: 'Electrical Wiring',
+        startDate: DateTime.now().add(const Duration(days: 11)),
+        endDate: DateTime.now().add(const Duration(days: 13)),
+        projectId: _currentProjectId,
+        description: 'Connect panels and run DC/AC wiring',
+        status: TaskStatus.notStarted,
+        progress: 0.0,
+        priority: TaskPriority.critical,
+        assignedTeam: 'Electrical Team',
+        estimatedHours: 28.0,
+        materials: ['DC cables', 'AC cables', 'Conduit', 'Wire nuts'],
+      ),
+      ConstructionTask(
+        id: 'task_006',
+        title: 'Inverter Installation',
+        startDate: DateTime.now().add(const Duration(days: 12)),
+        endDate: DateTime.now().add(const Duration(days: 13)),
+        projectId: _currentProjectId,
+        description: 'Install and configure power inverters',
+        status: TaskStatus.notStarted,
+        progress: 0.0,
+        priority: TaskPriority.high,
+        assignedTeam: 'Electrical Team',
+        estimatedHours: 12.0,
+        materials: [
+          'String inverters',
+          'Mounting brackets',
+          'Disconnect switches',
+        ],
+      ),
+      ConstructionTask(
+        id: 'task_007',
+        title: 'System Testing',
+        startDate: DateTime.now().add(const Duration(days: 14)),
+        endDate: DateTime.now().add(const Duration(days: 15)),
+        projectId: _currentProjectId,
+        description: 'Test system performance and safety',
+        status: TaskStatus.notStarted,
+        progress: 0.0,
+        priority: TaskPriority.high,
+        assignedTeam: 'QA Team',
+        estimatedHours: 16.0,
+        materials: ['Testing equipment', 'Multimeter', 'Safety gear'],
+      ),
+      ConstructionTask(
+        id: 'task_008',
+        title: 'Final Inspection',
+        startDate: DateTime.now().add(const Duration(days: 16)),
+        endDate: DateTime.now().add(const Duration(days: 16)),
+        projectId: _currentProjectId,
+        description: 'Local authority inspection and sign-off',
+        status: TaskStatus.notStarted,
+        progress: 0.0,
+        priority: TaskPriority.critical,
+        assignedTeam: 'Project Manager',
+        estimatedHours: 4.0,
+        materials: ['Documentation', 'Inspection forms'],
+      ),
+    ];
   }
 
   @override
@@ -94,8 +231,10 @@ class _CalendarScreenState extends State<CalendarScreen>
         ],
         bottom: TabBar(
           controller: _tabController,
+          isScrollable: true,
           tabs: const [
             Tab(icon: Icon(Icons.calendar_month), text: 'Calendar'),
+            Tab(icon: Icon(Icons.construction), text: 'Construction'),
             Tab(icon: Icon(Icons.upcoming), text: 'Upcoming'),
             Tab(icon: Icon(Icons.today), text: 'Today'),
             Tab(icon: Icon(Icons.category), text: 'Categories'),
@@ -131,17 +270,14 @@ class _CalendarScreenState extends State<CalendarScreen>
           controller: _tabController,
           children: [
             _buildCalendarView(),
+            _buildConstructionView(),
             _buildUpcomingEventsView(),
             _buildTodayEventsView(),
             _buildCategoriesView(),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showCreateEventDialog(),
-        tooltip: 'Create Event',
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton: _buildFloatingActionButton(),
     );
   }
 
@@ -511,6 +647,194 @@ class _CalendarScreenState extends State<CalendarScreen>
       case WorkEventType.other:
         return 'Other miscellaneous events';
     }
+  }
+
+  Widget _buildConstructionView() {
+    return DefaultTabController(
+      length: 2,
+      child: Column(
+        children: [
+          // Progress Overview
+          ConstructionProgressOverview(
+            tasks: _constructionTasks,
+            projectId: _currentProjectId,
+            onTaskStatusTapped: (status) {
+              _showTasksByStatus(status);
+            },
+          ),
+          // Sub-tabs for different construction views
+          Container(
+            color: Theme.of(context).colorScheme.surfaceVariant,
+            child: const TabBar(
+              tabs: [
+                Tab(icon: Icon(Icons.calendar_view_month), text: 'Calendar'),
+                Tab(icon: Icon(Icons.timeline), text: 'Timeline'),
+              ],
+            ),
+          ),
+          // Construction views
+          Expanded(
+            child: TabBarView(
+              children: [
+                // Calendar View
+                ConstructionCalendarWidget(
+                  tasks: _constructionTasks,
+                  events: [],
+                  view: _currentView,
+                  controller: _calendarController,
+                  onTaskTapped: (task) {
+                    _showTaskDetailsDialog(task);
+                  },
+                  onTaskCreated: (date) {
+                    _showCreateTaskDialog(selectedDate: date);
+                  },
+                ),
+                // Timeline View
+                ConstructionTimelineView(
+                  tasks: _constructionTasks,
+                  projectId: _currentProjectId,
+                  onTaskTapped: (task) {
+                    _showTaskDetailsDialog(task);
+                  },
+                  onTaskCreated: (date) {
+                    _showCreateTaskDialog(selectedDate: date);
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showTaskDetailsDialog(ConstructionTask task) {
+    showDialog(
+      context: context,
+      builder: (context) => ConstructionTaskDialog(
+        task: task,
+        projectId: _currentProjectId,
+        onTaskUpdated: (updatedTask) {
+          setState(() {
+            final index = _constructionTasks.indexWhere(
+              (t) => t.id == updatedTask.id,
+            );
+            if (index != -1) {
+              _constructionTasks[index] = updatedTask;
+            }
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Task updated successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        },
+        onTaskDeleted: (taskId) {
+          setState(() {
+            _constructionTasks.removeWhere((task) => task.id == taskId);
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Task deleted successfully!'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  void _showCreateTaskDialog({DateTime? selectedDate}) {
+    showDialog(
+      context: context,
+      builder: (context) => ConstructionTaskDialog(
+        projectId: _currentProjectId,
+        onTaskCreated: (newTask) {
+          setState(() {
+            _constructionTasks.add(newTask);
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Task created successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  void _showTasksByStatus(TaskStatus status) {
+    final filteredTasks = _constructionTasks
+        .where((task) => task.status == status)
+        .toList();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('${status.displayName} Tasks'),
+        content: SizedBox(
+          width: double.maxFinite,
+          height: 400,
+          child: filteredTasks.isEmpty
+              ? const Center(child: Text('No tasks found with this status.'))
+              : ListView.builder(
+                  itemCount: filteredTasks.length,
+                  itemBuilder: (context, index) {
+                    final task = filteredTasks[index];
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      child: ListTile(
+                        title: Text(task.title),
+                        subtitle: Text(
+                          '${task.progress * 100}% • ${task.assignedTeam ?? 'Unassigned'}',
+                        ),
+                        trailing: Text(
+                          '${task.startDate.day}/${task.startDate.month}',
+                        ),
+                        onTap: () {
+                          Navigator.of(context).pop();
+                          _showTaskDetailsDialog(task);
+                        },
+                      ),
+                    );
+                  },
+                ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFloatingActionButton() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (_tabController.index == 1) // Construction tab
+          FloatingActionButton(
+            heroTag: "construction_task",
+            onPressed: () => _showCreateTaskDialog(),
+            tooltip: 'Create Construction Task',
+            backgroundColor: Theme.of(context).colorScheme.secondary,
+            child: const Icon(Icons.construction),
+          ),
+        if (_tabController.index == 1) const SizedBox(height: 16),
+        FloatingActionButton(
+          heroTag: "work_event",
+          onPressed: () => _showCreateEventDialog(),
+          tooltip: _tabController.index == 1
+              ? 'Create Work Event'
+              : 'Create Event',
+          child: const Icon(Icons.add),
+        ),
+      ],
+    );
   }
 }
 

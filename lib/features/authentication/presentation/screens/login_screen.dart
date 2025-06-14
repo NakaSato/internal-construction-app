@@ -263,52 +263,63 @@ class _LoginScreenState extends State<LoginScreen>
                     decoration: _buildBackgroundDecoration(context),
                   ),
                 ),
-                // Main content
+                // Main content with improved scrolling
                 SafeArea(
-                  child: Column(
-                    children: [
-                      // Top spacer to push content to bottom
-                      const Expanded(flex: 1, child: SizedBox()),
-
-                      // Bottom content area
-                      ConstrainedBox(
-                        constraints: const BoxConstraints(
-                          maxWidth:
-                              400, // Max width for better desktop experience
-                        ),
-                        child: SingleChildScrollView(
-                          physics: const BouncingScrollPhysics(),
-                          padding: _horizontalPadding,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      return SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            minHeight:
+                                constraints.maxHeight * 0.9, // Reduced to 90%
+                            maxWidth: 400,
+                          ),
                           child: Column(
-                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              // Sign out option for already authenticated users
-                              if (state is AuthAuthenticated) ...[
-                                _buildSignOutHeader(context, state.user),
-                                const SizedBox(height: 20),
-                              ],
-
-                              // Main login form
-                              AnimatedBuilder(
-                                animation: _animationController,
-                                builder: (context, child) {
-                                  return FadeTransition(
-                                    opacity: _fadeAnimation,
-                                    child: SlideTransition(
-                                      position: _slideAnimation,
-                                      child: _buildLoginForm(context),
-                                    ),
-                                  );
-                                },
+                              // Flexible top spacer (smaller on small screens)
+                              SizedBox(
+                                height: constraints.maxHeight < 700
+                                    ? 20
+                                    : constraints.maxHeight * 0.3,
                               ),
+
+                              // Bottom content area
+                              Padding(
+                                padding: _horizontalPadding,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    // Sign out option for already authenticated users
+                                    if (state is AuthAuthenticated) ...[
+                                      _buildSignOutHeader(context, state.user),
+                                      const SizedBox(height: 20),
+                                    ],
+
+                                    // Main login form
+                                    AnimatedBuilder(
+                                      animation: _animationController,
+                                      builder: (context, child) {
+                                        return FadeTransition(
+                                          opacity: _fadeAnimation,
+                                          child: SlideTransition(
+                                            position: _slideAnimation,
+                                            child: _buildLoginForm(context),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              // Small bottom padding
+                              const SizedBox(height: 20),
                             ],
                           ),
                         ),
-                      ),
-
-                      // Small bottom padding
-                      const SizedBox(height: 20),
-                    ],
+                      );
+                    },
                   ),
                 ),
               ],
@@ -363,9 +374,9 @@ class _LoginScreenState extends State<LoginScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SizedBox(height: 16), // Reduced top spacing
+          const SizedBox(height: 12), // Reduced top spacing
           _buildHeader(context),
-          const SizedBox(height: 24), // Reduced spacing before form
+          const SizedBox(height: 20), // Reduced spacing before form
           Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(
@@ -399,21 +410,23 @@ class _LoginScreenState extends State<LoginScreen>
                   children: [
                     _buildInputFieldWrapper(child: _buildUsernameField()),
                     const SizedBox(
-                      height: 24,
-                    ), // Optimized space between credentials
+                      height: 20,
+                    ), // Reduced space between credentials
                     _buildInputFieldWrapper(child: _buildPasswordField()),
-                    const SizedBox(height: 28), // Space after credentials
+                    const SizedBox(
+                      height: 24,
+                    ), // Reduced space after credentials
                     _buildOptionsRow(),
-                    const SizedBox(height: 28), // Optimal space before button
+                    const SizedBox(height: 24), // Reduced space before button
                     _buildSignInButton(),
                   ],
                 ),
               ),
             ),
           ),
-          const SizedBox(height: 20), // Reduced spacing after form
+          const SizedBox(height: 16), // Reduced spacing after form
           _buildSignUpSection(),
-          const SizedBox(height: 16), // Minimal bottom spacing
+          const SizedBox(height: 12), // Reduced bottom spacing
         ],
       ),
     );

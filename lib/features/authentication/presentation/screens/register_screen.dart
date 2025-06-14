@@ -40,8 +40,8 @@ class _RegisterScreenState extends State<RegisterScreen>
     horizontal: 12.0,
   );
   static const EdgeInsets _containerPadding = EdgeInsets.symmetric(
-    horizontal: 32,
-    vertical: 28,
+    horizontal: 28, // Reduced from 32
+    vertical: 24, // Reduced from 28
   );
   static const EdgeInsets _containerMargin = EdgeInsets.symmetric(
     horizontal: 12.0,
@@ -272,46 +272,59 @@ class _RegisterScreenState extends State<RegisterScreen>
                     decoration: _buildBackgroundDecoration(context),
                   ),
                 ),
-                // Main content
+                // Main content with improved scrolling
                 SafeArea(
-                  child: Column(
-                    children: [
-                      // Top spacer to push content to bottom
-                      const Expanded(flex: 1, child: SizedBox()),
-
-                      // Bottom content area
-                      ConstrainedBox(
-                        constraints: const BoxConstraints(
-                          maxWidth:
-                              400, // Max width for better desktop experience
-                        ),
-                        child: SingleChildScrollView(
-                          physics: const BouncingScrollPhysics(),
-                          padding: _horizontalPadding,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      return SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            minHeight:
+                                constraints.maxHeight *
+                                0.85, // Even more reduced for register
+                            maxWidth: 400,
+                          ),
                           child: Column(
-                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              // Main register form
-                              AnimatedBuilder(
-                                animation: _animationController,
-                                builder: (context, child) {
-                                  return FadeTransition(
-                                    opacity: _fadeAnimation,
-                                    child: SlideTransition(
-                                      position: _slideAnimation,
-                                      child: _buildRegisterForm(context),
-                                    ),
-                                  );
-                                },
+                              // Flexible top spacer (smaller on small screens)
+                              SizedBox(
+                                height: constraints.maxHeight < 700
+                                    ? 20
+                                    : constraints.maxHeight *
+                                          0.2, // Even smaller for register
                               ),
+
+                              // Bottom content area
+                              Padding(
+                                padding: _horizontalPadding,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    // Main register form
+                                    AnimatedBuilder(
+                                      animation: _animationController,
+                                      builder: (context, child) {
+                                        return FadeTransition(
+                                          opacity: _fadeAnimation,
+                                          child: SlideTransition(
+                                            position: _slideAnimation,
+                                            child: _buildRegisterForm(context),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              // Small bottom padding
+                              const SizedBox(height: 20),
                             ],
                           ),
                         ),
-                      ),
-
-                      // Small bottom padding
-                      const SizedBox(height: 20),
-                    ],
+                      );
+                    },
                   ),
                 ),
               ],
@@ -366,9 +379,9 @@ class _RegisterScreenState extends State<RegisterScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SizedBox(height: 16), // Reduced top spacing
+          const SizedBox(height: 10), // Reduced top spacing
           _buildHeader(context),
-          const SizedBox(height: 24), // Reduced spacing before form
+          const SizedBox(height: 20), // Reduced spacing before form
           Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(
@@ -401,24 +414,24 @@ class _RegisterScreenState extends State<RegisterScreen>
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _buildInputFieldWrapper(child: _buildNameField()),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16), // Reduced spacing
                     _buildInputFieldWrapper(child: _buildEmailField()),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16), // Reduced spacing
                     _buildInputFieldWrapper(child: _buildPasswordField()),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16), // Reduced spacing
                     _buildInputFieldWrapper(
                       child: _buildConfirmPasswordField(),
                     ),
-                    const SizedBox(height: 28), // Space before button
+                    const SizedBox(height: 24), // Reduced space before button
                     _buildRegisterButton(),
                   ],
                 ),
               ),
             ),
           ),
-          const SizedBox(height: 20), // Reduced spacing after form
+          const SizedBox(height: 16), // Reduced spacing after form
           _buildLoginLink(),
-          const SizedBox(height: 16), // Minimal bottom spacing
+          const SizedBox(height: 12), // Reduced bottom spacing
         ],
       ),
     );
@@ -434,7 +447,7 @@ class _RegisterScreenState extends State<RegisterScreen>
             color: Colors.white,
             letterSpacing: -0.5,
             height: 1.2,
-            fontSize: 40,
+            fontSize: 32, // Reduced from 40 for better space utilization
             shadows: [
               Shadow(
                 offset: const Offset(0, 2),
@@ -445,7 +458,7 @@ class _RegisterScreenState extends State<RegisterScreen>
           ),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 8), // Reduced from 12
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Text(
@@ -453,7 +466,7 @@ class _RegisterScreenState extends State<RegisterScreen>
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
               color: Colors.white.withValues(alpha: 0.9),
               height: 1.4,
-              fontSize: 16,
+              fontSize: 14, // Reduced from 16
               shadows: [
                 Shadow(
                   offset: const Offset(0, 1),

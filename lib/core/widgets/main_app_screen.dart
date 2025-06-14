@@ -11,7 +11,7 @@ import '../../features/work_calendar/presentation/screens/calendar_screen.dart';
 import '../../features/project_management/application/project_bloc.dart';
 import '../../features/project_management/application/project_state.dart';
 import '../../features/project_management/application/project_event.dart';
-import '../../features/project_management/domain/entities/project.dart';
+import '../../features/project_management/presentation/widgets/project_card.dart';
 import '../utils/api_config_verifier.dart';
 import 'app_bottom_bar.dart';
 import 'common_widgets.dart';
@@ -222,7 +222,7 @@ class _MainAppScreenState extends State<MainAppScreen>
     );
   }
 
-  /// Project list card with recent projects
+  /// Project list card with all projects in compact format
   Widget _buildProjectListCard(BuildContext context) {
     return Card(
       elevation: 2,
@@ -231,28 +231,20 @@ class _MainAppScreenState extends State<MainAppScreen>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Recent Projects',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
-                ),
-                TextButton(
-                  onPressed: () {
-                    // Navigate to full project list
-                    context.push('/projects');
-                  },
-                  child: Text(
-                    'View All',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () {
+                  // Navigate to full project list
+                  context.push('/projects');
+                },
+                child: Text(
+                  'View All',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                 ),
-              ],
+              ),
             ),
             const SizedBox(height: 16),
             BlocProvider(
@@ -264,9 +256,9 @@ class _MainAppScreenState extends State<MainAppScreen>
                   if (state is ProjectLoading) {
                     return const Center(child: CircularProgressIndicator());
                   } else if (state is ProjectLoaded) {
-                    final recentProjects = state.projects.take(3).toList();
+                    final allProjects = state.projects;
 
-                    if (recentProjects.isEmpty) {
+                    if (allProjects.isEmpty) {
                       return Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -303,13 +295,24 @@ class _MainAppScreenState extends State<MainAppScreen>
                       );
                     }
 
-                    return Column(
-                      children: recentProjects.map((project) {
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 8.0),
-                          child: _buildProjectSummaryCard(context, project),
-                        );
-                      }).toList(),
+                    return SizedBox(
+                      height: 300, // Reduced height for compact cards
+                      child: ListView.builder(
+                        itemCount: allProjects.length,
+                        itemBuilder: (context, index) {
+                          final project = allProjects[index];
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 4.0),
+                            child: ProjectCard(
+                              project: project,
+                              isCompact: true,
+                              onTap: () {
+                                context.push('/projects/${project.id}');
+                              },
+                            ),
+                          );
+                        },
+                      ),
                     );
                   } else if (state is ProjectError) {
                     return Center(
@@ -351,111 +354,6 @@ class _MainAppScreenState extends State<MainAppScreen>
         ),
       ),
     );
-  }
-
-  /// Builds a compact project summary card for the dashboard
-  Widget _buildProjectSummaryCard(BuildContext context, Project project) {
-    return Card(
-      margin: EdgeInsets.zero,
-      child: InkWell(
-        onTap: () {
-          // Navigate to project detail
-          context.push('/projects/${project.id}');
-        },
-        borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Row(
-            children: [
-              // Status indicator
-              Container(
-                width: 12,
-                height: 12,
-                decoration: BoxDecoration(
-                  color: _getStatusColor(context, project.projectStatus),
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: 12),
-              // Project info
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      project.name,
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      project.description,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-              // Progress indicator
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    '${project.completionPercentage}%',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Container(
-                    width: 60,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                    child: FractionallySizedBox(
-                      alignment: Alignment.centerLeft,
-                      widthFactor: project.completionPercentage / 100,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primary,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// Gets color for project status
-  Color _getStatusColor(BuildContext context, ProjectStatus status) {
-    switch (status) {
-      case ProjectStatus.planning:
-        return Theme.of(context).colorScheme.outline;
-      case ProjectStatus.inProgress:
-        return Theme.of(context).colorScheme.primary;
-      case ProjectStatus.completed:
-        return Colors.green;
-      case ProjectStatus.onHold:
-        return Colors.orange;
-      case ProjectStatus.cancelled:
-        return Theme.of(context).colorScheme.error;
-    }
   }
 
   /// Profile header with user avatar and information
