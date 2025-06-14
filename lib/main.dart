@@ -9,7 +9,7 @@ import 'features/authentication/application/auth_event.dart';
 import 'features/authorization/application/authorization_bloc.dart';
 import 'features/project_management/application/project_bloc.dart';
 import 'features/work_calendar/application/work_calendar_bloc.dart';
-import 'utils/api_config_verifier.dart';
+import 'core/utils/api_config_verifier.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

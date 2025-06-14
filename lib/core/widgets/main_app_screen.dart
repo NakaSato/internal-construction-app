@@ -12,7 +12,7 @@ import '../../features/project_management/application/project_bloc.dart';
 import '../../features/project_management/application/project_state.dart';
 import '../../features/project_management/application/project_event.dart';
 import '../../features/project_management/domain/entities/project.dart';
-import '../../utils/api_config_verifier.dart';
+import '../utils/api_config_verifier.dart';
 import 'app_bottom_bar.dart';
 import 'common_widgets.dart';
 import 'app_header.dart';
@@ -161,6 +161,7 @@ class _MainAppScreenState extends State<MainAppScreen>
       appBar: AppHeader(
         user: state.user,
         title: 'Dashboard',
+        heroContext: 'dashboard', // Add unique context
         showNotificationBadge: true,
         notificationCount: 3,
         onProfileTap: () {
@@ -190,6 +191,7 @@ class _MainAppScreenState extends State<MainAppScreen>
       appBar: AppHeader(
         user: state.user,
         title: 'My Profile',
+        heroContext: 'profile', // Add unique context
         onProfileTap: () {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Edit profile coming soon!')),
@@ -267,6 +269,8 @@ class _MainAppScreenState extends State<MainAppScreen>
                     if (recentProjects.isEmpty) {
                       return Center(
                         child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
                               Icons.folder_open,
@@ -310,6 +314,8 @@ class _MainAppScreenState extends State<MainAppScreen>
                   } else if (state is ProjectError) {
                     return Center(
                       child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
                             Icons.error_outline,

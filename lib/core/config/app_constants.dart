@@ -1,13 +1,13 @@
 /// Application-wide constants and configuration values
 class AppConstants {
   // App Information
-  static const String appName = 'Flutter Architecture App';
+  static const String appName = 'INVERTAL SOLAR';
   static const String appVersion = '1.0.0';
 
   // API Configuration
   static const String baseUrl = String.fromEnvironment(
     'BASE_URL',
-    defaultValue: 'https://api.example.com',
+    defaultValue: 'http://localhost:5002',
   );
 
   static const String apiVersion = 'v1';

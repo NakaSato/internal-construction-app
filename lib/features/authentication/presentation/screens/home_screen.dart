@@ -120,29 +120,15 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: Container(
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/images/bg.jpg'),
-            fit: BoxFit.cover,
-            opacity: 0.45, // Set image opacity to 45%
-          ),
-        ),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.background.withOpacity(0.7),
-          ),
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildProjectsSection(context),
-                const SizedBox(height: 24),
-                _buildFeatureGrid(context),
-              ],
-            ),
-          ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildProjectsSection(context),
+            const SizedBox(height: 24),
+            _buildFeatureGrid(context),
+          ],
         ),
       ),
     );
@@ -547,6 +533,13 @@ class _HomeScreenState extends State<HomeScreen> {
               Icons.event_note,
               Colors.green,
               () => context.push(AppRoutes.calendarManagement),
+            ),
+            _buildFeatureCard(
+              context,
+              'Project List Demo',
+              Icons.assignment,
+              Colors.orange,
+              () => context.go('/dashboard/project-list-demo'),
             ),
             _buildFeatureCard(
               context,

@@ -6,23 +6,15 @@ import '../../features/authentication/application/auth_bloc.dart';
 import '../../features/authentication/application/auth_state.dart';
 import '../../features/authentication/presentation/screens/forgot_password_screen.dart';
 import '../../features/authentication/presentation/screens/login_screen.dart';
-import '../../features/authentication/presentation/screens/extend_login_screen.dart';
 import '../../features/authentication/presentation/screens/register_screen.dart';
-import '../../features/calendar_integration/calendar_project_demo_screen.dart';
 import '../../features/calendar_management/presentation/screens/calendar_management_screen.dart';
-
-import '../../features/project_management/application/project_bloc.dart';
 import '../../features/project_management/presentation/screens/image_project_card_list_screen.dart';
-import '../../features/project_list_style_demo.dart';
 import '../widgets/main_app_screen.dart';
-import '../../features/calendar_api_demo.dart';
-import '../../features/daily_reports_api_demo.dart';
 
 /// Application route names
 class AppRoutes {
   // Authentication routes
   static const String login = '/login';
-  static const String enhancedLogin = '/enhanced-login';
   static const String register = '/register';
   static const String forgotPassword = '/forgot-password';
 
@@ -58,18 +50,7 @@ class AppRouter {
         path: AppRoutes.login,
         name: 'login',
         builder: (context, state) =>
-            const ExtendLoginScreen(), // Use extended version by default
-      ),
-      GoRoute(
-        path: AppRoutes.enhancedLogin,
-        name: 'enhanced-login',
-        builder: (context, state) => const ExtendLoginScreen(),
-      ),
-      GoRoute(
-        path: '/classic-login',
-        name: 'classic-login',
-        builder: (context, state) =>
-            const LoginScreen(), // Keep original as alternative
+            const LoginScreen(), // Use enhanced login screen
       ),
       GoRoute(
         path: AppRoutes.register,
@@ -117,14 +98,6 @@ class AppRouter {
         builder: (context, state) => const CalendarManagementScreen(),
       ),
       GoRoute(
-        path: '/calendar-demo',
-        name: 'calendar-demo',
-        builder: (context, state) => BlocProvider.value(
-          value: context.read<ProjectBloc>(),
-          child: const CalendarProjectDemoScreen(),
-        ),
-      ),
-      GoRoute(
         path: AppRoutes.calendarDetail,
         name: 'calendar-detail',
         builder: (context, state) {
@@ -132,30 +105,18 @@ class AppRouter {
           return Placeholder(
             fallbackHeight: 200,
             fallbackWidth: 200,
-            child: Text(
-              'Calendar Detail: $id',
-            ), // TODO: Replace with CalendarDetailScreen(id: id)
+            child: Text('Calendar Detail: $id'),
           );
         },
       ),
       GoRoute(
-        path: '/project-list-demo',
-        name: 'project-list-demo',
-        builder: (context, state) => const ProjectListStyleDemo(),
-      ),
-      GoRoute(
-        path: '/calendar-api-demo',
-        name: 'calendar-api-demo',
-        builder: (context, state) => const CalendarManagementApiDemo(),
-      ),
-      GoRoute(
-        path: '/daily-reports-demo',
-        name: 'daily-reports-demo',
-        builder: (context, state) => const DailyReportsApiDemo(),
-      ),
-      GoRoute(
         path: '/image-project-cards',
         name: 'image-project-cards',
+        builder: (context, state) => const ImageProjectCardListScreen(),
+      ),
+      GoRoute(
+        path: '/projects',
+        name: 'projects',
         builder: (context, state) => const ImageProjectCardListScreen(),
       ),
     ],

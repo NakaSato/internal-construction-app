@@ -9,7 +9,15 @@ import '../../application/auth_event.dart';
 import '../../application/auth_state.dart';
 import '../../domain/entities/user.dart';
 
-/// Extended login screen with modern UI and improved UX
+/// Extended login screen with modern solar energy themed UI and enhanced UX
+/// 
+/// Features:
+/// - Animated background with 2x zoom effect
+/// - Solar energy gradient overlay  
+/// - Smooth fade-in and slide animations
+/// - Enhanced form validation
+/// - Remember me functionality
+/// - Integrated sign-out support for authenticated users
 class ExtendLoginScreen extends StatefulWidget {
   const ExtendLoginScreen({super.key});
 
@@ -19,21 +27,48 @@ class ExtendLoginScreen extends StatefulWidget {
 
 class _ExtendLoginScreenState extends State<ExtendLoginScreen>
     with TickerProviderStateMixin {
+  // UI Constants
+  static const double _logoIconSize = 60.0;
+  static const double _containerBorderRadius = 24.0;
+  static const double _iconContainerSize = 8.0;
+  static const double _iconSize = 20.0;
+  static const double _buttonHeight = 60.0;
+  static const double _loadingIndicatorSize = 22.0;
+  
+  // Animation Constants  
+  static const Duration _animationDuration = Duration(milliseconds: 1200);
+  static const Duration _buttonAnimationDuration = Duration(milliseconds: 150);
+  static const Duration _backgroundZoomDuration = Duration(milliseconds: 20000);
+  
+  // Validation Constants
+  static const int _minUsernameLength = 3;
+  static const int _minPasswordLength = 6;
+  
+  // Spacing Constants
+  static const EdgeInsets _horizontalPadding = EdgeInsets.symmetric(horizontal: 24.0);
+  static const EdgeInsets _containerPadding = EdgeInsets.all(32);
+  static const EdgeInsets _inputContentPadding = EdgeInsets.symmetric(horizontal: 20, vertical: 16);
+
+  // Form controllers and focus nodes
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _usernameFocusNode = FocusNode();
   final _passwordFocusNode = FocusNode();
 
+  // State variables
   bool _obscurePassword = true;
   bool _isLoading = false;
   bool _rememberMe = false;
 
+  // Animation controllers and animations
   late AnimationController _animationController;
   late AnimationController _buttonAnimationController;
+  late AnimationController _backgroundZoomController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
   late Animation<double> _buttonScaleAnimation;
+  late Animation<double> _backgroundZoomAnimation;
 
   @override
   void initState() {
@@ -43,12 +78,17 @@ class _ExtendLoginScreenState extends State<ExtendLoginScreen>
 
   void _setupAnimations() {
     _animationController = AnimationController(
-      duration: const Duration(milliseconds: 1200),
+      duration: _animationDuration,
       vsync: this,
     );
 
     _buttonAnimationController = AnimationController(
-      duration: const Duration(milliseconds: 150),
+      duration: _buttonAnimationDuration,
+      vsync: this,
+    );
+
+    _backgroundZoomController = AnimationController(
+      duration: _backgroundZoomDuration,
       vsync: this,
     );
 
@@ -74,7 +114,12 @@ class _ExtendLoginScreenState extends State<ExtendLoginScreen>
       ),
     );
 
+    _backgroundZoomAnimation = Tween<double>(begin: 1.0, end: 2.0).animate(
+      CurvedAnimation(parent: _backgroundZoomController, curve: Curves.linear),
+    );
+
     _animationController.forward();
+    _backgroundZoomController.repeat(reverse: true);
   }
 
   @override
@@ -85,6 +130,7 @@ class _ExtendLoginScreenState extends State<ExtendLoginScreen>
     _passwordFocusNode.dispose();
     _animationController.dispose();
     _buttonAnimationController.dispose();
+    _backgroundZoomController.dispose();
     super.dispose();
   }
 
@@ -95,44 +141,54 @@ class _ExtendLoginScreenState extends State<ExtendLoginScreen>
         listener: _handleAuthStateChange,
         child: BlocBuilder<AuthBloc, AuthState>(
           builder: (context, state) {
-            return Container(
-              decoration: _buildBackgroundDecoration(context),
-              child: SafeArea(
-                child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  child: SizedBox(
-                    height:
-                        MediaQuery.of(context).size.height -
-                        MediaQuery.of(context).padding.top,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                      child: Column(
-                        children: [
-                          // Sign out option for already authenticated users
-                          if (state is AuthAuthenticated)
-                            _buildSignOutHeader(context, state.user),
+            return Stack(
+              children: [
+                // Animated background with zoom effect
+                Positioned.fill(child: _buildAnimatedBackground()),
+                // Gradient overlay for energy theme
+                Positioned.fill(
+                  child: Container(
+                    decoration: _buildBackgroundDecoration(context),
+                  ),
+                ),
+                // Main content
+                SafeArea(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: SizedBox(
+                      height:
+                          MediaQuery.of(context).size.height -
+                          MediaQuery.of(context).padding.top,
+                      child: Padding(
+                        padding: _horizontalPadding,
+                        child: Column(
+                          children: [
+                            // Sign out option for already authenticated users
+                            if (state is AuthAuthenticated)
+                              _buildSignOutHeader(context, state.user),
 
-                          // Main login form
-                          Expanded(
-                            child: AnimatedBuilder(
-                              animation: _animationController,
-                              builder: (context, child) {
-                                return FadeTransition(
-                                  opacity: _fadeAnimation,
-                                  child: SlideTransition(
-                                    position: _slideAnimation,
-                                    child: _buildLoginForm(context),
-                                  ),
-                                );
-                              },
+                            // Main login form
+                            Expanded(
+                              child: AnimatedBuilder(
+                                animation: _animationController,
+                                builder: (context, child) {
+                                  return FadeTransition(
+                                    opacity: _fadeAnimation,
+                                    child: SlideTransition(
+                                      position: _slideAnimation,
+                                      child: _buildLoginForm(context),
+                                    ),
+                                  );
+                                },
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
+              ],
             );
           },
         ),
@@ -141,73 +197,92 @@ class _ExtendLoginScreenState extends State<ExtendLoginScreen>
   }
 
   BoxDecoration _buildBackgroundDecoration(BuildContext context) {
-    return const BoxDecoration(
-      // Use bg.jpg as background image
-      image: DecorationImage(
-        image: AssetImage('assets/images/bg.jpg'),
-        fit: BoxFit.cover,
-        opacity: 0.45, // Set image opacity to 45%
+    return BoxDecoration(
+      // Solar energy gradient overlay
+      gradient: LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          const Color(0xFF1B5E20).withValues(alpha: 0.8), // Dark green
+          const Color(0xFF2E7D32).withValues(alpha: 0.6), // Medium green
+          const Color(0xFF4CAF50).withValues(alpha: 0.4), // Light green
+          const Color(0xFF8BC34A).withValues(alpha: 0.2), // Energy green
+        ],
+        stops: const [0.0, 0.3, 0.7, 1.0],
       ),
+    );
+  }
+
+  Widget _buildAnimatedBackground() {
+    return AnimatedBuilder(
+      animation: _backgroundZoomAnimation,
+      builder: (context, child) {
+        return Transform.scale(
+          scale: _backgroundZoomAnimation.value,
+          child: Container(
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('assets/images/bg.jpg'),
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
   Widget _buildLoginForm(BuildContext context) {
     return Form(
       key: _formKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const Spacer(flex: 1),
-          _buildHeader(context),
-          const SizedBox(height: 48),
-          Container(
-            padding: const EdgeInsets.all(32),
-            margin: const EdgeInsets.symmetric(horizontal: 8),
-            decoration: BoxDecoration(
-              color: Theme.of(
-                context,
-              ).colorScheme.surface.withValues(alpha: 0.95),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: Theme.of(
-                  context,
-                ).colorScheme.outline.withValues(alpha: 0.1),
-                width: 1,
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SizedBox(height: 40), // Fixed spacing instead of Spacer
+            _buildHeader(context),
+            const SizedBox(height: 48),
+            Container(
+              padding: _containerPadding,
+              margin: const EdgeInsets.symmetric(horizontal: 8),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.95),
+                borderRadius: BorderRadius.circular(_containerBorderRadius),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                  ),
+                  BoxShadow(
+                    color: const Color(0xFFCDDC39).withValues(alpha: 0.1),
+                    blurRadius: 40,
+                    offset: const Offset(0, 16),
+                  ),
+                ],
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.shadow.withValues(alpha: 0.1),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
-                ),
-                BoxShadow(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.primary.withValues(alpha: 0.05),
-                  blurRadius: 40,
-                  offset: const Offset(0, 16),
-                ),
-              ],
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildUsernameField(),
+                  const SizedBox(height: 24),
+                  _buildPasswordField(),
+                  const SizedBox(height: 20),
+                  _buildOptionsRow(),
+                  const SizedBox(height: 32),
+                  _buildSignInButton(),
+                ],
+              ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _buildUsernameField(),
-                const SizedBox(height: 24),
-                _buildPasswordField(),
-                const SizedBox(height: 20),
-                _buildOptionsRow(),
-                const SizedBox(height: 32),
-                _buildSignInButton(),
-              ],
-            ),
-          ),
-          const SizedBox(height: 32),
-          _buildSignUpSection(),
-          const Spacer(flex: 1),
-        ],
+            const SizedBox(height: 32),
+            _buildSignUpSection(),
+            const SizedBox(height: 40), // Fixed spacing instead of Spacer
+          ],
+        ),
       ),
     );
   }
@@ -226,57 +301,85 @@ class _ExtendLoginScreenState extends State<ExtendLoginScreen>
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Theme.of(context).colorScheme.primary,
-                  Theme.of(context).colorScheme.secondary,
-                  Theme.of(context).colorScheme.tertiary,
+                  const Color(0xFFFFEB3B), // Bright yellow (sun)
+                  const Color(0xFFFFC107), // Amber
+                  const Color(0xFFFF9800), // Orange
+                  const Color(0xFFFF5722), // Deep orange
                 ],
-                stops: const [0.0, 0.6, 1.0],
+                stops: const [0.0, 0.3, 0.7, 1.0],
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.primary.withValues(alpha: 0.4),
+                  color: const Color(0xFFFFEB3B).withValues(alpha: 0.4),
                   blurRadius: 25,
                   offset: const Offset(0, 12),
                 ),
                 BoxShadow(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.secondary.withValues(alpha: 0.2),
+                  color: const Color(0xFFFFC107).withValues(alpha: 0.3),
                   blurRadius: 40,
                   offset: const Offset(0, 20),
                 ),
               ],
             ),
-            child: Icon(
-              Icons.lock_rounded,
-              size: 60,
-              color: Theme.of(context).colorScheme.onPrimary,
+            child: const Icon(
+              Icons.wb_sunny_rounded, // Solar/sun icon
+              size: _logoIconSize,
+              color: Colors.white,
             ),
           ),
         ),
         const SizedBox(height: 40),
         Text(
-          'Welcome Back',
+          'Handle the power\nof energy',
           style: Theme.of(context).textTheme.headlineLarge?.copyWith(
             fontWeight: FontWeight.w700,
-            color: Theme.of(context).colorScheme.onSurface,
+            color: Colors.white,
             letterSpacing: -0.5,
+            height: 1.2,
+            fontSize: 40,
+            shadows: [
+              Shadow(
+                offset: const Offset(0, 2),
+                blurRadius: 8,
+                color: Colors.black.withValues(alpha: 0.3),
+              ),
+            ],
           ),
+          textAlign: TextAlign.center,
         ),
         const SizedBox(height: 12),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Text(
-            'Sign in to continue to your account',
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: Theme.of(
-                context,
-              ).colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
-              height: 1.4,
-            ),
+          child: RichText(
             textAlign: TextAlign.center,
+            text: TextSpan(
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: Colors.white.withValues(alpha: 0.9),
+                height: 1.4,
+                fontSize: 16,
+                shadows: [
+                  Shadow(
+                    offset: const Offset(0, 1),
+                    blurRadius: 4,
+                    color: Colors.black.withValues(alpha: 0.2),
+                  ),
+                ],
+              ),
+              children: [
+                const TextSpan(
+                  text:
+                      "We're thrilled to help you harness the power\nof the sun. Monitor your solar panels'\nperformance in ",
+                ),
+                TextSpan(
+                  text: 'real-time',
+                  style: TextStyle(
+                    color: const Color(0xFFCDDC39), // Energy yellow-green
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const TextSpan(text: '.'),
+              ],
+            ),
           ),
         ),
       ],
@@ -358,8 +461,8 @@ class _ExtendLoginScreenState extends State<ExtendLoginScreen>
         if (value == null || value.isEmpty) {
           return 'Please enter your username';
         }
-        if (value.length < 3) {
-          return 'Username must be at least 3 characters';
+        if (value.length < _minUsernameLength) {
+          return 'Username must be at least $_minUsernameLength characters';
         }
         return null;
       },
@@ -462,8 +565,8 @@ class _ExtendLoginScreenState extends State<ExtendLoginScreen>
         if (value == null || value.isEmpty) {
           return 'Please enter your password';
         }
-        if (value.length < 6) {
-          return 'Password must be at least 6 characters';
+        if (value.length < _minPasswordLength) {
+          return 'Password must be at least $_minPasswordLength characters';
         }
         return null;
       },
@@ -528,31 +631,27 @@ class _ExtendLoginScreenState extends State<ExtendLoginScreen>
         return Transform.scale(
           scale: _buttonScaleAnimation.value,
           child: Container(
-            height: 60,
+            height: _buttonHeight,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Theme.of(context).colorScheme.primary,
-                  Theme.of(context).colorScheme.secondary,
-                  Theme.of(context).colorScheme.tertiary,
+                  const Color(0xFFCDDC39), // Energy yellow-green
+                  const Color(0xFF8BC34A), // Light green
+                  const Color(0xFF4CAF50), // Green
                 ],
                 stops: const [0.0, 0.5, 1.0],
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.primary.withValues(alpha: 0.4),
+                  color: const Color(0xFFCDDC39).withValues(alpha: 0.4),
                   blurRadius: 20,
                   offset: const Offset(0, 8),
                 ),
                 BoxShadow(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.shadow.withValues(alpha: 0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 30,
                   offset: const Offset(0, 12),
                 ),
@@ -573,11 +672,11 @@ class _ExtendLoginScreenState extends State<ExtendLoginScreen>
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         SizedBox(
-                          width: 22,
-                          height: 22,
+                          width: _loadingIndicatorSize,
+                          height: _loadingIndicatorSize,
                           child: CircularProgressIndicator(
                             strokeWidth: 2.5,
-                            color: Theme.of(context).colorScheme.onPrimary,
+                            color: Colors.white,
                           ),
                         ),
                         const SizedBox(width: 16),
@@ -586,18 +685,18 @@ class _ExtendLoginScreenState extends State<ExtendLoginScreen>
                           style: TextStyle(
                             fontSize: 17,
                             fontWeight: FontWeight.w600,
-                            color: Theme.of(context).colorScheme.onPrimary,
+                            color: Colors.white,
                             letterSpacing: 0.5,
                           ),
                         ),
                       ],
                     )
                   : Text(
-                      'Sign In',
+                      'Let\'s explore',
                       style: TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.w600,
-                        color: Theme.of(context).colorScheme.onPrimary,
+                        color: Colors.white,
                         letterSpacing: 0.5,
                       ),
                     ),
