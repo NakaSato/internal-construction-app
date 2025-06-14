@@ -9,15 +9,6 @@ import '../../application/auth_event.dart';
 import '../../application/auth_state.dart';
 import '../../domain/entities/user.dart';
 
-/// Login screen with modern solar energy themed UI and enhanced UX
-///
-/// Features:
-/// - Animated background with 2x zoom effect
-/// - Solar energy gradient overlay
-/// - Smooth fade-in and slide animations
-/// - Enhanced form validation
-/// - Remember me functionality
-/// - Integrated sign-out support for authenticated users
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -28,8 +19,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen>
     with TickerProviderStateMixin {
   // UI Constants
-  static const double _logoIconSize = 60.0;
-  static const double _containerBorderRadius = 24.0;
+  static const double _containerBorderRadius = 18.0;
   static const double _iconContainerSize = 8.0;
   static const double _iconSize = 20.0;
   static const double _buttonHeight = 60.0;
@@ -46,12 +36,18 @@ class _LoginScreenState extends State<LoginScreen>
 
   // Spacing Constants
   static const EdgeInsets _horizontalPadding = EdgeInsets.symmetric(
-    horizontal: 24.0,
+    horizontal: 12.0,
   );
-  static const EdgeInsets _containerPadding = EdgeInsets.all(32);
+  static const EdgeInsets _containerPadding = EdgeInsets.symmetric(
+    horizontal: 32,
+    vertical: 28,
+  );
+  static const EdgeInsets _containerMargin = EdgeInsets.symmetric(
+    horizontal: 12.0,
+  );
   static const EdgeInsets _inputContentPadding = EdgeInsets.symmetric(
-    horizontal: 20,
-    vertical: 16,
+    horizontal: 12.0,
+    vertical: 12.0,
   );
 
   // Form controllers and focus nodes
@@ -81,6 +77,8 @@ class _LoginScreenState extends State<LoginScreen>
     _setupAnimations();
   }
 
+  /// Sets up all animations used in the login screen
+  /// Includes fade-in, slide, button scale, and background zoom animations
   void _setupAnimations() {
     _animationController = AnimationController(
       duration: _animationDuration,
@@ -148,19 +146,27 @@ class _LoginScreenState extends State<LoginScreen>
   }) {
     return InputDecoration(
       labelText: labelText,
+      labelStyle: TextStyle(
+        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
+        fontWeight: FontWeight.w500,
+        fontSize: 16,
+      ),
       hintText: hintText,
       hintStyle: TextStyle(
         color: Theme.of(
           context,
         ).colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+        fontSize: 15,
       ),
       prefixIcon: prefixIcon,
       suffixIcon: suffixIcon,
       border: _buildOutlineInputBorder(),
-      enabledBorder: _buildOutlineInputBorder(),
+      enabledBorder: _buildOutlineInputBorder(
+        color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.4),
+      ),
       focusedBorder: _buildOutlineInputBorder(
-        color: Theme.of(context).colorScheme.primary,
-        width: 2,
+        color: const Color(0xFF4CAF50), // Green theme color
+        width: 2.5,
       ),
       errorBorder: _buildOutlineInputBorder(
         color: Theme.of(context).colorScheme.error,
@@ -168,13 +174,12 @@ class _LoginScreenState extends State<LoginScreen>
       ),
       focusedErrorBorder: _buildOutlineInputBorder(
         color: Theme.of(context).colorScheme.error,
-        width: 2,
+        width: 2.5,
       ),
       filled: true,
-      fillColor: Theme.of(
-        context,
-      ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+      fillColor: Colors.white.withValues(alpha: 0.9),
       contentPadding: _inputContentPadding,
+      floatingLabelBehavior: FloatingLabelBehavior.auto,
     );
   }
 
@@ -184,11 +189,13 @@ class _LoginScreenState extends State<LoginScreen>
     double width = 1,
   }) {
     return OutlineInputBorder(
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(
+        16,
+      ), // Slightly smaller radius for modern look
       borderSide: BorderSide(
         color:
             color ??
-            Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+            Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
         width: width,
       ),
     );
@@ -200,14 +207,42 @@ class _LoginScreenState extends State<LoginScreen>
       margin: const EdgeInsets.all(12),
       padding: EdgeInsets.all(_iconContainerSize),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(_iconContainerSize),
+        color: const Color(
+          0xFF4CAF50,
+        ).withValues(alpha: 0.12), // Green theme with transparency
+        borderRadius: BorderRadius.circular(12), // More modern radius
+        border: Border.all(
+          color: const Color(0xFF4CAF50).withValues(alpha: 0.2),
+          width: 1,
+        ),
       ),
       child: Icon(
         iconData,
-        color: Theme.of(context).colorScheme.primary,
+        color: const Color(0xFF4CAF50), // Consistent green theme
         size: _iconSize,
       ),
+    );
+  }
+
+  // Helper method to wrap input fields with subtle shadow effect
+  Widget _buildInputFieldWrapper({required Widget child}) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+          BoxShadow(
+            color: const Color(0xFF4CAF50).withValues(alpha: 0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: child,
     );
   }
 
@@ -230,23 +265,31 @@ class _LoginScreenState extends State<LoginScreen>
                 ),
                 // Main content
                 SafeArea(
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    child: SizedBox(
-                      height:
-                          MediaQuery.of(context).size.height -
-                          MediaQuery.of(context).padding.top,
-                      child: Padding(
-                        padding: _horizontalPadding,
-                        child: Column(
-                          children: [
-                            // Sign out option for already authenticated users
-                            if (state is AuthAuthenticated)
-                              _buildSignOutHeader(context, state.user),
+                  child: Column(
+                    children: [
+                      // Top spacer to push content to bottom
+                      const Expanded(flex: 1, child: SizedBox()),
 
-                            // Main login form
-                            Expanded(
-                              child: AnimatedBuilder(
+                      // Bottom content area
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(
+                          maxWidth:
+                              400, // Max width for better desktop experience
+                        ),
+                        child: SingleChildScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          padding: _horizontalPadding,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // Sign out option for already authenticated users
+                              if (state is AuthAuthenticated) ...[
+                                _buildSignOutHeader(context, state.user),
+                                const SizedBox(height: 20),
+                              ],
+
+                              // Main login form
+                              AnimatedBuilder(
                                 animation: _animationController,
                                 builder: (context, child) {
                                   return FadeTransition(
@@ -258,11 +301,14 @@ class _LoginScreenState extends State<LoginScreen>
                                   );
                                 },
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
-                    ),
+
+                      // Small bottom padding
+                      const SizedBox(height: 20),
+                    ],
                   ),
                 ),
               ],
@@ -273,6 +319,7 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
+  /// Creates the solar energy themed gradient background decoration
   BoxDecoration _buildBackgroundDecoration(BuildContext context) {
     return BoxDecoration(
       // Solar energy gradient overlay
@@ -290,6 +337,7 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
+  /// Builds the animated background with solar panel image and zoom effect
   Widget _buildAnimatedBackground() {
     return AnimatedBuilder(
       animation: _backgroundZoomAnimation,
@@ -312,54 +360,61 @@ class _LoginScreenState extends State<LoginScreen>
   Widget _buildLoginForm(BuildContext context) {
     return Form(
       key: _formKey,
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const SizedBox(height: 40), // Fixed spacing instead of Spacer
-            _buildHeader(context),
-            const SizedBox(height: 48),
-            Container(
-              padding: _containerPadding,
-              margin: const EdgeInsets.symmetric(horizontal: 8),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.95),
-                borderRadius: BorderRadius.circular(_containerBorderRadius),
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  width: 1,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const SizedBox(height: 16), // Reduced top spacing
+          _buildHeader(context),
+          const SizedBox(height: 24), // Reduced spacing before form
+          Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(
+                maxWidth: 380,
+              ), // Optimal form width
+              child: Container(
+                padding: _containerPadding,
+                margin: _containerMargin,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.95),
+                  borderRadius: BorderRadius.circular(_containerBorderRadius),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    width: 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                    BoxShadow(
+                      color: const Color(0xFFCDDC39).withValues(alpha: 0.1),
+                      blurRadius: 40,
+                      offset: const Offset(0, 16),
+                    ),
+                  ],
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                  ),
-                  BoxShadow(
-                    color: const Color(0xFFCDDC39).withValues(alpha: 0.1),
-                    blurRadius: 40,
-                    offset: const Offset(0, 16),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _buildUsernameField(),
-                  const SizedBox(height: 24),
-                  _buildPasswordField(),
-                  const SizedBox(height: 20),
-                  _buildOptionsRow(),
-                  const SizedBox(height: 32),
-                  _buildSignInButton(),
-                ],
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildInputFieldWrapper(child: _buildUsernameField()),
+                    const SizedBox(
+                      height: 24,
+                    ), // Optimized space between credentials
+                    _buildInputFieldWrapper(child: _buildPasswordField()),
+                    const SizedBox(height: 28), // Space after credentials
+                    _buildOptionsRow(),
+                    const SizedBox(height: 28), // Optimal space before button
+                    _buildSignInButton(),
+                  ],
+                ),
               ),
             ),
-            const SizedBox(height: 32),
-            _buildSignUpSection(),
-            const SizedBox(height: 40), // Fixed spacing instead of Spacer
-          ],
-        ),
+          ),
+          const SizedBox(height: 20), // Reduced spacing after form
+          _buildSignUpSection(),
+          const SizedBox(height: 16), // Minimal bottom spacing
+        ],
       ),
     );
   }
@@ -367,47 +422,8 @@ class _LoginScreenState extends State<LoginScreen>
   Widget _buildHeader(BuildContext context) {
     return Column(
       children: [
-        Hero(
-          tag: 'app_logo',
-          child: Container(
-            width: 120,
-            height: 120,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  const Color(0xFFFFEB3B), // Bright yellow (sun)
-                  const Color(0xFFFFC107), // Amber
-                  const Color(0xFFFF9800), // Orange
-                  const Color(0xFFFF5722), // Deep orange
-                ],
-                stops: const [0.0, 0.3, 0.7, 1.0],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFFFFEB3B).withValues(alpha: 0.4),
-                  blurRadius: 25,
-                  offset: const Offset(0, 12),
-                ),
-                BoxShadow(
-                  color: const Color(0xFFFFC107).withValues(alpha: 0.3),
-                  blurRadius: 40,
-                  offset: const Offset(0, 20),
-                ),
-              ],
-            ),
-            child: const Icon(
-              Icons.wb_sunny_rounded, // Solar/sun icon
-              size: _logoIconSize,
-              color: Colors.white,
-            ),
-          ),
-        ),
-        const SizedBox(height: 40),
         Text(
-          'Handle the power\nof energy',
+          'CONSTRUCTION INTERNAL',
           style: Theme.of(context).textTheme.headlineLarge?.copyWith(
             fontWeight: FontWeight.w700,
             color: Colors.white,
@@ -424,9 +440,13 @@ class _LoginScreenState extends State<LoginScreen>
           ),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 12),
+        const SizedBox(
+          height: 12,
+        ), // Optimized spacing between title and description
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 20,
+          ), // Consistent with main padding
           child: RichText(
             textAlign: TextAlign.center,
             text: TextSpan(
@@ -442,20 +462,6 @@ class _LoginScreenState extends State<LoginScreen>
                   ),
                 ],
               ),
-              children: [
-                const TextSpan(
-                  text:
-                      "We're thrilled to help you harness the power\nof the sun. Monitor your solar panels'\nperformance in ",
-                ),
-                TextSpan(
-                  text: 'real-time',
-                  style: TextStyle(
-                    color: const Color(0xFFCDDC39), // Energy yellow-green
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const TextSpan(text: '.'),
-              ],
             ),
           ),
         ),
@@ -463,6 +469,7 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
+  /// Builds the username input field with validation
   Widget _buildUsernameField() {
     return TextFormField(
       controller: _usernameController,
@@ -470,7 +477,12 @@ class _LoginScreenState extends State<LoginScreen>
       keyboardType: TextInputType.text,
       textInputAction: TextInputAction.next,
       enabled: !_isLoading,
-      style: Theme.of(context).textTheme.bodyLarge,
+      style: TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w500,
+        color: Theme.of(context).colorScheme.onSurface,
+        letterSpacing: 0.5,
+      ),
       decoration: _buildInputDecoration(
         labelText: 'Username',
         hintText: 'Enter your username',
@@ -491,6 +503,7 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
+  /// Builds the password input field with visibility toggle and validation
   Widget _buildPasswordField() {
     return TextFormField(
       controller: _passwordController,
@@ -498,19 +511,35 @@ class _LoginScreenState extends State<LoginScreen>
       obscureText: _obscurePassword,
       textInputAction: TextInputAction.done,
       enabled: !_isLoading,
-      style: Theme.of(context).textTheme.bodyLarge,
+      style: TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w500,
+        color: Theme.of(context).colorScheme.onSurface,
+        letterSpacing: 0.5,
+      ),
       decoration: _buildInputDecoration(
         labelText: 'Password',
         hintText: 'Enter your password',
         prefixIcon: _buildPrefixIcon(Icons.lock_rounded),
         suffixIcon: Container(
-          margin: const EdgeInsets.only(right: 12),
+          margin: const EdgeInsets.only(right: 8),
           child: IconButton(
             icon: Icon(
               _obscurePassword
                   ? Icons.visibility_off_rounded
                   : Icons.visibility_rounded,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              color: const Color(
+                0xFF4CAF50,
+              ).withValues(alpha: 0.8), // Match theme
+              size: 22,
+            ),
+            style: IconButton.styleFrom(
+              padding: const EdgeInsets.all(8),
+              minimumSize: const Size(40, 40),
+              backgroundColor: const Color(0xFF4CAF50).withValues(alpha: 0.08),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             onPressed: _isLoading
                 ? null
@@ -538,46 +567,103 @@ class _LoginScreenState extends State<LoginScreen>
   Widget _buildOptionsRow() {
     return Row(
       children: [
-        // Remember me checkbox
+        // Enhanced Remember me section with modern UI
         Expanded(
-          child: Row(
-            children: [
-              Checkbox(
-                value: _rememberMe,
-                onChanged: _isLoading
-                    ? null
-                    : (value) {
-                        setState(() {
-                          _rememberMe = value ?? false;
-                        });
-                      },
-                activeColor: Theme.of(context).colorScheme.primary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Flexible(
-                child: Text(
-                  'Remember me',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+          child: InkWell(
+            onTap: _isLoading
+                ? null
+                : () {
+                    setState(() {
+                      _rememberMe = !_rememberMe;
+                    });
+                  },
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Custom animated checkbox
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    width: 22,
+                    height: 22,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: _rememberMe
+                            ? const Color(0xFF4CAF50)
+                            : Theme.of(
+                                context,
+                              ).colorScheme.outline.withValues(alpha: 0.6),
+                        width: _rememberMe ? 2 : 1.5,
+                      ),
+                      color: _rememberMe
+                          ? const Color(0xFF4CAF50)
+                          : Colors.transparent,
+                      boxShadow: _rememberMe
+                          ? [
+                              BoxShadow(
+                                color: const Color(
+                                  0xFF4CAF50,
+                                ).withValues(alpha: 0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ]
+                          : null,
+                    ),
+                    child: _rememberMe
+                        ? const Icon(
+                            Icons.check_rounded,
+                            color: Colors.white,
+                            size: 16,
+                          )
+                        : null,
                   ),
-                ),
+                  const SizedBox(width: 12),
+                  // Enhanced text with better typography
+                  Flexible(
+                    child: Text(
+                      'Remember me',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: _rememberMe
+                            ? Theme.of(context).colorScheme.onSurface
+                            : Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontWeight: _rememberMe
+                            ? FontWeight.w600
+                            : FontWeight.w500,
+                        fontSize: 15,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
-        // Forgot password
+        // Enhanced Forgot password button (no border)
         TextButton(
           onPressed: _isLoading
               ? null
               : () => context.go(AppRoutes.forgotPassword),
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            backgroundColor: Theme.of(
+              context,
+            ).colorScheme.primary.withValues(alpha: 0.04),
+          ),
           child: Text(
             'Forgot Password?',
             style: TextStyle(
-              color: Theme.of(context).colorScheme.primary,
+              color: const Color(0xFF4CAF50),
               fontWeight: FontWeight.w600,
+              fontSize: 14,
+              letterSpacing: 0.3,
             ),
           ),
         ),
@@ -595,19 +681,10 @@ class _LoginScreenState extends State<LoginScreen>
             height: _buttonHeight,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  const Color(0xFFCDDC39), // Energy yellow-green
-                  const Color(0xFF8BC34A), // Light green
-                  const Color(0xFF4CAF50), // Green
-                ],
-                stops: const [0.0, 0.5, 1.0],
-              ),
+              color: const Color(0xFF4CAF50), // Solid green color
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFFCDDC39).withValues(alpha: 0.4),
+                  color: const Color(0xFF4CAF50).withValues(alpha: 0.4),
                   blurRadius: 20,
                   offset: const Offset(0, 8),
                 ),
@@ -638,22 +715,36 @@ class _LoginScreenState extends State<LoginScreen>
                           child: CircularProgressIndicator(
                             strokeWidth: 2.5,
                             color: Colors.white,
+                            strokeCap: StrokeCap.round,
                           ),
                         ),
                         const SizedBox(width: 16),
-                        Text(
-                          'Signing In...',
+                        AnimatedDefaultTextStyle(
+                          duration: const Duration(milliseconds: 500),
                           style: TextStyle(
                             fontSize: 17,
                             fontWeight: FontWeight.w600,
                             color: Colors.white,
                             letterSpacing: 0.5,
                           ),
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 300),
+                            child: Text(
+                              'Signing In...',
+                              key: ValueKey(_isLoading),
+                              style: TextStyle(
+                                fontSize: 17,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
                         ),
                       ],
                     )
                   : Text(
-                      'Let\'s explore',
+                      'Sign In',
                       style: TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.w600,

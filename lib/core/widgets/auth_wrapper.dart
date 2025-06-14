@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/authentication/application/auth_bloc.dart';
 import '../../features/authentication/application/auth_state.dart';
-import '../../features/authentication/presentation/screens/extend_login_screen.dart';
+import '../../features/authentication/presentation/screens/login_screen.dart';
 import '../navigation/app_router.dart';
 import 'main_app_screen.dart';
 
@@ -35,9 +35,9 @@ class AuthWrapper extends StatelessWidget {
               return const MainAppScreen();
             case AuthUnauthenticated _:
             case AuthFailure _:
-              return const ExtendLoginScreen();
+              return const LoginScreen();
             default:
-              return const ExtendLoginScreen();
+              return const LoginScreen();
           }
         },
       ),
