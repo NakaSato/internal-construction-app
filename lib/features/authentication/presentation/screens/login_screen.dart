@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/navigation/app_router.dart';
-import '../../../../core/utils/extensions.dart';
 import '../../../../core/widgets/common_widgets.dart';
 import '../../application/auth_bloc.dart';
 import '../../application/auth_event.dart';
@@ -18,14 +17,14 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
   bool _isLoading = false;
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -87,21 +86,21 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 48),
 
-                  // Email field
+                  // Username field
                   TextFormField(
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
+                    controller: _usernameController,
+                    keyboardType: TextInputType.text,
                     textInputAction: TextInputAction.next,
                     decoration: const InputDecoration(
-                      labelText: 'Email',
-                      prefixIcon: Icon(Icons.email_outlined),
+                      labelText: 'Username',
+                      prefixIcon: Icon(Icons.person_outlined),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter your email';
+                        return 'Please enter your username';
                       }
-                      if (!value.isValidEmail) {
-                        return 'Please enter a valid email';
+                      if (value.length < 3) {
+                        return 'Username must be at least 3 characters';
                       }
                       return null;
                     },
@@ -192,7 +191,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     context.read<AuthBloc>().add(
       AuthSignInRequested(
-        username: _emailController.text.trim(),
+        username: _usernameController.text.trim(),
         password: _passwordController.text,
       ),
     );
@@ -230,7 +229,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ElevatedButton(
             onPressed: () {
               final email = emailController.text.trim();
-              if (email.isNotEmpty && email.isValidEmail) {
+              if (email.isNotEmpty) {
                 context.read<AuthBloc>().add(
                   AuthPasswordResetRequested(email: email),
                 );

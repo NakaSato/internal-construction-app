@@ -34,7 +34,7 @@ extension StringExtensions on String {
       return 'Email is required';
     }
     if (!isValidEmail) {
-      return 'Please enter a valid email address';
+      return 'Please enter a valid email format';
     }
     return null;
   }

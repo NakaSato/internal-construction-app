@@ -6,7 +6,7 @@ import '../../features/authentication/application/auth_bloc.dart';
 import '../../features/authentication/application/auth_state.dart';
 import '../../features/authentication/presentation/screens/forgot_password_screen.dart';
 import '../../features/authentication/presentation/screens/login_screen.dart';
-import '../../features/authentication/presentation/screens/enhanced_login_screen.dart';
+import '../../features/authentication/presentation/screens/extend_login_screen.dart';
 import '../../features/authentication/presentation/screens/register_screen.dart';
 import '../../features/calendar_integration/calendar_project_demo_screen.dart';
 import '../../features/calendar_management/presentation/screens/calendar_management_screen.dart';
@@ -58,12 +58,12 @@ class AppRouter {
         path: AppRoutes.login,
         name: 'login',
         builder: (context, state) =>
-            const EnhancedLoginScreen(), // Use enhanced version by default
+            const ExtendLoginScreen(), // Use extended version by default
       ),
       GoRoute(
         path: AppRoutes.enhancedLogin,
         name: 'enhanced-login',
-        builder: (context, state) => const EnhancedLoginScreen(),
+        builder: (context, state) => const ExtendLoginScreen(),
       ),
       GoRoute(
         path: '/classic-login',

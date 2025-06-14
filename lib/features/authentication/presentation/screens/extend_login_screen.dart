@@ -3,27 +3,26 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/navigation/app_router.dart';
-import '../../../../core/utils/extensions.dart';
 import '../../../../core/widgets/error_message_widget.dart';
 import '../../application/auth_bloc.dart';
 import '../../application/auth_event.dart';
 import '../../application/auth_state.dart';
 import '../../domain/entities/user.dart';
 
-/// Enhanced login screen with modern UI and improved UX
-class EnhancedLoginScreen extends StatefulWidget {
-  const EnhancedLoginScreen({super.key});
+/// Extended login screen with modern UI and improved UX
+class ExtendLoginScreen extends StatefulWidget {
+  const ExtendLoginScreen({super.key});
 
   @override
-  State<EnhancedLoginScreen> createState() => _EnhancedLoginScreenState();
+  State<ExtendLoginScreen> createState() => _ExtendLoginScreenState();
 }
 
-class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
+class _ExtendLoginScreenState extends State<ExtendLoginScreen>
     with TickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _emailFocusNode = FocusNode();
+  final _usernameFocusNode = FocusNode();
   final _passwordFocusNode = FocusNode();
 
   bool _obscurePassword = true;
@@ -80,9 +79,9 @@ class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _usernameController.dispose();
     _passwordController.dispose();
-    _emailFocusNode.dispose();
+    _usernameFocusNode.dispose();
     _passwordFocusNode.dispose();
     _animationController.dispose();
     _buttonAnimationController.dispose();
@@ -147,11 +146,14 @@ class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: [
-          Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-          Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.05),
+          Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
+          Theme.of(context).colorScheme.secondary.withValues(alpha: 0.1),
+          Theme.of(
+            context,
+          ).colorScheme.primaryContainer.withValues(alpha: 0.08),
           Theme.of(context).colorScheme.surface,
         ],
-        stops: const [0.0, 0.5, 1.0],
+        stops: const [0.0, 0.3, 0.7, 1.0],
       ),
     );
   }
@@ -162,16 +164,53 @@ class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Spacer(flex: 2),
+          const Spacer(flex: 1),
           _buildHeader(context),
-          const Spacer(flex: 2),
-          _buildEmailField(),
-          const SizedBox(height: 20),
-          _buildPasswordField(),
-          const SizedBox(height: 16),
-          _buildOptionsRow(),
-          const SizedBox(height: 32),
-          _buildSignInButton(),
+          const SizedBox(height: 48),
+          Container(
+            padding: const EdgeInsets.all(32),
+            margin: const EdgeInsets.symmetric(horizontal: 8),
+            decoration: BoxDecoration(
+              color: Theme.of(
+                context,
+              ).colorScheme.surface.withValues(alpha: 0.95),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: Theme.of(
+                  context,
+                ).colorScheme.outline.withValues(alpha: 0.1),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.shadow.withValues(alpha: 0.1),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+                BoxShadow(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.05),
+                  blurRadius: 40,
+                  offset: const Offset(0, 16),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildUsernameField(),
+                const SizedBox(height: 24),
+                _buildPasswordField(),
+                const SizedBox(height: 20),
+                _buildOptionsRow(),
+                const SizedBox(height: 32),
+                _buildSignInButton(),
+              ],
+            ),
+          ),
           const SizedBox(height: 32),
           _buildSignUpSection(),
           const Spacer(flex: 1),
@@ -186,8 +225,8 @@ class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
         Hero(
           tag: 'app_logo',
           child: Container(
-            width: 100,
-            height: 100,
+            width: 120,
+            height: 120,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: LinearGradient(
@@ -196,88 +235,138 @@ class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
                 colors: [
                   Theme.of(context).colorScheme.primary,
                   Theme.of(context).colorScheme.secondary,
+                  Theme.of(context).colorScheme.tertiary,
                 ],
+                stops: const [0.0, 0.6, 1.0],
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.4),
+                  blurRadius: 25,
+                  offset: const Offset(0, 12),
+                ),
+                BoxShadow(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.secondary.withValues(alpha: 0.2),
+                  blurRadius: 40,
+                  offset: const Offset(0, 20),
                 ),
               ],
             ),
             child: Icon(
-              Icons.security,
-              size: 50,
+              Icons.lock_rounded,
+              size: 60,
               color: Theme.of(context).colorScheme.onPrimary,
             ),
           ),
         ),
-        const SizedBox(height: 32),
+        const SizedBox(height: 40),
         Text(
           'Welcome Back',
-          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-            fontWeight: FontWeight.bold,
+          style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+            fontWeight: FontWeight.w700,
             color: Theme.of(context).colorScheme.onSurface,
+            letterSpacing: -0.5,
           ),
         ),
-        const SizedBox(height: 8),
-        Text(
-          'Sign in to continue to your account',
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Text(
+            'Sign in to continue to your account',
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
+              height: 1.4,
+            ),
+            textAlign: TextAlign.center,
           ),
-          textAlign: TextAlign.center,
         ),
       ],
     );
   }
 
-  Widget _buildEmailField() {
+  Widget _buildUsernameField() {
     return TextFormField(
-      controller: _emailController,
-      focusNode: _emailFocusNode,
-      keyboardType: TextInputType.emailAddress,
+      controller: _usernameController,
+      focusNode: _usernameFocusNode,
+      keyboardType: TextInputType.text,
       textInputAction: TextInputAction.next,
       enabled: !_isLoading,
       style: Theme.of(context).textTheme.bodyLarge,
       decoration: InputDecoration(
-        labelText: 'Email Address',
-        hintText: 'Enter your email',
-        prefixIcon: Icon(
-          Icons.email_outlined,
-          color: Theme.of(context).colorScheme.primary,
+        labelText: 'Username',
+        hintText: 'Enter your username',
+        hintStyle: TextStyle(
+          color: Theme.of(
+            context,
+          ).colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+        ),
+        prefixIcon: Container(
+          margin: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(
+            Icons.person_rounded,
+            color: Theme.of(context).colorScheme.primary,
+            size: 20,
+          ),
         ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Theme.of(context).colorScheme.outline),
+          borderRadius: BorderRadius.circular(20),
+          borderSide: BorderSide(
+            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+          ),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
           borderSide: BorderSide(
-            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
+            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
           ),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
           borderSide: BorderSide(
             color: Theme.of(context).colorScheme.primary,
             width: 2,
           ),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Theme.of(context).colorScheme.error),
+          borderRadius: BorderRadius.circular(20),
+          borderSide: BorderSide(
+            color: Theme.of(context).colorScheme.error,
+            width: 2,
+          ),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(20),
+          borderSide: BorderSide(
+            color: Theme.of(context).colorScheme.error,
+            width: 2,
+          ),
         ),
         filled: true,
-        fillColor: Theme.of(context).colorScheme.surface.withValues(alpha: 0.8),
+        fillColor: Theme.of(
+          context,
+        ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 16,
+        ),
       ),
       validator: (value) {
         if (value == null || value.isEmpty) {
-          return 'Please enter your email address';
+          return 'Please enter your username';
         }
-        if (!value.isValidEmail) {
-          return 'Please enter a valid email address';
+        if (value.length < 3) {
+          return 'Username must be at least 3 characters';
         }
         return null;
       },
@@ -298,46 +387,83 @@ class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
       decoration: InputDecoration(
         labelText: 'Password',
         hintText: 'Enter your password',
-        prefixIcon: Icon(
-          Icons.lock_outlined,
-          color: Theme.of(context).colorScheme.primary,
+        hintStyle: TextStyle(
+          color: Theme.of(
+            context,
+          ).colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
         ),
-        suffixIcon: IconButton(
-          icon: Icon(
-            _obscurePassword ? Icons.visibility_off : Icons.visibility,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
+        prefixIcon: Container(
+          margin: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8),
           ),
-          onPressed: _isLoading
-              ? null
-              : () {
-                  setState(() {
-                    _obscurePassword = !_obscurePassword;
-                  });
-                },
+          child: Icon(
+            Icons.lock_rounded,
+            color: Theme.of(context).colorScheme.primary,
+            size: 20,
+          ),
+        ),
+        suffixIcon: Container(
+          margin: const EdgeInsets.only(right: 12),
+          child: IconButton(
+            icon: Icon(
+              _obscurePassword
+                  ? Icons.visibility_off_rounded
+                  : Icons.visibility_rounded,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+            onPressed: _isLoading
+                ? null
+                : () {
+                    setState(() {
+                      _obscurePassword = !_obscurePassword;
+                    });
+                  },
+          ),
         ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Theme.of(context).colorScheme.outline),
+          borderRadius: BorderRadius.circular(20),
+          borderSide: BorderSide(
+            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+          ),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
           borderSide: BorderSide(
-            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
+            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
           ),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
           borderSide: BorderSide(
             color: Theme.of(context).colorScheme.primary,
             width: 2,
           ),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Theme.of(context).colorScheme.error),
+          borderRadius: BorderRadius.circular(20),
+          borderSide: BorderSide(
+            color: Theme.of(context).colorScheme.error,
+            width: 2,
+          ),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(20),
+          borderSide: BorderSide(
+            color: Theme.of(context).colorScheme.error,
+            width: 2,
+          ),
         ),
         filled: true,
-        fillColor: Theme.of(context).colorScheme.surface.withValues(alpha: 0.8),
+        fillColor: Theme.of(
+          context,
+        ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 16,
+        ),
       ),
       validator: (value) {
         if (value == null || value.isEmpty) {
@@ -409,22 +535,33 @@ class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
         return Transform.scale(
           scale: _buttonScaleAnimation.value,
           child: Container(
-            height: 56,
+            height: 60,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(20),
               gradient: LinearGradient(
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
                 colors: [
                   Theme.of(context).colorScheme.primary,
                   Theme.of(context).colorScheme.secondary,
+                  Theme.of(context).colorScheme.tertiary,
                 ],
+                stops: const [0.0, 0.5, 1.0],
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
-                  blurRadius: 15,
-                  offset: const Offset(0, 5),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.4),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+                BoxShadow(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.shadow.withValues(alpha: 0.1),
+                  blurRadius: 30,
+                  offset: const Offset(0, 12),
                 ),
               ],
             ),
@@ -433,8 +570,9 @@ class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.transparent,
                 shadowColor: Colors.transparent,
+                elevation: 0,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(20),
                 ),
               ),
               child: _isLoading
@@ -442,20 +580,21 @@ class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         SizedBox(
-                          width: 20,
-                          height: 20,
+                          width: 22,
+                          height: 22,
                           child: CircularProgressIndicator(
-                            strokeWidth: 2,
+                            strokeWidth: 2.5,
                             color: Theme.of(context).colorScheme.onPrimary,
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 16),
                         Text(
                           'Signing In...',
                           style: TextStyle(
-                            fontSize: 16,
+                            fontSize: 17,
                             fontWeight: FontWeight.w600,
                             color: Theme.of(context).colorScheme.onPrimary,
+                            letterSpacing: 0.5,
                           ),
                         ),
                       ],
@@ -463,9 +602,10 @@ class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
                   : Text(
                       'Sign In',
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 17,
                         fontWeight: FontWeight.w600,
                         color: Theme.of(context).colorScheme.onPrimary,
+                        letterSpacing: 0.5,
                       ),
                     ),
             ),
@@ -504,7 +644,9 @@ class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
       margin: const EdgeInsets.only(top: 16, bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.8),
+        color: Theme.of(
+          context,
+        ).colorScheme.primaryContainer.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
@@ -674,7 +816,7 @@ class _EnhancedLoginScreenState extends State<EnhancedLoginScreen>
 
     context.read<AuthBloc>().add(
       AuthSignInRequested(
-        username: _emailController.text.trim(),
+        username: _usernameController.text.trim(),
         password: _passwordController.text,
       ),
     );

@@ -9,7 +9,7 @@ class AuthRepositoryFactory {
 
   final AuthRepository _apiAuthRepository;
 
-  /// Get the appropriate auth repository - now only API-based
+  /// Get the appropriate auth repository - API-based only
   AuthRepository getAuthRepository() {
     return _apiAuthRepository;
   }
