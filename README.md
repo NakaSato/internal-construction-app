@@ -1,8 +1,6 @@
-# flutter_architecture_app
-
 # Flutter Architecture App
 
-A comprehensive Flutter application demonstrating Feature-First architecture with Clean Architecture principles. This project includes authentication, image upload, location tracking, and work calendar features.
+A comprehensive Flutter application demonstrating Feature-First architecture with Clean Architecture principles. This project includes authentication, project management, calendar integration, daily reports, image upload, and location tracking features.
 
 ## 🏗️ Architecture
 
@@ -23,6 +21,9 @@ lib/
     │   ├── domain/                 # Entities and repositories
     │   ├── infrastructure/         # Data sources and implementations
     │   └── presentation/           # UI screens and widgets
+    ├── project_management/         # Project management feature
+    ├── calendar_management/        # Calendar management feature
+    ├── daily_reports/             # Daily reports feature
     ├── image_upload/              # Image upload feature
     ├── location_tracking/         # Location tracking feature
     └── work_calendar/            # Work calendar feature
@@ -30,22 +31,25 @@ lib/
 
 ## 🚀 Features
 
-- ✅ **Authentication** - Sign in, sign up, password reset
-- 🔄 **Image Upload** - Camera and gallery image handling
-- 📍 **Location Tracking** - Real-time location services
-- 📅 **Work Calendar** - Calendar management and scheduling
+- ✅ **Enhanced Authentication** - Modern login/register with improved error handling
+- 📊 **Project Management** - Enhanced project list with status tracking and progress visualization
+- 📅 **Calendar Integration** - Interactive calendar with project deadlines and event management
+- 📋 **Daily Reports** - Comprehensive field reports management system
+- 🔄 **Image Upload** - Camera and gallery image handling with compression
+- 📍 **Location Tracking** - Real-time location services with background tracking
+- 🎨 **Modern UI/UX** - Material 3 design with glassmorphism effects and smooth animations
 
 ## 🛠️ Tech Stack
 
-- **Framework**: Flutter 3.27.0+
-- **State Management**: BLoC/Cubit
-- **Navigation**: GoRouter
+- **Framework**: Flutter 3.32.2+
+- **State Management**: BLoC/Cubit pattern
+- **Navigation**: GoRouter with authentication guards
 - **Dependency Injection**: get_it + injectable
-- **Authentication**: Firebase Auth
 - **Secure Storage**: flutter_secure_storage
-- **Network**: Dio
-- **Calendar**: Syncfusion Flutter Calendar
+- **Network**: Dio with comprehensive error handling
+- **Calendar**: table_calendar + Syncfusion Flutter Calendar
 - **Architecture**: Feature-First + Clean Architecture
+- **UI Components**: Material 3 with custom theming
 
 ## 📋 Prerequisites
 
@@ -187,12 +191,16 @@ This project follows:
 - Some deprecated APIs need updating (see flutter analyze output)
 - Location services require platform-specific permissions
 
-## 📖 Documentation
+## 📚 Documentation
 
-- [Architecture Guide](docs/architecture.md)
-- [Feature Development](docs/features.md)
-- [Testing Guide](docs/testing.md)
-- [Deployment Guide](docs/deployment.md)
+Comprehensive documentation is available in the [`docs/`](./docs/) directory:
+
+- **[📖 Complete Overview](./docs/FLUTTER_ARCHITECTURE_APP_FINAL_SUMMARY.md)** - Full project summary and features
+- **[🏠 Enhanced Project List](./docs/ENHANCED_PROJECT_LIST_SUMMARY.md)** - Project management implementation
+- **[📅 Calendar Management](./docs/CALENDAR_MANAGEMENT_FINAL_SUMMARY.md)** - Calendar integration details
+- **[📋 Daily Reports](./docs/DAILY_REPORTS_API_DEMO_SUMMARY.md)** - Reports management system
+- **[🔧 API Error Handling](./docs/API_ERROR_HANDLING_SUMMARY.md)** - Error handling improvements
+- **[🐛 Debug Guides](./docs/README.md)** - Troubleshooting and implementation guides
 
 ## 📄 License
 
