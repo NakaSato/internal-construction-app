@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-import '../../domain/entities/task.dart';
+import '../domain/entities/task.dart' as task_entity;
 
 /// Events for the TaskBloc
 abstract class TaskEvent extends Equatable {
@@ -47,7 +47,7 @@ class AssigneeTasksLoadRequested extends TaskEvent {
 
 /// Event to create a new task
 class TaskCreated extends TaskEvent {
-  final Task task;
+  final task_entity.Task task;
 
   const TaskCreated(this.task);
 
@@ -57,7 +57,7 @@ class TaskCreated extends TaskEvent {
 
 /// Event to update an existing task
 class TaskUpdated extends TaskEvent {
-  final Task task;
+  final task_entity.Task task;
 
   const TaskUpdated(this.task);
 
@@ -78,12 +78,9 @@ class TaskDeleted extends TaskEvent {
 /// Event to update task status
 class TaskStatusUpdated extends TaskEvent {
   final String taskId;
-  final TaskStatus status;
+  final task_entity.TaskStatus status;
 
-  const TaskStatusUpdated({
-    required this.taskId,
-    required this.status,
-  });
+  const TaskStatusUpdated({required this.taskId, required this.status});
 
   @override
   List<Object?> get props => [taskId, status];
@@ -94,10 +91,7 @@ class TaskCompletionUpdated extends TaskEvent {
   final String taskId;
   final int percentage;
 
-  const TaskCompletionUpdated({
-    required this.taskId,
-    required this.percentage,
-  });
+  const TaskCompletionUpdated({required this.taskId, required this.percentage});
 
   @override
   List<Object?> get props => [taskId, percentage];

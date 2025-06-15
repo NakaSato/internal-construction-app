@@ -15,12 +15,14 @@ class ProjectReportsWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final reports = project.recentReports;
-    
+
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.5)),
+        side: BorderSide(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -32,7 +34,10 @@ class ProjectReportsWidget extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.description_outlined, color: theme.colorScheme.primary),
+                    Icon(
+                      Icons.description_outlined,
+                      color: theme.colorScheme.primary,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       'Recent Reports',
@@ -58,7 +63,9 @@ class ProjectReportsWidget extends StatelessWidget {
                       Icon(
                         Icons.description_outlined,
                         size: 48,
-                        color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5),
+                        color: theme.colorScheme.onSurfaceVariant.withValues(
+                          alpha: 0.5,
+                        ),
                       ),
                       const SizedBox(height: 16),
                       Text(
@@ -73,18 +80,25 @@ class ProjectReportsWidget extends StatelessWidget {
               ),
             if (reports.isNotEmpty) ...[
               const SizedBox(height: 12),
-              ListView.separated(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: reports.length > 3 ? 3 : reports.length,
-                separatorBuilder: (context, index) => Divider(
-                  height: 1,
-                  thickness: 1,
-                  color: theme.colorScheme.outlineVariant.withOpacity(0.3),
-                ),
-                itemBuilder: (context, index) {
-                  return ReportItemWidget(report: reports[index]);
-                },
+              // Replace ListView with Column to avoid nested scrolling issues
+              Column(
+                children: [
+                  for (
+                    int i = 0;
+                    i < (reports.length > 3 ? 3 : reports.length);
+                    i++
+                  ) ...[
+                    if (i > 0)
+                      Divider(
+                        height: 1,
+                        thickness: 1,
+                        color: theme.colorScheme.outlineVariant.withValues(
+                          alpha: 0.3,
+                        ),
+                      ),
+                    ReportItemWidget(report: reports[i]),
+                  ],
+                ],
               ),
               if (reports.length > 3) ...[
                 const SizedBox(height: 8),
@@ -105,11 +119,7 @@ class ProjectReportsWidget extends StatelessWidget {
 }
 
 class ReportItemWidget extends StatelessWidget {
-  const ReportItemWidget({
-    super.key,
-    required this.report,
-    this.onTap,
-  });
+  const ReportItemWidget({super.key, required this.report, this.onTap});
 
   final RecentReport report;
   final VoidCallback? onTap;
@@ -119,8 +129,9 @@ class ReportItemWidget extends StatelessWidget {
     final theme = Theme.of(context);
     final reportDate = _formatDate(report.reportDate);
     final isToday = report.reportDate.difference(DateTime.now()).inDays == 0;
-    final isYesterday = report.reportDate.difference(DateTime.now()).inDays == -1;
-    
+    final isYesterday =
+        report.reportDate.difference(DateTime.now()).inDays == -1;
+
     String dateLabel;
     if (isToday) {
       dateLabel = 'Today';
@@ -129,13 +140,13 @@ class ReportItemWidget extends StatelessWidget {
     } else {
       dateLabel = reportDate;
     }
-    
+
     return ListTile(
       contentPadding: EdgeInsets.zero,
       leading: CircleAvatar(
         backgroundColor: theme.colorScheme.primaryContainer,
         child: Text(
-          report.userName.isNotEmpty 
+          report.userName.isNotEmpty
               ? report.userName.substring(0, 1).toUpperCase()
               : '?',
           style: TextStyle(
@@ -146,9 +157,7 @@ class ReportItemWidget extends StatelessWidget {
       ),
       title: Text(
         report.userName,
-        style: theme.textTheme.bodyLarge?.copyWith(
-          fontWeight: FontWeight.w500,
-        ),
+        style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
       ),
       subtitle: Row(
         children: [
@@ -195,18 +204,19 @@ class ReportItemWidget extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          Icon(
-            Icons.chevron_right,
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
+          Icon(Icons.chevron_right, color: theme.colorScheme.onSurfaceVariant),
         ],
       ),
-      onTap: onTap ?? () {
-        // Handle report tap - navigate to report details
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Report ${report.id} details coming soon')),
-        );
-      },
+      onTap:
+          onTap ??
+          () {
+            // Handle report tap - navigate to report details
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Report ${report.id} details coming soon'),
+              ),
+            );
+          },
     );
   }
 

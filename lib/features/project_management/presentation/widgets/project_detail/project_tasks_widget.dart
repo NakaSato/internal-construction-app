@@ -15,12 +15,14 @@ class ProjectTasksWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final tasks = project.tasks;
-    
+
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.5)),
+        side: BorderSide(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -32,7 +34,10 @@ class ProjectTasksWidget extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.check_circle_outline, color: theme.colorScheme.primary),
+                    Icon(
+                      Icons.check_circle_outline,
+                      color: theme.colorScheme.primary,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       'Tasks',
@@ -44,7 +49,10 @@ class ProjectTasksWidget extends StatelessWidget {
                 ),
                 if (tasks.isNotEmpty)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: theme.colorScheme.secondaryContainer,
                       borderRadius: BorderRadius.circular(12),
@@ -68,7 +76,9 @@ class ProjectTasksWidget extends StatelessWidget {
                       Icon(
                         Icons.task_outlined,
                         size: 48,
-                        color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5),
+                        color: theme.colorScheme.onSurfaceVariant.withValues(
+                          alpha: 0.5,
+                        ),
                       ),
                       const SizedBox(height: 16),
                       Text(
@@ -106,10 +116,7 @@ class ProjectTasksWidget extends StatelessWidget {
 }
 
 class TaskItemWidget extends StatelessWidget {
-  const TaskItemWidget({
-    super.key,
-    required this.task,
-  });
+  const TaskItemWidget({super.key, required this.task});
 
   final ProjectTask task;
 
@@ -119,18 +126,16 @@ class TaskItemWidget extends StatelessWidget {
     final isCompleted = task.status.toLowerCase() == 'completed';
     final daysLeft = task.dueDate.difference(DateTime.now()).inDays;
     final isOverdue = daysLeft < 0 && !isCompleted;
-    
+
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       elevation: 0,
       color: isCompleted
-          ? theme.colorScheme.surface.withOpacity(0.7)
+          ? theme.colorScheme.surface.withValues(alpha: 0.7)
           : isOverdue
-              ? theme.colorScheme.errorContainer.withOpacity(0.2)
-              : theme.colorScheme.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-      ),
+          ? theme.colorScheme.errorContainer.withValues(alpha: 0.2)
+          : theme.colorScheme.surface,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Row(
@@ -139,10 +144,10 @@ class TaskItemWidget extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: isCompleted
-                    ? theme.colorScheme.primary.withOpacity(0.1)
+                    ? theme.colorScheme.primary.withValues(alpha: 0.1)
                     : isOverdue
-                        ? theme.colorScheme.errorContainer
-                        : theme.colorScheme.primaryContainer,
+                    ? theme.colorScheme.errorContainer
+                    : theme.colorScheme.primaryContainer,
               ),
               padding: const EdgeInsets.all(8),
               child: Icon(
@@ -150,8 +155,8 @@ class TaskItemWidget extends StatelessWidget {
                 color: isCompleted
                     ? theme.colorScheme.primary
                     : isOverdue
-                        ? theme.colorScheme.error
-                        : theme.colorScheme.primary,
+                    ? theme.colorScheme.error
+                    : theme.colorScheme.primary,
                 size: 18,
               ),
             ),
@@ -164,8 +169,10 @@ class TaskItemWidget extends StatelessWidget {
                     task.title,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w500,
-                      decoration: isCompleted ? TextDecoration.lineThrough : null,
-                      color: isCompleted 
+                      decoration: isCompleted
+                          ? TextDecoration.lineThrough
+                          : null,
+                      color: isCompleted
                           ? theme.colorScheme.onSurfaceVariant
                           : theme.colorScheme.onSurface,
                     ),
@@ -217,20 +224,17 @@ class TaskItemWidget extends StatelessWidget {
 }
 
 class TaskStatusChip extends StatelessWidget {
-  const TaskStatusChip({
-    super.key,
-    required this.status,
-  });
+  const TaskStatusChip({super.key, required this.status});
 
   final String status;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     Color chipColor;
     IconData statusIcon;
-    
+
     switch (status.toLowerCase()) {
       case 'completed':
         chipColor = Colors.green;
@@ -248,22 +252,18 @@ class TaskStatusChip extends StatelessWidget {
         chipColor = theme.colorScheme.primary;
         statusIcon = Icons.circle;
     }
-    
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: chipColor.withOpacity(0.1),
+        color: chipColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: chipColor.withOpacity(0.3)),
+        border: Border.all(color: chipColor.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            statusIcon,
-            size: 14,
-            color: chipColor,
-          ),
+          Icon(statusIcon, size: 14, color: chipColor),
           const SizedBox(width: 4),
           Text(
             status,

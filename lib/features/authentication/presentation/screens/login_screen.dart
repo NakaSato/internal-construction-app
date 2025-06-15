@@ -34,20 +34,19 @@ class _LoginScreenState extends State<LoginScreen>
   static const int _minUsernameLength = 3;
   static const int _minPasswordLength = 6;
 
-  // Spacing Constants
-  static const EdgeInsets _horizontalPadding = EdgeInsets.symmetric(
-    horizontal: 12.0,
-  );
+  // Responsive Breakpoints
+  static const double _smallScreenHeight = 600;
+  static const double _mediumScreenHeight = 700;
+  static const double _smallScreenWidth = 360;
+  static const double _mediumScreenWidth = 400;
+
+  // Spacing Constants (will be adjusted based on screen size)
   static const EdgeInsets _containerPadding = EdgeInsets.symmetric(
     horizontal: 32,
     vertical: 28,
   );
   static const EdgeInsets _containerMargin = EdgeInsets.symmetric(
     horizontal: 12.0,
-  );
-  static const EdgeInsets _inputContentPadding = EdgeInsets.symmetric(
-    horizontal: 12.0,
-    vertical: 12.0,
   );
 
   // Form controllers and focus nodes
@@ -137,26 +136,30 @@ class _LoginScreenState extends State<LoginScreen>
     super.dispose();
   }
 
-  // Helper method to create consistent input decoration
+  // Helper method to create consistent input decoration with responsive sizing
   InputDecoration _buildInputDecoration({
     required String labelText,
     required String hintText,
     required Widget prefixIcon,
     Widget? suffixIcon,
   }) {
+    final isSmallScreen = _isSmallScreen(context);
+    final fontSize = isSmallScreen ? 14.0 : 16.0;
+    final hintFontSize = isSmallScreen ? 13.0 : 15.0;
+
     return InputDecoration(
       labelText: labelText,
       labelStyle: TextStyle(
         color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
         fontWeight: FontWeight.w500,
-        fontSize: 16,
+        fontSize: fontSize,
       ),
       hintText: hintText,
       hintStyle: TextStyle(
         color: Theme.of(
           context,
         ).colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
-        fontSize: 15,
+        fontSize: hintFontSize,
       ),
       prefixIcon: prefixIcon,
       suffixIcon: suffixIcon,
@@ -178,7 +181,10 @@ class _LoginScreenState extends State<LoginScreen>
       ),
       filled: true,
       fillColor: Colors.white.withValues(alpha: 0.9),
-      contentPadding: _inputContentPadding,
+      contentPadding: EdgeInsets.symmetric(
+        horizontal: isSmallScreen ? 10.0 : 12.0,
+        vertical: isSmallScreen ? 10.0 : 12.0,
+      ),
       floatingLabelBehavior: FloatingLabelBehavior.auto,
     );
   }
@@ -267,55 +273,93 @@ class _LoginScreenState extends State<LoginScreen>
                 SafeArea(
                   child: LayoutBuilder(
                     builder: (context, constraints) {
+                      final isSmallScreen = _isSmallScreen(context);
+                      final isMediumScreen = _isMediumScreen(context);
+                      final screenHeight = constraints.maxHeight;
+                      final keyboardHeight = MediaQuery.of(
+                        context,
+                      ).viewInsets.bottom;
+
+                      // Calculate dynamic spacing based on screen size and keyboard
+                      double topSpacing;
+                      if (keyboardHeight > 0) {
+                        // Keyboard is open - minimal top spacing
+                        topSpacing = isSmallScreen ? 10 : 20;
+                      } else {
+                        // Keyboard is closed - responsive top spacing
+                        if (isSmallScreen) {
+                          topSpacing =
+                              screenHeight * 0.08; // 8% for small screens
+                        } else if (isMediumScreen) {
+                          topSpacing =
+                              screenHeight * 0.15; // 15% for medium screens
+                        } else {
+                          topSpacing =
+                              screenHeight * 0.25; // 25% for large screens
+                        }
+                      }
+
                       return SingleChildScrollView(
                         physics: const BouncingScrollPhysics(),
                         child: ConstrainedBox(
                           constraints: BoxConstraints(
-                            minHeight:
-                                constraints.maxHeight * 0.9, // Reduced to 90%
-                            maxWidth: 400,
+                            minHeight: screenHeight - keyboardHeight,
+                            maxWidth: double.infinity,
                           ),
-                          child: Column(
-                            children: [
-                              // Flexible top spacer (smaller on small screens)
-                              SizedBox(
-                                height: constraints.maxHeight < 700
-                                    ? 20
-                                    : constraints.maxHeight * 0.3,
-                              ),
+                          child: IntrinsicHeight(
+                            child: Column(
+                              children: [
+                                // Dynamic top spacer
+                                SizedBox(height: topSpacing),
 
-                              // Bottom content area
-                              Padding(
-                                padding: _horizontalPadding,
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    // Sign out option for already authenticated users
-                                    if (state is AuthAuthenticated) ...[
-                                      _buildSignOutHeader(context, state.user),
-                                      const SizedBox(height: 20),
-                                    ],
-
-                                    // Main login form
-                                    AnimatedBuilder(
-                                      animation: _animationController,
-                                      builder: (context, child) {
-                                        return FadeTransition(
-                                          opacity: _fadeAnimation,
-                                          child: SlideTransition(
-                                            position: _slideAnimation,
-                                            child: _buildLoginForm(context),
-                                          ),
-                                        );
-                                      },
+                                // Main content area
+                                Expanded(
+                                  child: Padding(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: isSmallScreen ? 8.0 : 12.0,
                                     ),
-                                  ],
-                                ),
-                              ),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        // Sign out option for already authenticated users
+                                        if (state is AuthAuthenticated) ...[
+                                          _buildSignOutHeader(
+                                            context,
+                                            state.user,
+                                          ),
+                                          SizedBox(
+                                            height: isSmallScreen ? 12 : 20,
+                                          ),
+                                        ],
 
-                              // Small bottom padding
-                              const SizedBox(height: 20),
-                            ],
+                                        // Main login form
+                                        AnimatedBuilder(
+                                          animation: _animationController,
+                                          builder: (context, child) {
+                                            return FadeTransition(
+                                              opacity: _fadeAnimation,
+                                              child: SlideTransition(
+                                                position: _slideAnimation,
+                                                child: _buildLoginForm(context),
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+
+                                // Bottom padding (smaller when keyboard is open)
+                                SizedBox(
+                                  height: keyboardHeight > 0
+                                      ? 10
+                                      : (isSmallScreen ? 16 : 24),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       );
@@ -369,22 +413,25 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   Widget _buildLoginForm(BuildContext context) {
+    final isSmallScreen = _isSmallScreen(context);
+    final responsivePadding = _getResponsivePadding(context);
+    final responsiveMargin = _getResponsiveMargin(context);
+    final responsiveMaxWidth = _getResponsiveMaxWidth(context);
+
     return Form(
       key: _formKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SizedBox(height: 12), // Reduced top spacing
+          SizedBox(height: isSmallScreen ? 8 : 12),
           _buildHeader(context),
-          const SizedBox(height: 20), // Reduced spacing before form
+          SizedBox(height: isSmallScreen ? 12 : 20),
           Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(
-                maxWidth: 380,
-              ), // Optimal form width
+              constraints: BoxConstraints(maxWidth: responsiveMaxWidth),
               child: Container(
-                padding: _containerPadding,
-                margin: _containerMargin,
+                padding: responsivePadding,
+                margin: responsiveMargin,
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.95),
                   borderRadius: BorderRadius.circular(_containerBorderRadius),
@@ -409,73 +456,87 @@ class _LoginScreenState extends State<LoginScreen>
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _buildInputFieldWrapper(child: _buildUsernameField()),
-                    const SizedBox(
-                      height: 20,
-                    ), // Reduced space between credentials
+                    SizedBox(height: isSmallScreen ? 16 : 20),
                     _buildInputFieldWrapper(child: _buildPasswordField()),
-                    const SizedBox(
-                      height: 24,
-                    ), // Reduced space after credentials
+                    SizedBox(height: isSmallScreen ? 20 : 24),
                     _buildOptionsRow(),
-                    const SizedBox(height: 24), // Reduced space before button
+                    SizedBox(height: isSmallScreen ? 20 : 24),
                     _buildSignInButton(),
                   ],
                 ),
               ),
             ),
           ),
-          const SizedBox(height: 16), // Reduced spacing after form
+          SizedBox(height: isSmallScreen ? 12 : 16),
           _buildSignUpSection(),
-          const SizedBox(height: 12), // Reduced bottom spacing
+          SizedBox(height: isSmallScreen ? 8 : 12),
         ],
       ),
     );
   }
 
   Widget _buildHeader(BuildContext context) {
+    final isSmallScreen = _isSmallScreen(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    // Responsive font sizes
+    final titleFontSize = isSmallScreen
+        ? (screenWidth < 320 ? 28.0 : 32.0)
+        : 40.0;
+    final descriptionFontSize = isSmallScreen ? 14.0 : 16.0;
+
     return Column(
       children: [
-        Text(
-          'CONSTRUCTION INTERNAL',
-          style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-            fontWeight: FontWeight.w700,
-            color: Colors.white,
-            letterSpacing: -0.5,
-            height: 1.2,
-            fontSize: 40,
-            shadows: [
-              Shadow(
-                offset: const Offset(0, 2),
-                blurRadius: 8,
-                color: Colors.black.withValues(alpha: 0.3),
-              ),
-            ],
-          ),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(
-          height: 12,
-        ), // Optimized spacing between title and description
+        // Make title responsive with better line breaking
         Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 20,
-          ), // Consistent with main padding
-          child: RichText(
-            textAlign: TextAlign.center,
-            text: TextSpan(
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Colors.white.withValues(alpha: 0.9),
-                height: 1.4,
-                fontSize: 16,
+          width: double.infinity,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              'CONSTRUCTION\nINTERNAL',
+              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+                letterSpacing: isSmallScreen ? -0.3 : -0.5,
+                height: 1.1,
+                fontSize: titleFontSize,
                 shadows: [
                   Shadow(
-                    offset: const Offset(0, 1),
-                    blurRadius: 4,
-                    color: Colors.black.withValues(alpha: 0.2),
+                    offset: const Offset(0, 2),
+                    blurRadius: 8,
+                    color: Colors.black.withValues(alpha: 0.3),
                   ),
                 ],
               ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
             ),
+          ),
+        ),
+        SizedBox(height: isSmallScreen ? 8 : 12),
+        // Responsive description with better padding
+        Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: isSmallScreen ? 16.0 : 20.0,
+          ),
+          child: Text(
+            'Manage your solar construction projects',
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              color: Colors.white.withValues(alpha: 0.9),
+              height: 1.4,
+              fontSize: descriptionFontSize,
+              fontWeight: FontWeight.w500,
+              shadows: [
+                Shadow(
+                  offset: const Offset(0, 1),
+                  blurRadius: 4,
+                  color: Colors.black.withValues(alpha: 0.2),
+                ),
+              ],
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
         ),
       ],
@@ -578,6 +639,11 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   Widget _buildOptionsRow() {
+    final isSmallScreen = _isSmallScreen(context);
+    final checkboxSize = isSmallScreen ? 20.0 : 22.0;
+    final fontSize = isSmallScreen ? 13.0 : 15.0;
+    final buttonFontSize = isSmallScreen ? 12.0 : 14.0;
+
     return Row(
       children: [
         // Enhanced Remember me section with modern UI
@@ -599,8 +665,8 @@ class _LoginScreenState extends State<LoginScreen>
                   // Custom animated checkbox
                   AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
-                    width: 22,
-                    height: 22,
+                    width: checkboxSize,
+                    height: checkboxSize,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(6),
                       border: Border.all(
@@ -627,10 +693,10 @@ class _LoginScreenState extends State<LoginScreen>
                           : null,
                     ),
                     child: _rememberMe
-                        ? const Icon(
+                        ? Icon(
                             Icons.check_rounded,
                             color: Colors.white,
-                            size: 16,
+                            size: isSmallScreen ? 14.0 : 16.0,
                           )
                         : null,
                   ),
@@ -646,7 +712,7 @@ class _LoginScreenState extends State<LoginScreen>
                         fontWeight: _rememberMe
                             ? FontWeight.w600
                             : FontWeight.w500,
-                        fontSize: 15,
+                        fontSize: fontSize,
                         letterSpacing: 0.2,
                       ),
                     ),
@@ -656,13 +722,16 @@ class _LoginScreenState extends State<LoginScreen>
             ),
           ),
         ),
-        // Enhanced Forgot password button (no border)
+        // Enhanced Forgot password button (responsive)
         TextButton(
           onPressed: _isLoading
               ? null
               : () => context.go(AppRoutes.forgotPassword),
           style: TextButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: EdgeInsets.symmetric(
+              horizontal: isSmallScreen ? 12 : 16,
+              vertical: isSmallScreen ? 8 : 12,
+            ),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
@@ -675,7 +744,7 @@ class _LoginScreenState extends State<LoginScreen>
             style: TextStyle(
               color: const Color(0xFF4CAF50),
               fontWeight: FontWeight.w600,
-              fontSize: 14,
+              fontSize: buttonFontSize,
               letterSpacing: 0.3,
             ),
           ),
@@ -685,13 +754,18 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   Widget _buildSignInButton() {
+    final isSmallScreen = _isSmallScreen(context);
+    final buttonHeight = isSmallScreen ? 52.0 : _buttonHeight;
+    final fontSize = isSmallScreen ? 15.0 : 17.0;
+    final loadingSize = isSmallScreen ? 18.0 : _loadingIndicatorSize;
+
     return AnimatedBuilder(
       animation: _buttonScaleAnimation,
       builder: (context, child) {
         return Transform.scale(
           scale: _buttonScaleAnimation.value,
           child: Container(
-            height: _buttonHeight,
+            height: buttonHeight,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
               color: const Color(0xFF4CAF50), // Solid green color
@@ -723,19 +797,19 @@ class _LoginScreenState extends State<LoginScreen>
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         SizedBox(
-                          width: _loadingIndicatorSize,
-                          height: _loadingIndicatorSize,
+                          width: loadingSize,
+                          height: loadingSize,
                           child: CircularProgressIndicator(
                             strokeWidth: 2.5,
                             color: Colors.white,
                             strokeCap: StrokeCap.round,
                           ),
                         ),
-                        const SizedBox(width: 16),
+                        const SizedBox(width: 12),
                         AnimatedDefaultTextStyle(
                           duration: const Duration(milliseconds: 500),
                           style: TextStyle(
-                            fontSize: 17,
+                            fontSize: fontSize,
                             fontWeight: FontWeight.w600,
                             color: Colors.white,
                             letterSpacing: 0.5,
@@ -746,7 +820,7 @@ class _LoginScreenState extends State<LoginScreen>
                               'Signing In...',
                               key: ValueKey(_isLoading),
                               style: TextStyle(
-                                fontSize: 17,
+                                fontSize: fontSize,
                                 fontWeight: FontWeight.w600,
                                 color: Colors.white,
                                 letterSpacing: 0.5,
@@ -759,7 +833,7 @@ class _LoginScreenState extends State<LoginScreen>
                   : Text(
                       'Sign In',
                       style: TextStyle(
-                        fontSize: 17,
+                        fontSize: fontSize,
                         fontWeight: FontWeight.w600,
                         color: Colors.white,
                         letterSpacing: 0.5,
@@ -773,6 +847,10 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   Widget _buildSignUpSection() {
+    final isSmallScreen = _isSmallScreen(context);
+    final fontSize = isSmallScreen ? 13.0 : null;
+    final buttonFontSize = isSmallScreen ? 13.0 : null;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -780,15 +858,23 @@ class _LoginScreenState extends State<LoginScreen>
           "Don't have an account? ",
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
             color: Theme.of(context).colorScheme.onSurfaceVariant,
+            fontSize: fontSize,
           ),
         ),
         TextButton(
           onPressed: _isLoading ? null : () => context.go(AppRoutes.register),
+          style: TextButton.styleFrom(
+            padding: EdgeInsets.symmetric(
+              horizontal: isSmallScreen ? 8 : 12,
+              vertical: isSmallScreen ? 4 : 8,
+            ),
+          ),
           child: Text(
             'Sign Up',
             style: TextStyle(
               color: Theme.of(context).colorScheme.primary,
               fontWeight: FontWeight.w600,
+              fontSize: buttonFontSize,
             ),
           ),
         ),
@@ -977,5 +1063,42 @@ class _LoginScreenState extends State<LoginScreen>
         password: _passwordController.text,
       ),
     );
+  }
+
+  // Helper methods for responsive design
+  bool _isSmallScreen(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    return size.height < _smallScreenHeight || size.width < _smallScreenWidth;
+  }
+
+  bool _isMediumScreen(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    return size.height < _mediumScreenHeight || size.width < _mediumScreenWidth;
+  }
+
+  EdgeInsets _getResponsivePadding(BuildContext context) {
+    if (_isSmallScreen(context)) {
+      return const EdgeInsets.symmetric(horizontal: 8.0, vertical: 16.0);
+    } else if (_isMediumScreen(context)) {
+      return const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0);
+    }
+    return _containerPadding;
+  }
+
+  EdgeInsets _getResponsiveMargin(BuildContext context) {
+    if (_isSmallScreen(context)) {
+      return const EdgeInsets.symmetric(horizontal: 8.0);
+    }
+    return _containerMargin;
+  }
+
+  double _getResponsiveMaxWidth(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    if (_isSmallScreen(context)) {
+      return screenWidth - 32; // Leave 16px margin on each side
+    } else if (_isMediumScreen(context)) {
+      return 360;
+    }
+    return 380;
   }
 }

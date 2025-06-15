@@ -198,7 +198,7 @@ class _AppHeaderState extends State<AppHeader>
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           border: Border.all(
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
             width: 2,
           ),
         ),
@@ -284,7 +284,9 @@ class _AppHeaderState extends State<AppHeader>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.7),
+        color: Theme.of(
+          context,
+        ).colorScheme.primaryContainer.withValues(alpha: 0.7),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
@@ -334,7 +336,7 @@ class _AppHeaderState extends State<AppHeader>
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: Colors.green.shade400.withOpacity(0.3),
+                color: Colors.green.shade400.withValues(alpha: 0.3),
                 blurRadius: 3,
                 spreadRadius: 1,
               ),
@@ -394,7 +396,9 @@ class _AppHeaderState extends State<AppHeader>
             decoration: _buildIconDecoration(context),
             child: Icon(
               Icons.search_rounded,
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.8),
               size: _AppHeaderConstants.iconSize,
             ),
           ),
@@ -454,7 +458,9 @@ class _AppHeaderState extends State<AppHeader>
             widget.showNotificationBadge && widget.notificationCount > 0
                 ? Icons.notifications_active_rounded
                 : Icons.notifications_outlined,
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
+            color: Theme.of(
+              context,
+            ).colorScheme.onSurface.withValues(alpha: 0.8),
             size: _AppHeaderConstants.iconSize,
           ),
         ),
@@ -521,20 +527,22 @@ class _AppHeaderState extends State<AppHeader>
           end: Alignment.bottomRight,
           colors: [
             widget.backgroundColor ?? Theme.of(context).colorScheme.surface,
-            widget.backgroundColor?.withOpacity(0.8) ??
-                Theme.of(context).colorScheme.surface.withOpacity(0.95),
+            widget.backgroundColor?.withValues(alpha: 0.8) ??
+                Theme.of(context).colorScheme.surface.withValues(alpha: 0.95),
           ],
           stops: const [0.0, 1.0],
         ),
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context).colorScheme.shadow.withOpacity(0.08),
+            color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.08),
             offset: const Offset(0, 2),
             blurRadius: 12,
             spreadRadius: 0,
           ),
           BoxShadow(
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.05),
+            color: Theme.of(
+              context,
+            ).colorScheme.primary.withValues(alpha: 0.05),
             offset: const Offset(0, 1),
             blurRadius: 4,
             spreadRadius: 0,
@@ -546,7 +554,7 @@ class _AppHeaderState extends State<AppHeader>
         color: widget.backgroundColor ?? Theme.of(context).colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context).colorScheme.shadow.withOpacity(0.05),
+            color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.05),
             offset: const Offset(0, 1),
             blurRadius: 4,
             spreadRadius: 0,
@@ -563,15 +571,15 @@ class _AppHeaderState extends State<AppHeader>
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: [
-          Theme.of(context).colorScheme.primary.withOpacity(0.15),
-          Theme.of(context).colorScheme.secondary.withOpacity(0.1),
-          Theme.of(context).colorScheme.tertiary.withOpacity(0.05),
+          Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
+          Theme.of(context).colorScheme.secondary.withValues(alpha: 0.1),
+          Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.05),
         ],
         stops: const [0.0, 0.5, 1.0],
       ),
       boxShadow: [
         BoxShadow(
-          color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
           blurRadius: 16,
           offset: const Offset(0, 4),
           spreadRadius: 0,
@@ -585,9 +593,9 @@ class _AppHeaderState extends State<AppHeader>
       borderRadius: BorderRadius.circular(_AppHeaderConstants.iconBorderRadius),
       color: Theme.of(
         context,
-      ).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+      ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
       border: Border.all(
-        color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
+        color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.1),
       ),
     );
   }
@@ -597,7 +605,7 @@ class _AppHeaderState extends State<AppHeader>
       gradient: LinearGradient(
         colors: [
           Theme.of(context).colorScheme.error,
-          Theme.of(context).colorScheme.error.withOpacity(0.8),
+          Theme.of(context).colorScheme.error.withValues(alpha: 0.8),
         ],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
@@ -609,7 +617,7 @@ class _AppHeaderState extends State<AppHeader>
       ),
       boxShadow: [
         BoxShadow(
-          color: Theme.of(context).colorScheme.error.withOpacity(0.3),
+          color: Theme.of(context).colorScheme.error.withValues(alpha: 0.3),
           blurRadius: 6,
           offset: const Offset(0, 2),
         ),

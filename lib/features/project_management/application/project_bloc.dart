@@ -7,8 +7,22 @@ import '../infrastructure/repositories/api_project_repository.dart';
 import 'project_event.dart';
 import 'project_state.dart';
 
+/// A [Bloc] that manages project-related state and operations.
+///
+/// This bloc handles all project management operations including:
+/// - Loading projects (all, by status, with pagination)
+/// - Searching projects
+/// - Creating, updating, and deleting projects
+/// - Refreshing project data
+///
+/// The bloc follows Clean Architecture principles by depending on abstractions
+/// ([ProjectRepository]) rather than concrete implementations.
 @injectable
 class ProjectBloc extends Bloc<ProjectEvent, ProjectState> {
+  /// Creates a [ProjectBloc] with the given [ProjectRepository].
+  ///
+  /// The repository is injected using the 'api' named qualifier, which
+  /// provides the API-based implementation with fallback to mock data.
   ProjectBloc(@Named('api') this._projectRepository)
     : super(const ProjectInitial()) {
     on<ProjectLoadRequested>(_onProjectLoadRequested);
@@ -89,9 +103,10 @@ class ProjectBloc extends Bloc<ProjectEvent, ProjectState> {
         ),
       );
     } catch (e) {
-      final currentProjects = state is ProjectLoaded
-          ? (state as ProjectLoaded).projects
-          : <Project>[];
+      final currentProjects = switch (state) {
+        ProjectLoaded loadedState => loadedState.projects,
+        _ => <Project>[],
+      };
       emit(
         ProjectError(
           message: 'Failed to create project: ${e.toString()}',
@@ -115,9 +130,10 @@ class ProjectBloc extends Bloc<ProjectEvent, ProjectState> {
         ),
       );
     } catch (e) {
-      final currentProjects = state is ProjectLoaded
-          ? (state as ProjectLoaded).projects
-          : <Project>[];
+      final currentProjects = switch (state) {
+        ProjectLoaded loadedState => loadedState.projects,
+        _ => <Project>[],
+      };
       emit(
         ProjectError(
           message: 'Failed to update project: ${e.toString()}',
@@ -141,9 +157,10 @@ class ProjectBloc extends Bloc<ProjectEvent, ProjectState> {
         ),
       );
     } catch (e) {
-      final currentProjects = state is ProjectLoaded
-          ? (state as ProjectLoaded).projects
-          : <Project>[];
+      final currentProjects = switch (state) {
+        ProjectLoaded loadedState => loadedState.projects,
+        _ => <Project>[],
+      };
       emit(
         ProjectError(
           message: 'Failed to delete project: ${e.toString()}',
@@ -188,8 +205,7 @@ class ProjectBloc extends Bloc<ProjectEvent, ProjectState> {
     try {
       // Check if repository supports pagination
       if (_projectRepository is ApiProjectRepository) {
-        final apiRepository = _projectRepository as ApiProjectRepository;
-        final projectData = await apiRepository.getProjectsWithPagination(
+        final projectData = await _projectRepository.getProjectsWithPagination(
           pageNumber: event.pageNumber,
           pageSize: event.pageSize,
           managerId: event.managerId,
@@ -215,9 +231,10 @@ class ProjectBloc extends Bloc<ProjectEvent, ProjectState> {
         emit(ProjectLoaded(projects: projects));
       }
     } catch (e) {
-      final currentProjects = state is ProjectLoadedWithPagination
-          ? (state as ProjectLoadedWithPagination).projects
-          : <Project>[];
+      final currentProjects = switch (state) {
+        ProjectLoadedWithPagination paginatedState => paginatedState.projects,
+        _ => <Project>[],
+      };
       emit(ProjectError(message: e.toString(), projects: currentProjects));
     }
   }
@@ -237,10 +254,9 @@ class ProjectBloc extends Bloc<ProjectEvent, ProjectState> {
 
     try {
       if (_projectRepository is ApiProjectRepository) {
-        final apiRepository = _projectRepository as ApiProjectRepository;
         final nextPage = currentState.currentPage + 1;
 
-        final projectData = await apiRepository.getProjectsWithPagination(
+        final projectData = await _projectRepository.getProjectsWithPagination(
           pageNumber: nextPage,
           pageSize: 10, // Default page size
         );

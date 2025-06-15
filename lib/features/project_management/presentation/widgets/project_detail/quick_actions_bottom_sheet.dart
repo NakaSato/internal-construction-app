@@ -2,17 +2,14 @@ import 'package:flutter/material.dart';
 import '../../../domain/entities/project.dart';
 
 class QuickActionsBottomSheet extends StatelessWidget {
-  const QuickActionsBottomSheet({
-    super.key,
-    required this.project,
-  });
+  const QuickActionsBottomSheet({super.key, required this.project});
 
   final Project project;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Padding(
       padding: const EdgeInsets.all(20.0),
       child: Column(
@@ -20,10 +17,7 @@ class QuickActionsBottomSheet extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text(
-                'Quick Actions',
-                style: theme.textTheme.titleLarge,
-              ),
+              Text('Quick Actions', style: theme.textTheme.titleLarge),
               const Spacer(),
               IconButton(
                 onPressed: () => Navigator.pop(context),
@@ -86,9 +80,7 @@ class QuickActionsBottomSheet extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(20),
-        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) => QuickActionsBottomSheet(project: project),
     );
@@ -112,7 +104,7 @@ class QuickActionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size.width / 4 - 20;
-    
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
@@ -120,17 +112,13 @@ class QuickActionTile extends StatelessWidget {
         width: size,
         height: size,
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              icon,
-              color: color,
-              size: 32,
-            ),
+            Icon(icon, color: color, size: 32),
             const SizedBox(height: 8),
             Text(
               title,

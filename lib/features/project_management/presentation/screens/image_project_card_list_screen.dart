@@ -1,5 +1,17 @@
 import 'package:flutter/material.dart';
 
+/// Extension for convenience methods on Color objects
+extension ColorExtension on Color {
+  Color withValues({int? red, int? green, int? blue, int? alpha}) {
+    return Color.fromARGB(
+      alpha ?? this.alpha,
+      red ?? this.red,
+      green ?? this.green,
+      blue ?? this.blue,
+    );
+  }
+}
+
 // Project data model matching your API response
 class ApiProject {
   final String projectId;
@@ -144,24 +156,16 @@ class _ImageProjectCardListScreenState
 
   List<ApiProject> _getMockProjects({int page = 1}) {
     // Mock data matching your API structure
-    final mockImages = [
-      'https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=500',
-      'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=500',
-      'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=500',
-      'https://images.unsplash.com/photo-1590725121839-892b458a74fe?w=500',
-      'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=500',
-    ];
-
     final statuses = ['In Progress', 'Completed', 'On Hold', 'Planning'];
     final projectTypes = [
       'Downtown Solar Installation',
-      'Residential Roofing Project',
-      'Commercial Building Renovation',
-      'Highway Bridge Construction',
-      'Smart Home Automation',
+      'Residential Solar Project',
+      'Commercial Solar Array',
+      'Solar Farm Development',
+      'Smart Solar Home',
       'Green Energy Facility',
-      'Urban Development Phase 2',
-      'Waterfront Property Build',
+      'Rooftop Solar Installation',
+      'Solar Power Plant',
     ];
 
     return List.generate(page == 1 ? 8 : 4, (index) {
@@ -169,15 +173,15 @@ class _ImageProjectCardListScreenState
       return ApiProject(
         projectId: 'project-${projectIndex + 1}',
         projectName: projectTypes[projectIndex % projectTypes.length],
-        address: '${123 + projectIndex} Main St, City, State 1234${index}',
+        address: '${123 + projectIndex} Main St, City, State 1234$index',
         clientInfo:
-            'Client Corp ${index + 1} - Contact: John Smith (555-123-456${index})',
+            'Client Corp ${index + 1} - Contact: John Smith (555-123-456$index)',
         status: statuses[projectIndex % statuses.length],
         startDate: DateTime.now().subtract(Duration(days: 30 + index * 5)),
         estimatedEndDate: DateTime.now().add(Duration(days: 60 - index * 10)),
         taskCount: 15 + index * 3,
         completedTaskCount: 8 + index * 2,
-        imageUrl: mockImages[projectIndex % mockImages.length],
+        imageUrl: null, // Now using header.jpg asset for all backgrounds
         projectManager: ProjectManager(
           userId: 'pm-${index + 1}',
           username: 'pm.manager${index + 1}',
@@ -194,7 +198,7 @@ class _ImageProjectCardListScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Project Gallery'),
+        title: const Text('Solar Project Gallery'),
         elevation: 0,
         backgroundColor: Theme.of(context).colorScheme.surface,
         actions: [
@@ -202,7 +206,6 @@ class _ImageProjectCardListScreenState
           IconButton(
             icon: const Icon(Icons.filter_list),
             onPressed: () {
-              // TODO: Implement filter dialog
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Filter options coming soon!')),
               );
@@ -217,7 +220,6 @@ class _ImageProjectCardListScreenState
       floatingActionButton: FloatingActionButton.extended(
         heroTag: "image_project_fab",
         onPressed: () {
-          // TODO: Navigate to add project screen
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Add project feature coming soon!')),
           );
@@ -302,45 +304,93 @@ class _ImageProjectCardListScreenState
 
     return Container(
       margin: const EdgeInsets.all(16.0),
-      padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primaryContainer,
         borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
-      child: Column(
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
         children: [
-          Text(
-            'Project Overview',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).colorScheme.onPrimaryContainer,
+          // Background header image
+          Positioned.fill(
+            child: Image.asset('assets/images/header.jpg', fit: BoxFit.cover),
+          ),
+          // Overlay for better text visibility
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Theme.of(
+                      context,
+                    ).colorScheme.primaryContainer.withValues(alpha: 0.9),
+                    Theme.of(
+                      context,
+                    ).colorScheme.primaryContainer.withValues(alpha: 0.8),
+                  ],
+                ),
+              ),
             ),
           ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildStatItem('Total', totalProjects.toString(), Icons.folder),
-              _buildStatItem(
-                'Active',
-                inProgressProjects.toString(),
-                Icons.play_circle,
-                Colors.orange,
-              ),
-              _buildStatItem(
-                'Done',
-                completedProjects.toString(),
-                Icons.check_circle,
-                Colors.green,
-              ),
-              if (overdueProjects > 0)
-                _buildStatItem(
-                  'Overdue',
-                  overdueProjects.toString(),
-                  Icons.warning,
-                  Colors.red,
+          // Content
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                Text(
+                  'Project Overview',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                    shadows: [
+                      Shadow(
+                        offset: const Offset(0, 1),
+                        blurRadius: 2.0,
+                        color: Colors.black.withValues(alpha: 0.2),
+                      ),
+                    ],
+                  ),
                 ),
-            ],
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildStatItem(
+                      'Total',
+                      totalProjects.toString(),
+                      Icons.folder,
+                    ),
+                    _buildStatItem(
+                      'Active',
+                      inProgressProjects.toString(),
+                      Icons.play_circle,
+                      Colors.orange,
+                    ),
+                    _buildStatItem(
+                      'Done',
+                      completedProjects.toString(),
+                      Icons.check_circle,
+                      Colors.green,
+                    ),
+                    if (overdueProjects > 0)
+                      _buildStatItem(
+                        'Overdue',
+                        overdueProjects.toString(),
+                        Icons.warning,
+                        Colors.red,
+                      ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -357,19 +407,45 @@ class _ImageProjectCardListScreenState
 
     return Column(
       children: [
-        Icon(icon, color: itemColor, size: 24),
-        const SizedBox(height: 4),
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: itemColor.withValues(alpha: 0.2),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: itemColor.withValues(alpha: 0.3),
+              width: 1,
+            ),
+          ),
+          child: Icon(icon, color: itemColor, size: 24),
+        ),
+        const SizedBox(height: 8),
         Text(
           value,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
             color: itemColor,
+            shadows: [
+              Shadow(
+                offset: const Offset(0, 1),
+                blurRadius: 2.0,
+                color: Colors.black.withValues(alpha: 0.3),
+              ),
+            ],
           ),
         ),
         Text(
           label,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: itemColor.withValues(alpha: 0.8),
+            color: itemColor.withValues(alpha: 0.9),
+            fontWeight: FontWeight.w600,
+            shadows: [
+              Shadow(
+                offset: const Offset(0, 1),
+                blurRadius: 2.0,
+                color: Colors.black.withValues(alpha: 0.2),
+              ),
+            ],
           ),
         ),
       ],
@@ -398,18 +474,38 @@ class _ImageProjectCardListScreenState
                         context,
                       ).colorScheme.surfaceContainerHighest,
                     ),
-                    child: project.imageUrl != null
-                        ? Image.network(
-                            project.imageUrl!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                _buildPlaceholderImage(),
-                            loadingBuilder: (context, child, loadingProgress) {
-                              if (loadingProgress == null) return child;
-                              return _buildPlaceholderImage();
-                            },
-                          )
-                        : _buildPlaceholderImage(),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        // Background header image
+                        Image.asset(
+                          'assets/images/header.jpg',
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              _buildPlaceholderImage(),
+                        ),
+                        // Overlay gradient for better text visibility
+                        Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.transparent,
+                                Colors.black.withValues(alpha: 0.3),
+                              ],
+                            ),
+                          ),
+                        ),
+                        // Optional: Project-specific overlay if available
+                        if (project.imageUrl != null)
+                          Container(
+                            decoration: BoxDecoration(
+                              color: project.statusColor.withValues(alpha: 0.1),
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
                   // Status overlay
                   Positioned(
@@ -527,14 +623,39 @@ class _ImageProjectCardListScreenState
   }
 
   Widget _buildPlaceholderImage() {
-    return Container(
-      width: double.infinity,
-      color: Theme.of(context).colorScheme.surfaceContainerHighest,
-      child: Icon(
-        Icons.business,
-        size: 48,
-        color: Theme.of(context).colorScheme.onSurfaceVariant,
-      ),
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // Use header.jpg as fallback background
+        Image.asset(
+          'assets/images/header.jpg',
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => Container(
+            width: double.infinity,
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+            child: Icon(
+              Icons.business,
+              size: 48,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+        // Semi-transparent overlay
+        Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.3),
+          ),
+          child: Center(
+            child: Icon(
+              Icons.solar_power,
+              size: 48,
+              color: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: 0.8),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -597,25 +718,98 @@ class _ProjectDetailsSheet extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Project image
-                      if (project.imageUrl != null)
-                        Container(
-                          height: 200,
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.surfaceContainerHighest,
-                          ),
-                          clipBehavior: Clip.antiAlias,
-                          child: Image.network(
-                            project.imageUrl!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                const Icon(Icons.business, size: 64),
-                          ),
+                      // Project image with header.jpg background
+                      Container(
+                        height: 200,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.surfaceContainerHighest,
                         ),
+                        clipBehavior: Clip.antiAlias,
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            // Background header image
+                            Image.asset(
+                              'assets/images/header.jpg',
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const Icon(Icons.business, size: 64),
+                            ),
+                            // Overlay gradient for better contrast
+                            Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    Colors.transparent,
+                                    Colors.black.withValues(alpha: 0.4),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            // Project status overlay
+                            Positioned(
+                              top: 12,
+                              right: 12,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: project.statusColor,
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(
+                                        alpha: 0.2,
+                                      ),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: Text(
+                                  project.status.toUpperCase(),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            // Project name overlay at the bottom
+                            Positioned(
+                              bottom: 12,
+                              left: 12,
+                              right: 12,
+                              child: Text(
+                                project.projectName,
+                                style: Theme.of(context).textTheme.titleLarge
+                                    ?.copyWith(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      shadows: [
+                                        const Shadow(
+                                          offset: Offset(0, 1),
+                                          blurRadius: 3.0,
+                                          color: Color.fromARGB(130, 0, 0, 0),
+                                        ),
+                                      ],
+                                    ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
 
                       const SizedBox(height: 24),
 

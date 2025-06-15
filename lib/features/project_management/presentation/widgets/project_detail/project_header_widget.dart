@@ -18,7 +18,7 @@ class ProjectHeaderWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return SliverAppBar(
       expandedHeight: 240.0,
       floating: false,
@@ -49,10 +49,10 @@ class ProjectHeaderWidget extends StatelessWidget {
                 project.imageUrl!,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) =>
-                    _buildDefaultBackground(context, project),
+                    Image.asset('assets/images/header.jpg', fit: BoxFit.cover),
               )
             else
-              _buildDefaultBackground(context, project),
+              Image.asset('assets/images/header.jpg', fit: BoxFit.cover),
 
             // Gradient overlay
             Container(
@@ -62,7 +62,7 @@ class ProjectHeaderWidget extends StatelessWidget {
                   end: Alignment.bottomCenter,
                   colors: [
                     Colors.transparent,
-                    Colors.black.withOpacity(0.7),
+                    Colors.black.withValues(alpha: 0.7),
                   ],
                 ),
               ),
@@ -81,7 +81,11 @@ class ProjectHeaderWidget extends StatelessWidget {
                   if (project.location != null && project.location!.isNotEmpty)
                     Row(
                       children: [
-                        const Icon(Icons.location_on, color: Colors.white, size: 16),
+                        const Icon(
+                          Icons.location_on,
+                          color: Colors.white,
+                          size: 16,
+                        ),
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
@@ -100,7 +104,11 @@ class ProjectHeaderWidget extends StatelessWidget {
                     children: [
                       Row(
                         children: [
-                          const Icon(Icons.calendar_today, color: Colors.white70, size: 16),
+                          const Icon(
+                            Icons.calendar_today,
+                            color: Colors.white70,
+                            size: 16,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             '${_formatDate(project.startDate)} - ${_formatDate(project.estimatedEndDate)}',
@@ -114,15 +122,22 @@ class ProjectHeaderWidget extends StatelessWidget {
                       const Spacer(),
                       if (project.progressPercentage != null) ...[
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.3),
+                            color: Colors.black.withValues(alpha: 0.3),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.pie_chart, color: Colors.white, size: 14),
+                              const Icon(
+                                Icons.pie_chart,
+                                color: Colors.white,
+                                size: 14,
+                              ),
                               const SizedBox(width: 4),
                               Text(
                                 '${project.progressPercentage!.toStringAsFixed(1)}%',
@@ -190,43 +205,12 @@ class ProjectHeaderWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildDefaultBackground(BuildContext context, Project project) {
-    final theme = Theme.of(context);
-    final isDarkMode = theme.brightness == Brightness.dark;
-    
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: isDarkMode
-              ? [
-                  Colors.grey[900]!,
-                  theme.colorScheme.primary.withOpacity(0.6),
-                ]
-              : [
-                  theme.colorScheme.primary,
-                  theme.colorScheme.tertiary,
-                ],
-        ),
-      ),
-      child: CustomPaint(
-        painter: ProjectPatternPainter(
-          lineColor: isDarkMode 
-              ? Colors.white.withOpacity(0.1) 
-              : Colors.white.withOpacity(0.2),
-        ),
-        child: const SizedBox.expand(),
-      ),
-    );
-  }
-
   Widget _buildStatusChip(BuildContext context, Project project) {
     final theme = Theme.of(context);
     final status = project.status.toLowerCase();
     Color chipColor;
     IconData statusIcon;
-    
+
     if (status.contains('active') || status.contains('in progress')) {
       chipColor = Colors.green;
       statusIcon = Icons.trending_up;
@@ -246,11 +230,11 @@ class ProjectHeaderWidget extends StatelessWidget {
       chipColor = theme.colorScheme.primary;
       statusIcon = Icons.info;
     }
-    
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: chipColor.withOpacity(0.9),
+        color: chipColor.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -274,36 +258,4 @@ class ProjectHeaderWidget extends StatelessWidget {
   String _formatDate(DateTime date) {
     return '${date.day}/${date.month}/${date.year}';
   }
-}
-
-// Custom painter for background pattern
-class ProjectPatternPainter extends CustomPainter {
-  final Color lineColor;
-  
-  ProjectPatternPainter({
-    this.lineColor = Colors.white24,
-  });
-  
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = lineColor
-      ..strokeWidth = 1.0
-      ..style = PaintingStyle.stroke;
-
-    const spacing = 30.0;
-
-    // Draw grid pattern
-    for (double x = 0; x < size.width; x += spacing) {
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
-    }
-
-    for (double y = 0; y < size.height; y += spacing) {
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant ProjectPatternPainter oldDelegate) => 
-    lineColor != oldDelegate.lineColor;
 }

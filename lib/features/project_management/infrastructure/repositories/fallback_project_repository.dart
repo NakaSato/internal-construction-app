@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import '../../domain/entities/project.dart';
 import '../../domain/repositories/project_repository.dart';
 import 'api_project_repository.dart';
@@ -16,10 +17,10 @@ class FallbackProjectRepository implements ProjectRepository {
     try {
       return await _apiRepository.getAllProjects();
     } on DioException catch (e) {
-      print('API error, falling back to mock data: ${e.message}');
+      debugPrint('API error, falling back to mock data: ${e.message}');
       return await _mockRepository.getAllProjects();
     } catch (e) {
-      print('Unexpected error, falling back to mock data: $e');
+      debugPrint('Unexpected error, falling back to mock data: $e');
       return await _mockRepository.getAllProjects();
     }
   }
@@ -29,10 +30,10 @@ class FallbackProjectRepository implements ProjectRepository {
     try {
       return await _apiRepository.getProjectsByStatus(status);
     } on DioException catch (e) {
-      print('API error, falling back to mock data: ${e.message}');
+      debugPrint('API error, falling back to mock data: ${e.message}');
       return await _mockRepository.getProjectsByStatus(status);
     } catch (e) {
-      print('Unexpected error, falling back to mock data: $e');
+      debugPrint('Unexpected error, falling back to mock data: $e');
       return await _mockRepository.getProjectsByStatus(status);
     }
   }
@@ -42,10 +43,10 @@ class FallbackProjectRepository implements ProjectRepository {
     try {
       return await _apiRepository.getProjectById(id);
     } on DioException catch (e) {
-      print('API error, falling back to mock data: ${e.message}');
+      debugPrint('API error, falling back to mock data: ${e.message}');
       return await _mockRepository.getProjectById(id);
     } catch (e) {
-      print('Unexpected error, falling back to mock data: $e');
+      debugPrint('Unexpected error, falling back to mock data: $e');
       return await _mockRepository.getProjectById(id);
     }
   }
@@ -55,10 +56,10 @@ class FallbackProjectRepository implements ProjectRepository {
     try {
       return await _apiRepository.createProject(project);
     } on DioException catch (e) {
-      print('API error, falling back to mock data: ${e.message}');
+      debugPrint('API error, falling back to mock data: ${e.message}');
       return await _mockRepository.createProject(project);
     } catch (e) {
-      print('Unexpected error, falling back to mock data: $e');
+      debugPrint('Unexpected error, falling back to mock data: $e');
       return await _mockRepository.createProject(project);
     }
   }
@@ -68,10 +69,10 @@ class FallbackProjectRepository implements ProjectRepository {
     try {
       return await _apiRepository.updateProject(project);
     } on DioException catch (e) {
-      print('API error, falling back to mock data: ${e.message}');
+      debugPrint('API error, falling back to mock data: ${e.message}');
       return await _mockRepository.updateProject(project);
     } catch (e) {
-      print('Unexpected error, falling back to mock data: $e');
+      debugPrint('Unexpected error, falling back to mock data: $e');
       return await _mockRepository.updateProject(project);
     }
   }
@@ -81,10 +82,10 @@ class FallbackProjectRepository implements ProjectRepository {
     try {
       await _apiRepository.deleteProject(id);
     } on DioException catch (e) {
-      print('API error, falling back to mock data: ${e.message}');
+      debugPrint('API error, falling back to mock data: ${e.message}');
       await _mockRepository.deleteProject(id);
     } catch (e) {
-      print('Unexpected error, falling back to mock data: $e');
+      debugPrint('Unexpected error, falling back to mock data: $e');
       await _mockRepository.deleteProject(id);
     }
   }
@@ -94,10 +95,10 @@ class FallbackProjectRepository implements ProjectRepository {
     try {
       return await _apiRepository.searchProjects(query);
     } on DioException catch (e) {
-      print('API error, falling back to mock data: ${e.message}');
+      debugPrint('API error, falling back to mock data: ${e.message}');
       return await _mockRepository.searchProjects(query);
     } catch (e) {
-      print('Unexpected error, falling back to mock data: $e');
+      debugPrint('Unexpected error, falling back to mock data: $e');
       return await _mockRepository.searchProjects(query);
     }
   }
@@ -107,10 +108,10 @@ class FallbackProjectRepository implements ProjectRepository {
     try {
       return await _apiRepository.getProjectsByUserId(userId);
     } on DioException catch (e) {
-      print('API error, falling back to mock data: ${e.message}');
+      debugPrint('API error, falling back to mock data: ${e.message}');
       return await _mockRepository.getProjectsByUserId(userId);
     } catch (e) {
-      print('Unexpected error, falling back to mock data: $e');
+      debugPrint('Unexpected error, falling back to mock data: $e');
       return await _mockRepository.getProjectsByUserId(userId);
     }
   }
@@ -128,13 +129,13 @@ class FallbackProjectRepository implements ProjectRepository {
         managerId: managerId,
       );
     } on DioException catch (e) {
-      print('API error, falling back to mock data: ${e.message}');
+      debugPrint('API error, falling back to mock data: ${e.message}');
       // For mock data, just return all projects with simple pagination simulation
       final allProjects = await _mockRepository.getAllProjects();
       final startIndex = (pageNumber - 1) * pageSize;
       return allProjects.skip(startIndex).take(pageSize).toList();
     } catch (e) {
-      print('Unexpected error, falling back to mock data: $e');
+      debugPrint('Unexpected error, falling back to mock data: $e');
       // For mock data, just return all projects with simple pagination simulation
       final allProjects = await _mockRepository.getAllProjects();
       final startIndex = (pageNumber - 1) * pageSize;

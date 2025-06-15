@@ -20,12 +20,14 @@ class ProjectActionsWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.5)),
+        side: BorderSide(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -52,11 +54,15 @@ class ProjectActionsWidget extends StatelessWidget {
                     label: 'Daily Reports',
                     icon: Icons.assessment_outlined,
                     color: theme.colorScheme.primary,
-                    onPressed: onDailyReports ?? () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Daily reports coming soon')),
-                      );
-                    },
+                    onPressed:
+                        onDailyReports ??
+                        () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Daily reports coming soon'),
+                            ),
+                          );
+                        },
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -65,11 +71,15 @@ class ProjectActionsWidget extends StatelessWidget {
                     label: 'Work Requests',
                     icon: Icons.assignment_outlined,
                     color: theme.colorScheme.secondary,
-                    onPressed: onWorkRequests ?? () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Work requests coming soon')),
-                      );
-                    },
+                    onPressed:
+                        onWorkRequests ??
+                        () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Work requests coming soon'),
+                            ),
+                          );
+                        },
                   ),
                 ),
               ],
@@ -82,11 +92,17 @@ class ProjectActionsWidget extends StatelessWidget {
                     label: 'Add Task',
                     icon: Icons.add_task,
                     color: theme.colorScheme.tertiary,
-                    onPressed: onAddTask ?? () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Add task functionality coming soon')),
-                      );
-                    },
+                    onPressed:
+                        onAddTask ??
+                        () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Add task functionality coming soon',
+                              ),
+                            ),
+                          );
+                        },
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -95,11 +111,17 @@ class ProjectActionsWidget extends StatelessWidget {
                     label: 'Project Team',
                     icon: Icons.people_outline,
                     color: Colors.indigo,
-                    onPressed: onProjectTeam ?? () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Project team functionality coming soon')),
-                      );
-                    },
+                    onPressed:
+                        onProjectTeam ??
+                        () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Project team functionality coming soon',
+                              ),
+                            ),
+                          );
+                        },
                   ),
                 ),
               ],
@@ -130,16 +152,13 @@ class ActionButton extends StatelessWidget {
     return ElevatedButton(
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
-        backgroundColor: color.withOpacity(0.1),
+        backgroundColor: color.withValues(alpha: 0.1),
         foregroundColor: color,
         elevation: 0,
-        padding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 12,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
-          side: BorderSide(color: color.withOpacity(0.3)),
+          side: BorderSide(color: color.withValues(alpha: 0.3)),
         ),
       ),
       child: Column(
@@ -149,10 +168,7 @@ class ActionButton extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             label,
-            style: const TextStyle(
-              fontWeight: FontWeight.w500,
-              fontSize: 12,
-            ),
+            style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 12),
           ),
         ],
       ),

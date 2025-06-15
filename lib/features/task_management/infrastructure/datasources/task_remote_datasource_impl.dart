@@ -9,16 +9,13 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
   final Dio client;
   final String baseUrl;
 
-  TaskRemoteDataSourceImpl({
-    required this.client,
-    required this.baseUrl,
-  });
+  TaskRemoteDataSourceImpl({required this.client, required this.baseUrl});
 
   @override
   Future<List<TaskModel>> getTasks() async {
     try {
       final response = await client.get('$baseUrl/tasks');
-      
+
       if (response.statusCode == 200) {
         final List<dynamic> taskJson = response.data['data'] as List;
         return taskJson
@@ -26,19 +23,15 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
             .toList();
       } else {
         throw ServerException(
-          message: response.data['message'] ?? 'Failed to fetch tasks',
-          statusCode: response.statusCode,
+          response.data['message'] ?? 'Failed to fetch tasks',
         );
       }
     } on DioException catch (e) {
       throw ServerException(
-        message: e.message ?? 'An error occurred while fetching tasks',
-        statusCode: e.response?.statusCode,
+        e.message ?? 'An error occurred while fetching tasks',
       );
     } catch (e) {
-      throw ServerException(
-        message: e.toString(),
-      );
+      throw ServerException(e.toString());
     }
   }
 
@@ -46,24 +39,22 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
   Future<TaskModel> getTaskById(String id) async {
     try {
       final response = await client.get('$baseUrl/tasks/$id');
-      
+
       if (response.statusCode == 200) {
-        return TaskModel.fromJson(response.data['data'] as Map<String, dynamic>);
+        return TaskModel.fromJson(
+          response.data['data'] as Map<String, dynamic>,
+        );
       } else {
         throw ServerException(
-          message: response.data['message'] ?? 'Failed to fetch task',
-          statusCode: response.statusCode,
+          response.data['message'] ?? 'Failed to fetch task',
         );
       }
     } on DioException catch (e) {
       throw ServerException(
-        message: e.message ?? 'An error occurred while fetching the task',
-        statusCode: e.response?.statusCode,
+        e.message ?? 'An error occurred while fetching the task',
       );
     } catch (e) {
-      throw ServerException(
-        message: e.toString(),
-      );
+      throw ServerException(e.toString());
     }
   }
 
@@ -71,7 +62,7 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
   Future<List<TaskModel>> getTasksByProject(String projectId) async {
     try {
       final response = await client.get('$baseUrl/projects/$projectId/tasks');
-      
+
       if (response.statusCode == 200) {
         final List<dynamic> taskJson = response.data['data'] as List;
         return taskJson
@@ -79,19 +70,15 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
             .toList();
       } else {
         throw ServerException(
-          message: response.data['message'] ?? 'Failed to fetch project tasks',
-          statusCode: response.statusCode,
+          response.data['message'] ?? 'Failed to fetch project tasks',
         );
       }
     } on DioException catch (e) {
       throw ServerException(
-        message: e.message ?? 'An error occurred while fetching project tasks',
-        statusCode: e.response?.statusCode,
+        e.message ?? 'An error occurred while fetching project tasks',
       );
     } catch (e) {
-      throw ServerException(
-        message: e.toString(),
-      );
+      throw ServerException(e.toString());
     }
   }
 
@@ -99,7 +86,7 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
   Future<List<TaskModel>> getTasksByAssignee(String assigneeId) async {
     try {
       final response = await client.get('$baseUrl/users/$assigneeId/tasks');
-      
+
       if (response.statusCode == 200) {
         final List<dynamic> taskJson = response.data['data'] as List;
         return taskJson
@@ -107,47 +94,38 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
             .toList();
       } else {
         throw ServerException(
-          message: response.data['message'] ?? 'Failed to fetch assignee tasks',
-          statusCode: response.statusCode,
+          response.data['message'] ?? 'Failed to fetch assignee tasks',
         );
       }
     } on DioException catch (e) {
       throw ServerException(
-        message: e.message ?? 'An error occurred while fetching assignee tasks',
-        statusCode: e.response?.statusCode,
+        e.message ?? 'An error occurred while fetching assignee tasks',
       );
     } catch (e) {
-      throw ServerException(
-        message: e.toString(),
-      );
+      throw ServerException(e.toString());
     }
   }
 
   @override
   Future<TaskModel> createTask(TaskModel task) async {
     try {
-      final response = await client.post(
-        '$baseUrl/tasks',
-        data: task.toJson(),
-      );
-      
+      final response = await client.post('$baseUrl/tasks', data: task.toJson());
+
       if (response.statusCode == 201) {
-        return TaskModel.fromJson(response.data['data'] as Map<String, dynamic>);
+        return TaskModel.fromJson(
+          response.data['data'] as Map<String, dynamic>,
+        );
       } else {
         throw ServerException(
-          message: response.data['message'] ?? 'Failed to create task',
-          statusCode: response.statusCode,
+          response.data['message'] ?? 'Failed to create task',
         );
       }
     } on DioException catch (e) {
       throw ServerException(
-        message: e.message ?? 'An error occurred while creating the task',
-        statusCode: e.response?.statusCode,
+        e.message ?? 'An error occurred while creating the task',
       );
     } catch (e) {
-      throw ServerException(
-        message: e.toString(),
-      );
+      throw ServerException(e.toString());
     }
   }
 
@@ -158,24 +136,22 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
         '$baseUrl/tasks/${task.id}',
         data: task.toJson(),
       );
-      
+
       if (response.statusCode == 200) {
-        return TaskModel.fromJson(response.data['data'] as Map<String, dynamic>);
+        return TaskModel.fromJson(
+          response.data['data'] as Map<String, dynamic>,
+        );
       } else {
         throw ServerException(
-          message: response.data['message'] ?? 'Failed to update task',
-          statusCode: response.statusCode,
+          response.data['message'] ?? 'Failed to update task',
         );
       }
     } on DioException catch (e) {
       throw ServerException(
-        message: e.message ?? 'An error occurred while updating the task',
-        statusCode: e.response?.statusCode,
+        e.message ?? 'An error occurred while updating the task',
       );
     } catch (e) {
-      throw ServerException(
-        message: e.toString(),
-      );
+      throw ServerException(e.toString());
     }
   }
 
@@ -183,24 +159,20 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
   Future<bool> deleteTask(String id) async {
     try {
       final response = await client.delete('$baseUrl/tasks/$id');
-      
+
       if (response.statusCode == 200 || response.statusCode == 204) {
         return true;
       } else {
         throw ServerException(
-          message: response.data['message'] ?? 'Failed to delete task',
-          statusCode: response.statusCode,
+          response.data['message'] ?? 'Failed to delete task',
         );
       }
     } on DioException catch (e) {
       throw ServerException(
-        message: e.message ?? 'An error occurred while deleting the task',
-        statusCode: e.response?.statusCode,
+        e.message ?? 'An error occurred while deleting the task',
       );
     } catch (e) {
-      throw ServerException(
-        message: e.toString(),
-      );
+      throw ServerException(e.toString());
     }
   }
 }

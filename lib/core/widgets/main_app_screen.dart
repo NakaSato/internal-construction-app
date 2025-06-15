@@ -12,7 +12,6 @@ import 'app_header.dart';
 // Feature imports - Authentication
 import '../../features/authentication/application/auth_bloc.dart';
 import '../../features/authentication/application/auth_state.dart';
-import '../../features/authentication/application/auth_event.dart';
 
 // Feature imports - Calendar Management
 import '../../features/calendar_management/presentation/screens/calendar_management_screen.dart';
@@ -33,8 +32,8 @@ import '../../features/project_management/application/project_state.dart';
 import '../../features/project_management/application/project_event.dart';
 import '../../features/project_management/presentation/widgets/project_card.dart';
 
-// Feature imports - Settings
-import '../../features/settings/presentation/screens/settings_screen.dart';
+// Feature imports - Profile
+import '../../features/profile/presentation/screens/profile_screen.dart';
 
 /// Tab indices for bottom navigation
 enum AppTab {
@@ -176,8 +175,8 @@ class _MainAppScreenState extends State<MainAppScreen>
             ),
             child: const MyWorkRequestsScreen(),
           ),
-          // Profile - simplified version for now
-          _buildProfileTab(context, state),
+          // Profile - extracted to dedicated screen
+          const ProfileScreen(),
         ],
       ),
       bottomNavigationBar: CustomBottomBar(
@@ -219,7 +218,7 @@ class _MainAppScreenState extends State<MainAppScreen>
                 padding: const EdgeInsets.symmetric(horizontal: 4),
                 child: TextField(
                   decoration: InputDecoration(
-                    hintText: 'Search projects by name, address, or status...',
+                    hintText: 'Search projects',
                     prefixIcon: Icon(
                       Icons.search,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -277,10 +276,7 @@ class _MainAppScreenState extends State<MainAppScreen>
                     ),
                   ),
                   style: Theme.of(context).textTheme.bodyLarge,
-                  onChanged: (value) {
-                    // TODO: Implement real-time search filtering
-                    // For now, just a placeholder
-                  },
+                  onChanged: (value) {},
                 ),
               ),
               _buildProjectListCard(context),
@@ -323,46 +319,12 @@ class _MainAppScreenState extends State<MainAppScreen>
     }
   }
 
-  /// Profile tab content
-  Widget _buildProfileTab(BuildContext context, AuthAuthenticated state) {
-    return Scaffold(
-      appBar: AppHeader(
-        user: state.user,
-        title: 'My Profile',
-        heroContext: 'profile', // Add unique context
-        onProfileTap: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Edit profile coming soon!')),
-          );
-        },
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            tooltip: 'Settings',
-            onPressed: () => _navigateToSettings(context),
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            _buildProfileHeader(context, state.user),
-            const SizedBox(height: 24),
-            _buildProfileMenuItems(context),
-          ],
-        ),
-      ),
-    );
-  }
-
   /// Project list card with all projects in compact format
   Widget _buildProjectListCard(BuildContext context) {
     return Card(
-      elevation: 4,
-      color: Colors.transparent,
+      elevation: 2,
       shadowColor: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.2),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -372,7 +334,7 @@ class _MainAppScreenState extends State<MainAppScreen>
               _defaultPadding,
               _defaultPadding,
               _defaultPadding,
-              8,
+              2,
             ),
             decoration: BoxDecoration(
               color: Theme.of(
@@ -391,8 +353,8 @@ class _MainAppScreenState extends State<MainAppScreen>
                     if (state is ProjectLoaded) {
                       return Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
+                          horizontal: 4,
+                          vertical: 2,
                         ),
                         decoration: BoxDecoration(
                           color: Theme.of(
@@ -601,7 +563,7 @@ class _MainAppScreenState extends State<MainAppScreen>
       onRefresh: () async {
         context.read<ProjectBloc>().add(const ProjectRefreshRequested());
         // Wait a bit for the refresh to complete
-        await Future.delayed(const Duration(milliseconds: 500));
+        await Future.delayed(const Duration(milliseconds: 250));
       },
       child: Container(
         decoration: BoxDecoration(
@@ -611,7 +573,7 @@ class _MainAppScreenState extends State<MainAppScreen>
           borderRadius: BorderRadius.circular(12),
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(8),
           child: ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -637,283 +599,4 @@ class _MainAppScreenState extends State<MainAppScreen>
       ),
     );
   }
-
-  /// Profile header with user avatar and information
-  Widget _buildProfileHeader(BuildContext context, dynamic user) {
-    final initials = _getUserInitials(user);
-    final userName = _getUserDisplayName(user);
-    final userEmail = _getUserEmail(user);
-
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          children: [
-            CircleAvatar(
-              radius: 32.0,
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              child: Text(
-                initials,
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onPrimary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    userName,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    userEmail,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            IconButton(
-              icon: const Icon(Icons.edit),
-              onPressed: () => _showComingSoonSnackBar(context, 'Edit profile'),
-              tooltip: 'Edit profile',
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// Gets user initials for avatar with proper null safety
-  String _getUserInitials(dynamic user) {
-    try {
-      final name = _getUserDisplayName(user);
-      if (name != 'User') {
-        final nameParts = name.trim().split(' ');
-        if (nameParts.length >= 2) {
-          return '${nameParts.first[0]}${nameParts.last[0]}'.toUpperCase();
-        }
-        return name[0].toUpperCase();
-      }
-
-      // Fall back to email if no name
-      final email = _getUserEmail(user);
-      return email[0].toUpperCase();
-    } catch (e) {
-      // Return placeholder if anything fails
-      return 'U';
-    }
-  }
-
-  /// Gets user display name with proper null safety
-  String _getUserDisplayName(dynamic user) {
-    try {
-      final name = user?.name as String?;
-      return (name != null && name.isNotEmpty) ? name : 'User';
-    } catch (e) {
-      return 'User';
-    }
-  }
-
-  /// Gets user email with proper null safety
-  String _getUserEmail(dynamic user) {
-    try {
-      final email = user?.email as String?;
-      return (email != null && email.isNotEmpty) ? email : 'No email';
-    } catch (e) {
-      return 'No email';
-    }
-  }
-
-  /// Shows a coming soon snackbar
-  void _showComingSoonSnackBar(BuildContext context, String feature) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('$feature coming soon!'),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
-
-  /// Profile menu items with organized categories
-  Widget _buildProfileMenuItems(BuildContext context) {
-    final menuItems = _getProfileMenuItems(context);
-
-    return Column(
-      children: menuItems
-          .map((item) => _buildProfileMenuItem(context, item))
-          .toList(),
-    );
-  }
-
-  /// Gets organized profile menu items
-  List<_ProfileMenuItem> _getProfileMenuItems(BuildContext context) {
-    return [
-      _ProfileMenuItem(
-        icon: Icons.person,
-        title: 'Edit Profile',
-        subtitle: 'Update your personal information',
-        onTap: () => _showComingSoonSnackBar(context, 'Edit profile'),
-      ),
-      _ProfileMenuItem(
-        icon: Icons.notifications,
-        title: 'Notifications',
-        subtitle: 'Manage notification preferences',
-        onTap: () => _showComingSoonSnackBar(context, 'Notification settings'),
-      ),
-      _ProfileMenuItem(
-        icon: Icons.security,
-        title: 'Privacy & Security',
-        subtitle: 'Manage your account security',
-        onTap: () => _showComingSoonSnackBar(context, 'Security settings'),
-      ),
-      _ProfileMenuItem(
-        icon: Icons.palette,
-        title: 'Appearance',
-        subtitle: 'Customize app appearance',
-        onTap: () => _showComingSoonSnackBar(context, 'Appearance settings'),
-      ),
-      _ProfileMenuItem(
-        icon: Icons.help,
-        title: 'Help & Support',
-        subtitle: 'Get help and contact support',
-        onTap: () => _showComingSoonSnackBar(context, 'Help center'),
-      ),
-      _ProfileMenuItem(
-        icon: Icons.logout,
-        title: 'Sign Out',
-        subtitle: 'Sign out of your account',
-        onTap: () => _showLogoutDialog(context),
-        isDestructive: true,
-      ),
-    ];
-  }
-
-  /// Builds individual profile menu item with proper styling
-  Widget _buildProfileMenuItem(BuildContext context, _ProfileMenuItem item) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      elevation: 1,
-      child: ListTile(
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: item.isDestructive
-                ? Theme.of(context).colorScheme.errorContainer
-                : Theme.of(context).colorScheme.primaryContainer,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(
-            item.icon,
-            size: 20,
-            color: item.isDestructive
-                ? Theme.of(context).colorScheme.onErrorContainer
-                : Theme.of(context).colorScheme.onPrimaryContainer,
-          ),
-        ),
-        title: Text(
-          item.title,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            color: item.isDestructive
-                ? Theme.of(context).colorScheme.error
-                : null,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        subtitle: Text(
-          item.subtitle,
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
-        trailing: Icon(
-          Icons.chevron_right,
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
-        ),
-        onTap: item.onTap,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
-  }
-
-  /// Shows confirmation dialog for sign out
-  void _showLogoutDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          icon: Icon(
-            Icons.logout,
-            size: 32,
-            color: Theme.of(context).colorScheme.error,
-          ),
-          title: const Text('Sign Out'),
-          content: const Text(
-            'Are you sure you want to sign out? You will need to log in again to access your account.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-                context.read<AuthBloc>().add(const AuthSignOutRequested());
-              },
-              style: FilledButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.error,
-              ),
-              child: const Text('Sign Out'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  /// Navigate to the settings screen
-  void _navigateToSettings(BuildContext context) {
-    try {
-      Navigator.of(
-        context,
-      ).push(MaterialPageRoute(builder: (context) => const SettingsScreen()));
-    } catch (e) {
-      // Handle any navigation errors
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Could not open settings: ${e.toString()}'),
-          backgroundColor: Colors.red.shade700,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
-  }
-}
-
-// MARK: - Data Classes
-
-/// Profile menu item data class
-class _ProfileMenuItem {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-  final bool isDestructive;
-
-  _ProfileMenuItem({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-    this.isDestructive = false,
-  });
 }
