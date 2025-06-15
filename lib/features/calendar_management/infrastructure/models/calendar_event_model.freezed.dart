@@ -48,7 +48,7 @@ mixin _$CalendarEventModel {
   int get reminderMinutes => throw _privateConstructorUsedError;
   bool get isPrivate => throw _privateConstructorUsedError;
   String? get meetingUrl => throw _privateConstructorUsedError;
-  String? get attendees => throw _privateConstructorUsedError;
+  List<String>? get attendees => throw _privateConstructorUsedError;
   String? get notes => throw _privateConstructorUsedError;
   String? get color => throw _privateConstructorUsedError;
   DateTime? get createdAt => throw _privateConstructorUsedError;
@@ -99,7 +99,7 @@ abstract class $CalendarEventModelCopyWith<$Res> {
     int reminderMinutes,
     bool isPrivate,
     String? meetingUrl,
-    String? attendees,
+    List<String>? attendees,
     String? notes,
     String? color,
     DateTime? createdAt,
@@ -268,7 +268,7 @@ class _$CalendarEventModelCopyWithImpl<$Res, $Val extends CalendarEventModel>
             attendees: freezed == attendees
                 ? _value.attendees
                 : attendees // ignore: cast_nullable_to_non_nullable
-                      as String?,
+                      as List<String>?,
             notes: freezed == notes
                 ? _value.notes
                 : notes // ignore: cast_nullable_to_non_nullable
@@ -328,7 +328,7 @@ abstract class _$$CalendarEventModelImplCopyWith<$Res>
     int reminderMinutes,
     bool isPrivate,
     String? meetingUrl,
-    String? attendees,
+    List<String>? attendees,
     String? notes,
     String? color,
     DateTime? createdAt,
@@ -494,9 +494,9 @@ class __$$CalendarEventModelImplCopyWithImpl<$Res>
             : meetingUrl // ignore: cast_nullable_to_non_nullable
                   as String?,
         attendees: freezed == attendees
-            ? _value.attendees
+            ? _value._attendees
             : attendees // ignore: cast_nullable_to_non_nullable
-                  as String?,
+                  as List<String>?,
         notes: freezed == notes
             ? _value.notes
             : notes // ignore: cast_nullable_to_non_nullable
@@ -549,12 +549,12 @@ class _$CalendarEventModelImpl implements _CalendarEventModel {
     this.reminderMinutes = 15,
     this.isPrivate = false,
     this.meetingUrl,
-    this.attendees,
+    final List<String>? attendees,
     this.notes,
     this.color,
     this.createdAt,
     this.updatedAt,
-  });
+  }) : _attendees = attendees;
 
   factory _$CalendarEventModelImpl.fromJson(Map<String, dynamic> json) =>
       _$$CalendarEventModelImplFromJson(json);
@@ -617,8 +617,16 @@ class _$CalendarEventModelImpl implements _CalendarEventModel {
   final bool isPrivate;
   @override
   final String? meetingUrl;
+  final List<String>? _attendees;
   @override
-  final String? attendees;
+  List<String>? get attendees {
+    final value = _attendees;
+    if (value == null) return null;
+    if (_attendees is EqualUnmodifiableListView) return _attendees;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(value);
+  }
+
   @override
   final String? notes;
   @override
@@ -688,8 +696,10 @@ class _$CalendarEventModelImpl implements _CalendarEventModel {
                 other.isPrivate == isPrivate) &&
             (identical(other.meetingUrl, meetingUrl) ||
                 other.meetingUrl == meetingUrl) &&
-            (identical(other.attendees, attendees) ||
-                other.attendees == attendees) &&
+            const DeepCollectionEquality().equals(
+              other._attendees,
+              _attendees,
+            ) &&
             (identical(other.notes, notes) || other.notes == notes) &&
             (identical(other.color, color) || other.color == color) &&
             (identical(other.createdAt, createdAt) ||
@@ -729,7 +739,7 @@ class _$CalendarEventModelImpl implements _CalendarEventModel {
     reminderMinutes,
     isPrivate,
     meetingUrl,
-    attendees,
+    const DeepCollectionEquality().hash(_attendees),
     notes,
     color,
     createdAt,
@@ -782,7 +792,7 @@ abstract class _CalendarEventModel implements CalendarEventModel {
     final int reminderMinutes,
     final bool isPrivate,
     final String? meetingUrl,
-    final String? attendees,
+    final List<String>? attendees,
     final String? notes,
     final String? color,
     final DateTime? createdAt,
@@ -847,7 +857,7 @@ abstract class _CalendarEventModel implements CalendarEventModel {
   @override
   String? get meetingUrl;
   @override
-  String? get attendees;
+  List<String>? get attendees;
   @override
   String? get notes;
   @override
@@ -2245,7 +2255,7 @@ mixin _$CreateCalendarEventRequest {
   String? get assignedToUserId => throw _privateConstructorUsedError;
   String? get color => throw _privateConstructorUsedError;
   bool get isPrivate => throw _privateConstructorUsedError;
-  String? get attendees => throw _privateConstructorUsedError;
+  List<String>? get attendees => throw _privateConstructorUsedError;
 
   /// Serializes this CreateCalendarEventRequest to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -2286,7 +2296,7 @@ abstract class $CreateCalendarEventRequestCopyWith<$Res> {
     String? assignedToUserId,
     String? color,
     bool isPrivate,
-    String? attendees,
+    List<String>? attendees,
   });
 }
 
@@ -2400,7 +2410,7 @@ class _$CreateCalendarEventRequestCopyWithImpl<
             attendees: freezed == attendees
                 ? _value.attendees
                 : attendees // ignore: cast_nullable_to_non_nullable
-                      as String?,
+                      as List<String>?,
           )
           as $Val,
     );
@@ -2434,7 +2444,7 @@ abstract class _$$CreateCalendarEventRequestImplCopyWith<$Res>
     String? assignedToUserId,
     String? color,
     bool isPrivate,
-    String? attendees,
+    List<String>? attendees,
   });
 }
 
@@ -2546,9 +2556,9 @@ class __$$CreateCalendarEventRequestImplCopyWithImpl<$Res>
             : isPrivate // ignore: cast_nullable_to_non_nullable
                   as bool,
         attendees: freezed == attendees
-            ? _value.attendees
+            ? _value._attendees
             : attendees // ignore: cast_nullable_to_non_nullable
-                  as String?,
+                  as List<String>?,
       ),
     );
   }
@@ -2575,8 +2585,8 @@ class _$CreateCalendarEventRequestImpl implements _CreateCalendarEventRequest {
     this.assignedToUserId,
     this.color,
     this.isPrivate = false,
-    this.attendees,
-  });
+    final List<String>? attendees,
+  }) : _attendees = attendees;
 
   factory _$CreateCalendarEventRequestImpl.fromJson(
     Map<String, dynamic> json,
@@ -2620,8 +2630,15 @@ class _$CreateCalendarEventRequestImpl implements _CreateCalendarEventRequest {
   @override
   @JsonKey()
   final bool isPrivate;
+  final List<String>? _attendees;
   @override
-  final String? attendees;
+  List<String>? get attendees {
+    final value = _attendees;
+    if (value == null) return null;
+    if (_attendees is EqualUnmodifiableListView) return _attendees;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(value);
+  }
 
   @override
   String toString() {
@@ -2662,8 +2679,10 @@ class _$CreateCalendarEventRequestImpl implements _CreateCalendarEventRequest {
             (identical(other.color, color) || other.color == color) &&
             (identical(other.isPrivate, isPrivate) ||
                 other.isPrivate == isPrivate) &&
-            (identical(other.attendees, attendees) ||
-                other.attendees == attendees));
+            const DeepCollectionEquality().equals(
+              other._attendees,
+              _attendees,
+            ));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -2687,7 +2706,7 @@ class _$CreateCalendarEventRequestImpl implements _CreateCalendarEventRequest {
     assignedToUserId,
     color,
     isPrivate,
-    attendees,
+    const DeepCollectionEquality().hash(_attendees),
   );
 
   /// Create a copy of CreateCalendarEventRequest
@@ -2727,7 +2746,7 @@ abstract class _CreateCalendarEventRequest
     final String? assignedToUserId,
     final String? color,
     final bool isPrivate,
-    final String? attendees,
+    final List<String>? attendees,
   }) = _$CreateCalendarEventRequestImpl;
 
   factory _CreateCalendarEventRequest.fromJson(Map<String, dynamic> json) =
@@ -2768,7 +2787,7 @@ abstract class _CreateCalendarEventRequest
   @override
   bool get isPrivate;
   @override
-  String? get attendees;
+  List<String>? get attendees;
 
   /// Create a copy of CreateCalendarEventRequest
   /// with the given fields replaced by the non-null parameter values.

@@ -19,8 +19,26 @@ class ProjectResponse {
   final ProjectData data;
   final List<String> errors;
 
-  factory ProjectResponse.fromJson(Map<String, dynamic> json) =>
-      _$ProjectResponseFromJson(json);
+  factory ProjectResponse.fromJson(Map<String, dynamic> json) {
+    return ProjectResponse(
+      success: json['success'] as bool? ?? false,
+      message: json['message']?.toString() ?? '',
+      data: json['data'] != null
+          ? ProjectData.fromJson(json['data'] as Map<String, dynamic>)
+          : const ProjectData(
+              items: [],
+              totalCount: 0,
+              pageNumber: 1,
+              pageSize: 10,
+              totalPages: 0,
+            ),
+      errors:
+          (json['errors'] as List<dynamic>?)
+              ?.map((e) => e?.toString() ?? '')
+              .toList() ??
+          const [],
+    );
+  }
 
   Map<String, dynamic> toJson() => _$ProjectResponseToJson(this);
 }
@@ -42,8 +60,19 @@ class ProjectData {
   final int pageSize;
   final int totalPages;
 
-  factory ProjectData.fromJson(Map<String, dynamic> json) =>
-      _$ProjectDataFromJson(json);
+  factory ProjectData.fromJson(Map<String, dynamic> json) {
+    return ProjectData(
+      items:
+          (json['items'] as List<dynamic>?)
+              ?.map((e) => ProjectDto.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
+      totalCount: (json['totalCount'] as num?)?.toInt() ?? 0,
+      pageNumber: (json['pageNumber'] as num?)?.toInt() ?? 1,
+      pageSize: (json['pageSize'] as num?)?.toInt() ?? 10,
+      totalPages: (json['totalPages'] as num?)?.toInt() ?? 0,
+    );
+  }
 
   Map<String, dynamic> toJson() => _$ProjectDataToJson(this);
 }
@@ -94,8 +123,30 @@ class ProjectDto {
     );
   }
 
-  factory ProjectDto.fromJson(Map<String, dynamic> json) =>
-      _$ProjectDtoFromJson(json);
+  factory ProjectDto.fromJson(Map<String, dynamic> json) {
+    return ProjectDto(
+      projectId: json['projectId']?.toString() ?? '',
+      projectName: json['projectName']?.toString() ?? 'Unknown Project',
+      address: json['address']?.toString() ?? '',
+      clientInfo: json['clientInfo']?.toString() ?? '',
+      status: json['status']?.toString() ?? 'Unknown',
+      startDate: json['startDate'] != null
+          ? DateTime.tryParse(json['startDate'].toString()) ?? DateTime.now()
+          : DateTime.now(),
+      estimatedEndDate: json['estimatedEndDate'] != null
+          ? DateTime.tryParse(json['estimatedEndDate'].toString()) ??
+                DateTime.now()
+          : DateTime.now(),
+      actualEndDate: json['actualEndDate'] != null
+          ? DateTime.tryParse(json['actualEndDate'].toString())
+          : null,
+      projectManager: json['projectManager'] != null
+          ? UserDto.fromJson(json['projectManager'] as Map<String, dynamic>)
+          : null,
+      taskCount: (json['taskCount'] as num?)?.toInt() ?? 0,
+      completedTaskCount: (json['completedTaskCount'] as num?)?.toInt() ?? 0,
+    );
+  }
 
   Map<String, dynamic> toJson() => _$ProjectDtoToJson(this);
 }
@@ -146,8 +197,25 @@ class UserDto {
     );
   }
 
-  factory UserDto.fromJson(Map<String, dynamic> json) =>
-      _$UserDtoFromJson(json);
+  factory UserDto.fromJson(Map<String, dynamic> json) {
+    return UserDto(
+      userId: json['userId']?.toString() ?? '',
+      username: json['username']?.toString() ?? '',
+      email: json['email']?.toString() ?? '',
+      fullName: json['fullName']?.toString() ?? '',
+      roleName: json['roleName']?.toString() ?? '',
+      isActive: json['isActive'] as bool? ?? true,
+      profileImageUrl: json['profileImageUrl']?.toString(),
+      phoneNumber: json['phoneNumber']?.toString(),
+      isEmailVerified: json['isEmailVerified'] as bool? ?? false,
+      createdAt: json['createdAt'] != null
+          ? DateTime.tryParse(json['createdAt'].toString())
+          : null,
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.tryParse(json['updatedAt'].toString())
+          : null,
+    );
+  }
 
   Map<String, dynamic> toJson() => _$UserDtoToJson(this);
 }

@@ -70,6 +70,13 @@ class CustomBottomBar extends StatelessWidget {
             title: const Text('Calendar'),
           ),
 
+          /// Work Request Approvals
+          SalomonBottomBarItem(
+            icon: const Icon(Icons.approval_outlined),
+            activeIcon: const Icon(Icons.approval),
+            title: const Text('Approvals'),
+          ),
+
           /// Profile
           SalomonBottomBarItem(
             icon: const Icon(Icons.person_outline),

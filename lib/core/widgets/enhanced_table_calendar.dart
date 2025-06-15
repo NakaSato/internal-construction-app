@@ -76,6 +76,19 @@ class _EnhancedTableCalendarState extends State<EnhancedTableCalendar> {
               eventLoader: widget.eventLoader ?? (day) => [],
               startingDayOfWeek: widget.startingDayOfWeek,
 
+              headerStyle: HeaderStyle(
+                titleCentered: true,
+                formatButtonVisible: false,
+                leftChevronIcon: Icon(
+                  Icons.chevron_left,
+                  color: theme.colorScheme.primary,
+                ),
+                rightChevronIcon: Icon(
+                  Icons.chevron_right,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+
               // Selection
               selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
 

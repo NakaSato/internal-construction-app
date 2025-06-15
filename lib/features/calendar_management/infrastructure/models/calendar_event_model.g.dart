@@ -38,7 +38,9 @@ _$CalendarEventModelImpl _$$CalendarEventModelImplFromJson(
   reminderMinutes: (json['reminderMinutes'] as num?)?.toInt() ?? 15,
   isPrivate: json['isPrivate'] as bool? ?? false,
   meetingUrl: json['meetingUrl'] as String?,
-  attendees: json['attendees'] as String?,
+  attendees: (json['attendees'] as List<dynamic>?)
+      ?.map((e) => e as String)
+      .toList(),
   notes: json['notes'] as String?,
   color: json['color'] as String?,
   createdAt: json['createdAt'] == null
@@ -218,7 +220,9 @@ _$CreateCalendarEventRequestImpl _$$CreateCalendarEventRequestImplFromJson(
   assignedToUserId: json['assignedToUserId'] as String?,
   color: json['color'] as String?,
   isPrivate: json['isPrivate'] as bool? ?? false,
-  attendees: json['attendees'] as String?,
+  attendees: (json['attendees'] as List<dynamic>?)
+      ?.map((e) => e as String)
+      .toList(),
 );
 
 Map<String, dynamic> _$$CreateCalendarEventRequestImplToJson(

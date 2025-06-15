@@ -385,6 +385,8 @@ class ProjectCard extends StatelessWidget {
           color: Colors.white,
           fontWeight: FontWeight.bold,
         ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
       ),
     );
   }
@@ -450,7 +452,13 @@ class ProjectCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        _buildStatusChip(context, project.projectStatus),
+                        Flexible(
+                          flex: 0,
+                          child: _buildStatusChip(
+                            context,
+                            project.projectStatus,
+                          ),
+                        ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
@@ -471,40 +479,43 @@ class ProjectCard extends StatelessWidget {
                 ),
               ),
               // Progress Info
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    '${project.completionPercentage}%',
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary,
+              Flexible(
+                flex: 0,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      '${project.completionPercentage}%',
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Container(
-                    width: 60,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                    child: FractionallySizedBox(
-                      alignment: Alignment.centerLeft,
-                      widthFactor: project.completionPercentage / 100,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: _getProgressColor(
-                            project.completionPercentage,
+                    const SizedBox(height: 4),
+                    Container(
+                      width: 60,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                      child: FractionallySizedBox(
+                        alignment: Alignment.centerLeft,
+                        widthFactor: project.completionPercentage / 100,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: _getProgressColor(
+                              project.completionPercentage,
+                            ),
+                            borderRadius: BorderRadius.circular(2),
                           ),
-                          borderRadius: BorderRadius.circular(2),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),

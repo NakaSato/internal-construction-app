@@ -29,6 +29,7 @@ class DailyReport extends Equatable {
     this.submittedAt,
     this.approvedAt,
     this.rejectedAt,
+    this.location,
   });
 
   final String reportId;
@@ -56,35 +57,37 @@ class DailyReport extends Equatable {
   final DateTime? submittedAt;
   final DateTime? approvedAt;
   final DateTime? rejectedAt;
+  final LocationInfo? location;
 
   @override
   List<Object?> get props => [
-        reportId,
-        projectId,
-        technicianId,
-        reportDate,
-        status,
-        workStartTime,
-        workEndTime,
-        weatherConditions,
-        overallNotes,
-        safetyNotes,
-        delaysOrIssues,
-        photosCount,
-        createdAt,
-        updatedAt,
-        project,
-        technician,
-        workProgressItems,
-        personnelLogs,
-        materialUsage,
-        equipmentLogs,
-        approverComments,
-        rejectionReason,
-        submittedAt,
-        approvedAt,
-        rejectedAt,
-      ];
+    reportId,
+    projectId,
+    technicianId,
+    reportDate,
+    status,
+    workStartTime,
+    workEndTime,
+    weatherConditions,
+    overallNotes,
+    safetyNotes,
+    delaysOrIssues,
+    photosCount,
+    createdAt,
+    updatedAt,
+    project,
+    technician,
+    workProgressItems,
+    personnelLogs,
+    materialUsage,
+    equipmentLogs,
+    approverComments,
+    rejectionReason,
+    submittedAt,
+    approvedAt,
+    rejectedAt,
+    location,
+  ];
 
   DailyReport copyWith({
     String? reportId,
@@ -112,6 +115,7 @@ class DailyReport extends Equatable {
     DateTime? submittedAt,
     DateTime? approvedAt,
     DateTime? rejectedAt,
+    LocationInfo? location,
   }) {
     return DailyReport(
       reportId: reportId ?? this.reportId,
@@ -139,6 +143,7 @@ class DailyReport extends Equatable {
       submittedAt: submittedAt ?? this.submittedAt,
       approvedAt: approvedAt ?? this.approvedAt,
       rejectedAt: rejectedAt ?? this.rejectedAt,
+      location: location ?? this.location,
     );
   }
 }
@@ -272,14 +277,14 @@ class WorkProgressItem extends Equatable {
 
   @override
   List<Object> get props => [
-        workProgressId,
-        reportId,
-        taskDescription,
-        hoursWorked,
-        percentageComplete,
-        notes,
-        createdAt,
-      ];
+    workProgressId,
+    reportId,
+    taskDescription,
+    hoursWorked,
+    percentageComplete,
+    notes,
+    createdAt,
+  ];
 }
 
 /// Personnel Log
@@ -306,15 +311,15 @@ class PersonnelLog extends Equatable {
 
   @override
   List<Object> get props => [
-        personnelLogId,
-        reportId,
-        personnelName,
-        role,
-        hoursWorked,
-        overtimeHours,
-        notes,
-        createdAt,
-      ];
+    personnelLogId,
+    reportId,
+    personnelName,
+    role,
+    hoursWorked,
+    overtimeHours,
+    notes,
+    createdAt,
+  ];
 }
 
 /// Material Usage
@@ -339,14 +344,14 @@ class MaterialUsage extends Equatable {
 
   @override
   List<Object> get props => [
-        materialUsageId,
-        reportId,
-        materialName,
-        quantityUsed,
-        unit,
-        notes,
-        createdAt,
-      ];
+    materialUsageId,
+    reportId,
+    materialName,
+    quantityUsed,
+    unit,
+    notes,
+    createdAt,
+  ];
 }
 
 /// Equipment Log
@@ -371,12 +376,30 @@ class EquipmentLog extends Equatable {
 
   @override
   List<Object> get props => [
-        equipmentLogId,
-        reportId,
-        equipmentName,
-        usageHours,
-        condition,
-        notes,
-        createdAt,
-      ];
+    equipmentLogId,
+    reportId,
+    equipmentName,
+    usageHours,
+    condition,
+    notes,
+    createdAt,
+  ];
+}
+
+/// Location information for the report
+class LocationInfo extends Equatable {
+  const LocationInfo({
+    required this.latitude,
+    required this.longitude,
+    this.address,
+    this.timestamp,
+  });
+
+  final double latitude;
+  final double longitude;
+  final String? address;
+  final DateTime? timestamp;
+
+  @override
+  List<Object?> get props => [latitude, longitude, address, timestamp];
 }

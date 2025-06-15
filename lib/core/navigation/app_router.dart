@@ -9,6 +9,7 @@ import '../../features/authentication/presentation/screens/login_screen.dart';
 import '../../features/authentication/presentation/screens/register_screen.dart';
 import '../../features/calendar_management/presentation/screens/calendar_management_screen.dart';
 import '../../features/project_management/presentation/screens/image_project_card_list_screen.dart';
+import '../../features/project_management/presentation/screens/project_detail_screen.dart';
 import '../widgets/main_app_screen.dart';
 
 /// Application route names
@@ -24,6 +25,7 @@ class AppRoutes {
 
   // Bottom navigation routes
   static const String dashboard = '/dashboard';
+  static const String approvals = '/approvals';
 
   // Feature routes
   static const String calendar = '/calendar';
@@ -85,6 +87,11 @@ class AppRouter {
         name: 'dashboard',
         builder: (context, state) => const MainAppScreen(initialTabIndex: 0),
       ),
+      GoRoute(
+        path: AppRoutes.approvals,
+        name: 'approvals',
+        builder: (context, state) => const MainAppScreen(initialTabIndex: 2),
+      ),
 
       // Protected feature routes
       GoRoute(
@@ -118,6 +125,14 @@ class AppRouter {
         path: '/projects',
         name: 'projects',
         builder: (context, state) => const ImageProjectCardListScreen(),
+      ),
+      GoRoute(
+        path: '/projects/:id',
+        name: 'project-detail',
+        builder: (context, state) {
+          final projectId = state.pathParameters['id']!;
+          return ProjectDetailScreen(projectId: projectId);
+        },
       ),
     ],
 

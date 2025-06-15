@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/calendar_event.dart';
 import '../../application/calendar_management_bloc.dart';
 import '../../application/calendar_management_event.dart';
+import '../widgets/recurring_event_settings.dart';
 
 /// Dialog for creating and editing calendar events
 class CalendarEventDialog extends StatefulWidget {
@@ -37,8 +38,16 @@ class _CalendarEventDialogState extends State<CalendarEventDialog> {
   late CalendarEventPriority _priority;
   late bool _isAllDay;
   late bool _isPrivate;
+  late bool _isRecurring;
   late int _reminderMinutes;
   String? _selectedColor;
+  String? _recurrencePattern;
+  DateTime? _recurrenceEndDate;
+
+  // Recurring event settings
+  RecurrenceFrequency _recurrenceFrequency = RecurrenceFrequency.daily;
+  int _recurrenceInterval = 1;
+  List<int> _selectedDays = [];
 
   final List<Color> _eventColors = [
     Colors.blue,
@@ -70,7 +79,7 @@ class _CalendarEventDialogState extends State<CalendarEventDialog> {
       );
       _notesController = TextEditingController(text: widget.event!.notes ?? '');
       _attendeesController = TextEditingController(
-        text: widget.event!.attendees ?? '',
+        text: widget.event!.attendees?.join(', ') ?? '',
       );
       _meetingUrlController = TextEditingController(
         text: widget.event!.meetingUrl ?? '',
@@ -84,6 +93,12 @@ class _CalendarEventDialogState extends State<CalendarEventDialog> {
       _isPrivate = widget.event!.isPrivate;
       _reminderMinutes = widget.event!.reminderMinutes;
       _selectedColor = widget.event!.color;
+
+      // Initialize recurring event settings
+      _isRecurring = widget.event!.isRecurring;
+      _recurrencePattern = widget.event!.recurrencePattern;
+      _recurrenceEndDate = widget.event!.recurrenceEndDate;
+      _selectedDays = widget.event!.selectedDays;
     } else {
       _titleController = TextEditingController();
       _descriptionController = TextEditingController();
@@ -100,6 +115,12 @@ class _CalendarEventDialogState extends State<CalendarEventDialog> {
       _isPrivate = false;
       _reminderMinutes = 15;
       _selectedColor = null;
+
+      // Default recurring event settings
+      _isRecurring = false;
+      _recurrenceFrequency = RecurrenceFrequency.daily;
+      _recurrenceInterval = 1;
+      _selectedDays = [];
     }
   }
 
@@ -169,6 +190,33 @@ class _CalendarEventDialogState extends State<CalendarEventDialog> {
                       _buildPrivateSwitch(),
                       const SizedBox(height: 16),
                       _buildColorPicker(),
+                      const SizedBox(height: 16),
+                      _buildRecurringEventSwitch(),
+                      if (_isRecurring) ...[
+                        RecurringEventSettings(
+                          initialPattern: _recurrencePattern,
+                          initialEndDate: _recurrenceEndDate,
+                          frequency: _recurrenceFrequency,
+                          interval: _recurrenceInterval,
+                          selectedDays: _selectedDays,
+                          onPatternChanged: (pattern) {
+                            setState(() {
+                              _recurrencePattern = pattern;
+                            });
+                          },
+                          onEndDateChanged: (date) {
+                            setState(() {
+                              _recurrenceEndDate = date;
+                            });
+                          },
+                          onDaysChanged: (value) {
+                            setState(() {
+                              _selectedDays = value;
+                            });
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                      ],
                     ],
                   ),
                 ),
@@ -375,6 +423,19 @@ class _CalendarEventDialogState extends State<CalendarEventDialog> {
     );
   }
 
+  Widget _buildRecurringEventSwitch() {
+    return SwitchListTile(
+      title: const Text('Recurring Event'),
+      subtitle: const Text('Event repeats on a regular basis'),
+      value: _isRecurring,
+      onChanged: (value) {
+        setState(() {
+          _isRecurring = value;
+        });
+      },
+    );
+  }
+
   Widget _buildTimeFields() {
     return Column(
       children: [
@@ -504,11 +565,13 @@ class _CalendarEventDialogState extends State<CalendarEventDialog> {
           spacing: 8,
           runSpacing: 8,
           children: _eventColors.map((color) {
-            final colorValue = (color.a * 255).round() << 24 | 
-                              (color.r * 255).round() << 16 | 
-                              (color.g * 255).round() << 8 | 
-                              (color.b * 255).round();
-            final colorHex = '#${colorValue.toRadixString(16).padLeft(8, '0').substring(2)}';
+            final colorValue =
+                (color.a * 255).round() << 24 |
+                (color.r * 255).round() << 16 |
+                (color.g * 255).round() << 8 |
+                (color.b * 255).round();
+            final colorHex =
+                '#${colorValue.toRadixString(16).padLeft(8, '0').substring(2)}';
             final isSelected = _selectedColor == colorHex;
 
             return GestureDetector(
@@ -618,11 +681,15 @@ class _CalendarEventDialogState extends State<CalendarEventDialog> {
           : _meetingUrlController.text.trim(),
       attendees: _attendeesController.text.trim().isEmpty
           ? null
-          : _attendeesController.text.trim(),
+          : _attendeesController.text.split(',').map((e) => e.trim()).toList(),
       notes: _notesController.text.trim().isEmpty
           ? null
           : _notesController.text.trim(),
       color: _selectedColor,
+      isRecurring: _isRecurring,
+      recurrencePattern: _recurrencePattern,
+      recurrenceEndDate: _recurrenceEndDate,
+      selectedDays: _selectedDays,
     );
 
     if (widget.isEditing) {

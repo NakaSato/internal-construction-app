@@ -36,7 +36,7 @@ class CalendarEventModel with _$CalendarEventModel {
     @Default(15) int reminderMinutes,
     @Default(false) bool isPrivate,
     String? meetingUrl,
-    String? attendees,
+    List<String>? attendees,
     String? notes,
     String? color,
     DateTime? createdAt,
@@ -221,7 +221,7 @@ class CreateCalendarEventRequest with _$CreateCalendarEventRequest {
     String? assignedToUserId,
     String? color,
     @Default(false) bool isPrivate,
-    String? attendees,
+    List<String>? attendees,
   }) = _CreateCalendarEventRequest;
 
   factory CreateCalendarEventRequest.fromJson(Map<String, dynamic> json) =>

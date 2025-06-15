@@ -3,25 +3,45 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:get_it/get_it.dart';
 
+// Core imports
 import '../navigation/app_router.dart';
+import 'app_bottom_bar.dart';
+import 'common_widgets.dart';
+import 'app_header.dart';
+
+// Feature imports - Authentication
 import '../../features/authentication/application/auth_bloc.dart';
 import '../../features/authentication/application/auth_state.dart';
 import '../../features/authentication/application/auth_event.dart';
-import '../../features/work_calendar/presentation/screens/calendar_screen.dart';
+
+// Feature imports - Calendar Management
+import '../../features/calendar_management/presentation/screens/calendar_management_screen.dart';
+import '../../features/calendar_management/application/calendar_management_bloc.dart';
+import '../../features/calendar_management/application/calendar_management_event.dart'
+    as cm_events;
+import '../../features/calendar_management/config/mock_calendar_management_di.dart';
+
+// Feature imports - Work Request Approval
+import '../../features/work_request_approval/presentation/screens/my_work_requests_screen.dart';
+import '../../features/work_request_approval/application/cubits/my_work_requests_cubit.dart';
+import '../../features/work_request_approval/domain/usecases/get_my_work_requests_usecase.dart';
+import '../../features/work_request_approval/infrastructure/repositories/mock_work_request_approval_repository.dart';
+
+// Feature imports - Project Management
 import '../../features/project_management/application/project_bloc.dart';
 import '../../features/project_management/application/project_state.dart';
 import '../../features/project_management/application/project_event.dart';
 import '../../features/project_management/presentation/widgets/project_card.dart';
-import '../utils/api_config_verifier.dart';
-import 'app_bottom_bar.dart';
-import 'common_widgets.dart';
-import 'app_header.dart';
+
+// Feature imports - Settings
+import '../../features/settings/presentation/screens/settings_screen.dart';
 
 /// Tab indices for bottom navigation
 enum AppTab {
   dashboard(0),
   calendar(1),
-  profile(2);
+  approvals(2),
+  profile(3);
 
   const AppTab(this.value);
   final int value;
@@ -45,7 +65,6 @@ class _MainAppScreenState extends State<MainAppScreen>
 
   // Constants for better maintainability
   static const double _defaultPadding = 16.0;
-  static const double _profileAvatarRadius = 32.0;
 
   @override
   void initState() {
@@ -83,7 +102,7 @@ class _MainAppScreenState extends State<MainAppScreen>
             AuthUnauthenticated() => const Scaffold(
               body: Center(child: LoadingIndicator()),
             ),
-            AuthFailure() => _buildErrorState(context, state),
+            AuthFailure() => _buildAuthErrorState(context, state),
             _ => const Scaffold(body: Center(child: LoadingIndicator())),
           };
         },
@@ -91,12 +110,12 @@ class _MainAppScreenState extends State<MainAppScreen>
     );
   }
 
-  /// Builds error state UI
-  Widget _buildErrorState(BuildContext context, AuthFailure state) {
+  /// Builds authentication error state UI
+  Widget _buildAuthErrorState(BuildContext context, AuthFailure state) {
     return Scaffold(
       body: Center(
         child: Padding(
-          padding: const EdgeInsets.all(_defaultPadding),
+          padding: const EdgeInsets.all(16.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -130,14 +149,33 @@ class _MainAppScreenState extends State<MainAppScreen>
   }
 
   Widget _buildAuthenticatedApp(BuildContext context, AuthAuthenticated state) {
+    // Initialize calendar management dependencies
+    configureCalendarManagementDependencies();
+
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
         children: [
           // Home/Dashboard - uses the existing authenticated home
           _buildDashboardTab(context, state),
-          // Calendar
-          const CalendarScreen(),
+          // Calendar - Enhanced Calendar Management with API integration
+          MultiBlocProvider(
+            providers: [
+              BlocProvider(
+                create: (context) =>
+                    GetIt.instance<CalendarManagementBloc>()
+                      ..add(const cm_events.CalendarEventsRequested()),
+              ),
+            ],
+            child: const CalendarManagementScreen(),
+          ),
+          // Work Request Approvals
+          BlocProvider(
+            create: (context) => MyWorkRequestsCubit(
+              GetMyWorkRequestsUseCase(MockWorkRequestApprovalRepository()),
+            ),
+            child: const MyWorkRequestsScreen(),
+          ),
           // Profile - simplified version for now
           _buildProfileTab(context, state),
         ],
@@ -161,28 +199,57 @@ class _MainAppScreenState extends State<MainAppScreen>
       appBar: AppHeader(
         user: state.user,
         title: 'Dashboard',
-        heroContext: 'dashboard', // Add unique context
+        heroContext: 'dashboard',
         showNotificationBadge: true,
         notificationCount: 3,
-        onProfileTap: () {
-          // Navigate to profile tab
-          setState(() {
-            _currentIndex = AppTab.profile.value;
-          });
-        },
+        onProfileTap: () => _navigateToProfileTab(),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(_defaultPadding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildProjectListCard(context),
-            const SizedBox(height: 24),
-            _buildApiConfigDebugSection(context),
-          ],
+      body: RefreshIndicator(
+        onRefresh: () async => _refreshDashboard(context),
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(_defaultPadding),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildProjectListCard(context),
+              // Add space for future dashboard sections
+              const SizedBox(height: _defaultPadding),
+            ],
+          ),
         ),
       ),
     );
+  }
+
+  /// Navigate to profile tab
+  void _navigateToProfileTab() {
+    setState(() {
+      _currentIndex = AppTab.profile.value;
+    });
+  }
+
+  /// Refresh dashboard content
+  Future<void> _refreshDashboard(BuildContext context) async {
+    try {
+      // Refresh projects
+      final projectBloc = context.read<ProjectBloc>();
+      projectBloc.add(const ProjectLoadRequested());
+
+      // Wait a moment to show refresh indicator
+      await Future.delayed(const Duration(milliseconds: 800));
+    } catch (e) {
+      // Show error message if refresh fails
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error refreshing dashboard: ${e.toString()}'),
+            backgroundColor: Colors.red.shade700,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 
   /// Profile tab content
@@ -200,12 +267,8 @@ class _MainAppScreenState extends State<MainAppScreen>
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
-            onPressed: () {
-              // Navigate to settings or profile edit
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Settings coming soon!')),
-              );
-            },
+            tooltip: 'Settings',
+            onPressed: () => _navigateToSettings(context),
           ),
         ],
       ),
@@ -225,129 +288,131 @@ class _MainAppScreenState extends State<MainAppScreen>
   /// Project list card with all projects in compact format
   Widget _buildProjectListCard(BuildContext context) {
     return Card(
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(_defaultPadding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(
-                onPressed: () {
-                  // Navigate to full project list
-                  context.push('/projects');
-                },
-                child: Text(
-                  'View All',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                ),
+      elevation: 4,
+      shadowColor: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.2),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header section
+          Container(
+            padding: const EdgeInsets.fromLTRB(
+              _defaultPadding,
+              _defaultPadding,
+              _defaultPadding,
+              8,
+            ),
+            decoration: BoxDecoration(
+              color: Theme.of(
+                context,
+              ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(16),
+                topRight: Radius.circular(16),
               ),
             ),
-            const SizedBox(height: 16),
-            BlocProvider(
+            child: Row(
+              children: [
+                Icon(
+                  Icons.folder_outlined,
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 24,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Projects',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+                const Spacer(),
+                BlocBuilder<ProjectBloc, ProjectState>(
+                  builder: (context, state) {
+                    if (state is ProjectLoaded) {
+                      return Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          '${state.projects.length}',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(context).colorScheme.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                        ),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
+              ],
+            ),
+          ),
+
+          // Content section
+          Padding(
+            padding: const EdgeInsets.all(_defaultPadding),
+            child: BlocProvider(
               create: (context) =>
                   GetIt.instance<ProjectBloc>()
                     ..add(const ProjectLoadRequested()),
               child: BlocBuilder<ProjectBloc, ProjectState>(
                 builder: (context, state) {
                   if (state is ProjectLoading) {
-                    return const Center(child: CircularProgressIndicator());
+                    return _buildLoadingState(context);
                   } else if (state is ProjectLoaded) {
                     final allProjects = state.projects;
 
                     if (allProjects.isEmpty) {
-                      return Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.folder_open,
-                              size: 48,
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onSurfaceVariant,
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'No projects yet',
-                              style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onSurfaceVariant,
-                                  ),
-                            ),
-                            const SizedBox(height: 8),
-                            ElevatedButton.icon(
-                              onPressed: () {
-                                // Navigate to create project
-                                context.push('/projects/create');
-                              },
-                              icon: const Icon(Icons.add),
-                              label: const Text('Create Project'),
-                            ),
-                          ],
-                        ),
-                      );
+                      return _buildEmptyState(context);
                     }
 
-                    return SizedBox(
-                      height: 300, // Reduced height for compact cards
-                      child: ListView.builder(
-                        itemCount: allProjects.length,
-                        itemBuilder: (context, index) {
-                          final project = allProjects[index];
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 4.0),
-                            child: ProjectCard(
-                              project: project,
-                              isCompact: true,
-                              onTap: () {
-                                context.push('/projects/${project.id}');
-                              },
-                            ),
-                          );
-                        },
-                      ),
-                    );
+                    return _buildProjectList(context, allProjects);
                   } else if (state is ProjectError) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.error_outline,
-                            size: 48,
-                            color: Theme.of(context).colorScheme.error,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Failed to load projects',
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.error,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          TextButton(
-                            onPressed: () {
-                              context.read<ProjectBloc>().add(
-                                const ProjectRefreshRequested(),
-                              );
-                            },
-                            child: const Text('Retry'),
-                          ),
-                        ],
-                      ),
-                    );
+                    return _buildErrorState(context, state.message);
                   }
 
                   return const SizedBox.shrink();
                 },
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLoadingState(BuildContext context) {
+    return SizedBox(
+      height: 200,
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: 32,
+              height: 32,
+              child: CircularProgressIndicator(
+                strokeWidth: 3,
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  Theme.of(context).colorScheme.primary,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Loading projects...',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
           ],
@@ -356,18 +421,181 @@ class _MainAppScreenState extends State<MainAppScreen>
     );
   }
 
+  Widget _buildEmptyState(BuildContext context) {
+    return Container(
+      height: 200,
+      padding: const EdgeInsets.all(24),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.folder_open_outlined,
+                size: 32,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No projects yet',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Create your first project to get started',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              onPressed: () {
+                // Navigate to create project
+                context.push('/projects/create');
+              },
+              icon: const Icon(Icons.add, size: 18),
+              label: const Text('Create Project'),
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorState(BuildContext context, String message) {
+    return Container(
+      height: 200,
+      padding: const EdgeInsets.all(24),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Theme.of(
+                  context,
+                ).colorScheme.error.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.error_outline,
+                size: 32,
+                color: Theme.of(context).colorScheme.error,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Failed to load projects',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.error,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 16),
+            OutlinedButton.icon(
+              onPressed: () {
+                context.read<ProjectBloc>().add(
+                  const ProjectRefreshRequested(),
+                );
+              },
+              icon: const Icon(Icons.refresh, size: 18),
+              label: const Text('Try Again'),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProjectList(BuildContext context, List<dynamic> allProjects) {
+    return RefreshIndicator(
+      onRefresh: () async {
+        context.read<ProjectBloc>().add(const ProjectRefreshRequested());
+        // Wait a bit for the refresh to complete
+        await Future.delayed(const Duration(milliseconds: 500));
+      },
+      child: Container(
+        height: 320,
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+          ),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: ListView.separated(
+            padding: const EdgeInsets.all(8),
+            itemCount: allProjects.length,
+            separatorBuilder: (context, index) => const SizedBox(height: 8),
+            itemBuilder: (context, index) {
+              final project = allProjects[index];
+              return AnimatedContainer(
+                duration: Duration(milliseconds: 200 + (index * 50)),
+                curve: Curves.easeOutCubic,
+                child: ProjectCard(
+                  project: project,
+                  isCompact: true,
+                  onTap: () {
+                    context.push('/projects/${project.id}');
+                  },
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
   /// Profile header with user avatar and information
   Widget _buildProfileHeader(BuildContext context, dynamic user) {
     final initials = _getUserInitials(user);
+    final userName = _getUserDisplayName(user);
+    final userEmail = _getUserEmail(user);
 
     return Card(
       elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
-        padding: const EdgeInsets.all(_defaultPadding),
+        padding: const EdgeInsets.all(16.0),
         child: Row(
           children: [
             CircleAvatar(
-              radius: _profileAvatarRadius,
+              radius: 32.0,
               backgroundColor: Theme.of(context).colorScheme.primary,
               child: Text(
                 initials,
@@ -383,14 +611,14 @@ class _MainAppScreenState extends State<MainAppScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    user.name.isNotEmpty ? user.name : 'User',
+                    userName,
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    user.email,
+                    userEmail,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
@@ -409,16 +637,45 @@ class _MainAppScreenState extends State<MainAppScreen>
     );
   }
 
-  /// Gets user initials for avatar
+  /// Gets user initials for avatar with proper null safety
   String _getUserInitials(dynamic user) {
-    if (user.name.isNotEmpty) {
-      final nameParts = user.name.trim().split(' ');
-      if (nameParts.length >= 2) {
-        return '${nameParts.first[0]}${nameParts.last[0]}'.toUpperCase();
+    try {
+      final name = _getUserDisplayName(user);
+      if (name != 'User') {
+        final nameParts = name.trim().split(' ');
+        if (nameParts.length >= 2) {
+          return '${nameParts.first[0]}${nameParts.last[0]}'.toUpperCase();
+        }
+        return name[0].toUpperCase();
       }
-      return user.name[0].toUpperCase();
+
+      // Fall back to email if no name
+      final email = _getUserEmail(user);
+      return email[0].toUpperCase();
+    } catch (e) {
+      // Return placeholder if anything fails
+      return 'U';
     }
-    return user.email[0].toUpperCase();
+  }
+
+  /// Gets user display name with proper null safety
+  String _getUserDisplayName(dynamic user) {
+    try {
+      final name = user?.name as String?;
+      return (name != null && name.isNotEmpty) ? name : 'User';
+    } catch (e) {
+      return 'User';
+    }
+  }
+
+  /// Gets user email with proper null safety
+  String _getUserEmail(dynamic user) {
+    try {
+      final email = user?.email as String?;
+      return (email != null && email.isNotEmpty) ? email : 'No email';
+    } catch (e) {
+      return 'No email';
+    }
   }
 
   /// Shows a coming soon snackbar
@@ -566,93 +823,22 @@ class _MainAppScreenState extends State<MainAppScreen>
     );
   }
 
-  /// Debug section showing API configuration (only visible in development)
-  Widget _buildApiConfigDebugSection(BuildContext context) {
-    final config = ApiConfigVerifier.getConfigSummary();
-    final isConfigValid = config['isCorrectHost'] ?? false;
-
-    return Card(
-      color: Theme.of(
+  /// Navigate to the settings screen
+  void _navigateToSettings(BuildContext context) {
+    try {
+      Navigator.of(
         context,
-      ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-      elevation: 1,
-      child: ExpansionTile(
-        leading: Icon(
-          isConfigValid ? Icons.check_circle : Icons.warning,
-          color: isConfigValid ? Colors.green : Colors.orange,
+      ).push(MaterialPageRoute(builder: (context) => const SettingsScreen()));
+    } catch (e) {
+      // Handle any navigation errors
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Could not open settings: ${e.toString()}'),
+          backgroundColor: Colors.red.shade700,
+          behavior: SnackBarBehavior.floating,
         ),
-        title: Text(
-          'API Configuration',
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-        ),
-        subtitle: Text(
-          'Host: ${config['apiBaseUrl']}',
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(_defaultPadding),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildConfigRow(
-                  'Environment',
-                  config['environment']?.toString() ?? 'N/A',
-                ),
-                _buildConfigRow(
-                  'Debug Mode',
-                  config['debugMode']?.toString() ?? 'N/A',
-                ),
-                _buildConfigRow(
-                  'API Base URL',
-                  config['apiBaseUrl']?.toString() ?? 'N/A',
-                ),
-                _buildConfigRow(
-                  'Env File Loaded',
-                  config['envFileLoaded']?.toString() ?? 'N/A',
-                ),
-                _buildConfigRow(
-                  'Correct Host',
-                  config['isCorrectHost']?.toString() ?? 'N/A',
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Builds configuration row for debug section
-  Widget _buildConfigRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 120,
-            child: Text(
-              '$label:',
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
-            ),
-          ),
-          Expanded(
-            child: SelectableText(
-              value,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                fontFamily: 'monospace',
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+      );
+    }
   }
 }
 

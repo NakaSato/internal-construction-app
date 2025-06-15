@@ -33,6 +33,7 @@ class CalendarEvent extends Equatable {
     this.color,
     this.createdAt,
     this.updatedAt,
+    this.selectedDays = const [],
   });
 
   /// Unique event identifier
@@ -98,29 +99,32 @@ class CalendarEvent extends Equatable {
   /// End date for recurring events
   final DateTime? recurrenceEndDate;
 
-  /// Reminder minutes before event
+  /// Minutes before event to send reminder
   final int reminderMinutes;
 
   /// Whether event is private
   final bool isPrivate;
 
-  /// Meeting URL (Teams, Zoom, etc.)
+  /// URL for virtual meetings
   final String? meetingUrl;
 
-  /// Attendee email addresses
-  final String? attendees;
+  /// List of event attendees
+  final List<String>? attendees;
 
-  /// Additional notes
+  /// Additional notes for the event
   final String? notes;
 
-  /// Event color (hex string)
+  /// Event color (hex code)
   final String? color;
 
-  /// When event was created
+  /// Date when event was created
   final DateTime? createdAt;
 
-  /// When event was last updated
+  /// Date when event was last updated
   final DateTime? updatedAt;
+
+  /// Selected days for recurring events (day indices, where 0 is Monday)
+  final List<int> selectedDays;
 
   /// Event duration
   Duration get duration => endDateTime.difference(startDateTime);
@@ -175,11 +179,12 @@ class CalendarEvent extends Equatable {
     int? reminderMinutes,
     bool? isPrivate,
     String? meetingUrl,
-    String? attendees,
+    List<String>? attendees,
     String? notes,
     String? color,
     DateTime? createdAt,
     DateTime? updatedAt,
+    List<int>? selectedDays,
   }) {
     return CalendarEvent(
       id: id ?? this.id,
@@ -211,6 +216,7 @@ class CalendarEvent extends Equatable {
       color: color ?? this.color,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      selectedDays: selectedDays ?? this.selectedDays,
     );
   }
 
@@ -245,6 +251,7 @@ class CalendarEvent extends Equatable {
     color,
     createdAt,
     updatedAt,
+    selectedDays,
   ];
 
   @override
@@ -417,4 +424,16 @@ extension CalendarEventPriorityX on CalendarEventPriority {
         return '#9C27B0'; // Purple
     }
   }
+}
+
+/// Frequency options for recurring events
+enum RecurrenceFrequency {
+  daily('Daily'),
+  weekly('Weekly'),
+  biweekly('Bi-weekly'),
+  monthly('Monthly'),
+  yearly('Yearly');
+
+  const RecurrenceFrequency(this.displayName);
+  final String displayName;
 }
