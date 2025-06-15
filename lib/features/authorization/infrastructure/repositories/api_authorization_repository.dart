@@ -163,7 +163,7 @@ class ApiAuthorizationRepository implements AuthorizationRepository {
       await _secureStorage.write(key: cacheKey, value: roleJson.toString());
     } catch (e) {
       // Cache failure shouldn't break the app
-      print('Failed to cache role data: $e');
+      // Silently handle cache errors
     }
   }
 
@@ -201,7 +201,7 @@ class ApiAuthorizationRepository implements AuthorizationRepository {
       }
     } catch (e) {
       // Cache clear failure shouldn't break the app
-      print('Failed to clear role cache: $e');
+      // Silently handle cache errors
     }
   }
 }

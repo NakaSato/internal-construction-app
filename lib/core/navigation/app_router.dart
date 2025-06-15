@@ -117,11 +117,6 @@ class AppRouter {
         },
       ),
       GoRoute(
-        path: '/image-project-cards',
-        name: 'image-project-cards',
-        builder: (context, state) => const ImageProjectCardListScreen(),
-      ),
-      GoRoute(
         path: '/projects',
         name: 'projects',
         builder: (context, state) => const ImageProjectCardListScreen(),

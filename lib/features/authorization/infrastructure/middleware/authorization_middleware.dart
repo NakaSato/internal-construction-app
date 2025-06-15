@@ -54,7 +54,7 @@ class AuthorizationMiddleware {
       return true;
     } catch (e) {
       if (kDebugMode) {
-        print('Authorization middleware error for route $route: $e');
+        // Silently handle authorization errors in debug mode
       }
       return false;
     }

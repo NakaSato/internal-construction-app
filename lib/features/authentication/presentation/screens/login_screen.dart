@@ -319,10 +319,15 @@ class _LoginScreenState extends State<LoginScreen>
                                       horizontal: isSmallScreen ? 8.0 : 12.0,
                                     ),
                                     child: Column(
-                                      mainAxisSize: MainAxisSize.min,
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
                                       children: [
+                                        // Flexible spacer at top
+                                        const Flexible(
+                                          flex: 1,
+                                          child: SizedBox(),
+                                        ),
+
                                         // Sign out option for already authenticated users
                                         if (state is AuthAuthenticated) ...[
                                           _buildSignOutHeader(
@@ -346,6 +351,12 @@ class _LoginScreenState extends State<LoginScreen>
                                               ),
                                             );
                                           },
+                                        ),
+
+                                        // Flexible spacer at bottom
+                                        const Flexible(
+                                          flex: 1,
+                                          child: SizedBox(),
                                         ),
                                       ],
                                     ),
@@ -422,10 +433,11 @@ class _LoginScreenState extends State<LoginScreen>
       key: _formKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min, // Important: minimize the form size
         children: [
-          SizedBox(height: isSmallScreen ? 8 : 12),
+          SizedBox(height: isSmallScreen ? 4 : 8), // Reduced spacing
           _buildHeader(context),
-          SizedBox(height: isSmallScreen ? 12 : 20),
+          SizedBox(height: isSmallScreen ? 8 : 16), // Reduced spacing
           Center(
             child: ConstrainedBox(
               constraints: BoxConstraints(maxWidth: responsiveMaxWidth),
@@ -454,22 +466,30 @@ class _LoginScreenState extends State<LoginScreen>
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisSize:
+                      MainAxisSize.min, // Important: minimize column size
                   children: [
                     _buildInputFieldWrapper(child: _buildUsernameField()),
-                    SizedBox(height: isSmallScreen ? 16 : 20),
+                    SizedBox(
+                      height: isSmallScreen ? 12 : 16,
+                    ), // Reduced spacing
                     _buildInputFieldWrapper(child: _buildPasswordField()),
-                    SizedBox(height: isSmallScreen ? 20 : 24),
+                    SizedBox(
+                      height: isSmallScreen ? 16 : 20,
+                    ), // Reduced spacing
                     _buildOptionsRow(),
-                    SizedBox(height: isSmallScreen ? 20 : 24),
+                    SizedBox(
+                      height: isSmallScreen ? 16 : 20,
+                    ), // Reduced spacing
                     _buildSignInButton(),
                   ],
                 ),
               ),
             ),
           ),
-          SizedBox(height: isSmallScreen ? 12 : 16),
+          SizedBox(height: isSmallScreen ? 8 : 12), // Reduced spacing
           _buildSignUpSection(),
-          SizedBox(height: isSmallScreen ? 8 : 12),
+          SizedBox(height: isSmallScreen ? 4 : 8), // Reduced spacing
         ],
       ),
     );
@@ -513,32 +533,35 @@ class _LoginScreenState extends State<LoginScreen>
             ),
           ),
         ),
-        SizedBox(height: isSmallScreen ? 8 : 12),
+        SizedBox(height: isSmallScreen ? 6 : 8), // Further reduced spacing
         // Responsive description with better padding
-        Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: isSmallScreen ? 16.0 : 20.0,
-          ),
-          child: Text(
-            'Manage your solar construction projects',
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: Colors.white.withValues(alpha: 0.9),
-              height: 1.4,
-              fontSize: descriptionFontSize,
-              fontWeight: FontWeight.w500,
-              shadows: [
-                Shadow(
-                  offset: const Offset(0, 1),
-                  blurRadius: 4,
-                  color: Colors.black.withValues(alpha: 0.2),
-                ),
-              ],
+        if (!isSmallScreen ||
+            MediaQuery.of(context).size.height >
+                600) // Hide description on very small screens
+          Container(
+            padding: EdgeInsets.symmetric(
+              horizontal: isSmallScreen ? 16.0 : 20.0,
             ),
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
+            child: Text(
+              'Manage your solar construction projects',
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: Colors.white.withValues(alpha: 0.9),
+                height: 1.4,
+                fontSize: descriptionFontSize,
+                fontWeight: FontWeight.w500,
+                shadows: [
+                  Shadow(
+                    offset: const Offset(0, 1),
+                    blurRadius: 4,
+                    color: Colors.black.withValues(alpha: 0.2),
+                  ),
+                ],
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
-        ),
       ],
     );
   }

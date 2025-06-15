@@ -322,29 +322,12 @@ class _MainAppScreenState extends State<MainAppScreen>
   /// Project list card with all projects in compact format
   Widget _buildProjectListCard(BuildContext context) {
     return Card(
-      elevation: 2,
-      shadowColor: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.2),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header section
-          Container(
-            padding: const EdgeInsets.fromLTRB(
-              _defaultPadding,
-              _defaultPadding,
-              _defaultPadding,
-              2,
-            ),
-            decoration: BoxDecoration(
-              color: Theme.of(
-                context,
-              ).colorScheme.primary.withValues(alpha: 0.1),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(16),
-                topRight: Radius.circular(16),
-              ),
-            ),
+          Padding(
+            padding: const EdgeInsets.all(2.0),
             child: Row(
               children: [
                 const Spacer(),
@@ -565,37 +548,25 @@ class _MainAppScreenState extends State<MainAppScreen>
         // Wait a bit for the refresh to complete
         await Future.delayed(const Duration(milliseconds: 250));
       },
-      child: Container(
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
-          ),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(8),
-            itemCount: allProjects.length,
-            separatorBuilder: (context, index) => const SizedBox(height: 8),
-            itemBuilder: (context, index) {
-              final project = allProjects[index];
-              return AnimatedContainer(
-                duration: Duration(milliseconds: 200 + (index * 50)),
-                curve: Curves.easeOutCubic,
-                child: ProjectCard(
-                  project: project,
-                  isCompact: true,
-                  onTap: () {
-                    context.push('/projects/${project.id}');
-                  },
-                ),
-              );
-            },
-          ),
-        ),
+      child: ListView.separated(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: allProjects.length,
+        separatorBuilder: (context, index) => const SizedBox(height: 1.0),
+        itemBuilder: (context, index) {
+          final project = allProjects[index];
+          return AnimatedContainer(
+            duration: Duration(milliseconds: 200 + (index * 50)),
+            curve: Curves.easeOutCubic,
+            child: ProjectCard(
+              project: project,
+              isCompact: true,
+              onTap: () {
+                context.push('/projects/${project.id}');
+              },
+            ),
+          );
+        },
       ),
     );
   }

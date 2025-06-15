@@ -28,11 +28,18 @@ abstract class NetworkModule {
     if (EnvironmentConfig.enableDebugMode) {
       dio.interceptors.add(
         LogInterceptor(
-          requestBody: true,
-          responseBody: true,
-          requestHeader: true,
+          requestBody: false, // Disable request body logging
+          responseBody: false, // Disable response body logging
+          requestHeader: false, // Disable request header logging
           responseHeader: false,
-          error: true,
+          error: true, // Keep error logging
+          logPrint: (object) {
+            // Only log errors and critical information
+            if (object.toString().contains('ERROR') ||
+                object.toString().contains('DioException')) {
+              debugPrint(object.toString());
+            }
+          },
         ),
       );
     }
