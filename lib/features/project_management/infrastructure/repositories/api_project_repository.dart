@@ -1,10 +1,13 @@
 import 'package:dio/dio.dart';
+import 'package:injectable/injectable.dart';
 import '../../domain/entities/project.dart';
 import '../../domain/repositories/project_repository.dart';
 import '../services/project_api_service.dart';
 import '../models/project_response.dart';
 
 /// API-based implementation of ProjectRepository
+@Injectable(as: ProjectRepository)
+@Named('api')
 class ApiProjectRepository implements ProjectRepository {
   const ApiProjectRepository(this._apiService);
 
@@ -12,14 +15,16 @@ class ApiProjectRepository implements ProjectRepository {
 
   @override
   Future<List<Project>> getAllProjects() async {
-    return getProjects();
+    return getProjects(
+      pageSize: 1000,
+    ); // Fetch all projects with large page size
   }
 
   @override
   Future<List<Project>> getProjectsByStatus(ProjectStatus status) async {
     // Note: This would need to be implemented based on API capabilities
     // For now, get all projects and filter client-side
-    final projects = await getProjects();
+    final projects = await getProjects(pageSize: 1000); // Fetch all projects
     return projects
         .where((project) => project.projectStatus == status)
         .toList();
@@ -64,7 +69,7 @@ class ApiProjectRepository implements ProjectRepository {
   Future<List<Project>> searchProjects(String query) async {
     // Note: This would need to be implemented based on API capabilities
     // For now, get all projects and filter client-side
-    final projects = await getProjects();
+    final projects = await getProjects(pageSize: 1000); // Fetch all projects
     return projects
         .where(
           (project) =>

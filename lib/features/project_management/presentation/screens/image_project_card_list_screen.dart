@@ -215,6 +215,7 @@ class _ImageProjectCardListScreenState
         child: _buildProjectList(),
       ),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: "image_project_fab",
         onPressed: () {
           // TODO: Navigate to add project screen
           ScaffoldMessenger.of(context).showSnackBar(

@@ -212,6 +212,77 @@ class _MainAppScreenState extends State<MainAppScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Search Bar Section - Outside of card
+              Container(
+                width: double.infinity,
+                margin: const EdgeInsets.only(bottom: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: TextField(
+                  decoration: InputDecoration(
+                    hintText: 'Search projects by name, address, or status...',
+                    prefixIcon: Icon(
+                      Icons.search,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                    suffixIcon: IconButton(
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Advanced filters coming soon!'),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      },
+                      icon: Icon(
+                        Icons.filter_list,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                      tooltip: 'Filters',
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.outline.withValues(alpha: 0.2),
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.outline.withValues(alpha: 0.2),
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.primary,
+                        width: 2,
+                      ),
+                    ),
+                    filled: true,
+                    fillColor: Theme.of(context)
+                        .colorScheme
+                        .surfaceContainerHighest
+                        .withValues(alpha: 0.3),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
+                    hintStyle: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 16,
+                    ),
+                  ),
+                  style: Theme.of(context).textTheme.bodyLarge,
+                  onChanged: (value) {
+                    // TODO: Implement real-time search filtering
+                    // For now, just a placeholder
+                  },
+                ),
+              ),
               _buildProjectListCard(context),
               // Add space for future dashboard sections
               const SizedBox(height: _defaultPadding),
@@ -289,6 +360,7 @@ class _MainAppScreenState extends State<MainAppScreen>
   Widget _buildProjectListCard(BuildContext context) {
     return Card(
       elevation: 4,
+      color: Colors.transparent,
       shadowColor: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.2),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Column(
@@ -305,7 +377,7 @@ class _MainAppScreenState extends State<MainAppScreen>
             decoration: BoxDecoration(
               color: Theme.of(
                 context,
-              ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+              ).colorScheme.primary.withValues(alpha: 0.1),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(16),
                 topRight: Radius.circular(16),
@@ -313,19 +385,6 @@ class _MainAppScreenState extends State<MainAppScreen>
             ),
             child: Row(
               children: [
-                Icon(
-                  Icons.folder_outlined,
-                  color: Theme.of(context).colorScheme.primary,
-                  size: 24,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Projects',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
                 const Spacer(),
                 BlocBuilder<ProjectBloc, ProjectState>(
                   builder: (context, state) {
@@ -422,58 +481,55 @@ class _MainAppScreenState extends State<MainAppScreen>
   }
 
   Widget _buildEmptyState(BuildContext context) {
-    return Container(
-      height: 200,
-      padding: const EdgeInsets.all(24),
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.folder_open_outlined,
-                size: 32,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              shape: BoxShape.circle,
             ),
-            const SizedBox(height: 16),
-            Text(
-              'No projects yet',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
+            child: Icon(
+              Icons.folder_open_outlined,
+              size: 20,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Create your first project to get started',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-              textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'No projects yet',
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
-            const SizedBox(height: 16),
-            FilledButton.icon(
-              onPressed: () {
-                // Navigate to create project
-                context.push('/projects/create');
-              },
-              icon: const Icon(Icons.add, size: 18),
-              label: const Text('Create Project'),
-              style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 12,
-                ),
-              ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            'Create your first project to get started',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
-          ],
-        ),
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 8),
+          FilledButton.icon(
+            onPressed: () {
+              // Navigate to create project
+              context.push('/projects/create');
+            },
+            icon: const Icon(Icons.add, size: 14),
+            label: const Text('Create Project'),
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              textStyle: Theme.of(context).textTheme.bodySmall,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -548,7 +604,6 @@ class _MainAppScreenState extends State<MainAppScreen>
         await Future.delayed(const Duration(milliseconds: 500));
       },
       child: Container(
-        height: 320,
         decoration: BoxDecoration(
           border: Border.all(
             color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
@@ -558,6 +613,8 @@ class _MainAppScreenState extends State<MainAppScreen>
         child: ClipRRect(
           borderRadius: BorderRadius.circular(12),
           child: ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
             padding: const EdgeInsets.all(8),
             itemCount: allProjects.length,
             separatorBuilder: (context, index) => const SizedBox(height: 8),

@@ -151,6 +151,7 @@ class _SimpleCalendarView extends StatelessWidget {
         },
       ),
       floatingActionButton: FloatingActionButton(
+        heroTag: "calendar_management_simple_fab",
         onPressed: () => _showCreateEventDialog(context),
         child: const Icon(Icons.add),
       ),

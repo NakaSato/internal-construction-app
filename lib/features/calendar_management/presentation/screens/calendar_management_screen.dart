@@ -116,6 +116,7 @@ class _CalendarManagementViewState extends State<CalendarManagementView>
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: "calendar_management_fab",
         onPressed: () => _showCreateEventDialog(context),
         icon: const Icon(Icons.add),
         label: const Text('New Event'),

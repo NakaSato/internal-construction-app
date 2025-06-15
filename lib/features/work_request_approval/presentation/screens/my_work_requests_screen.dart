@@ -89,6 +89,7 @@ class _MyWorkRequestsScreenState extends State<MyWorkRequestsScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
+        heroTag: "work_requests_fab",
         onPressed: _createNewRequest,
         child: const Icon(Icons.add),
       ),

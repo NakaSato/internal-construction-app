@@ -36,8 +36,12 @@ import '../../features/project_management/application/project_bloc.dart'
     as _i1062;
 import '../../features/project_management/domain/repositories/project_repository.dart'
     as _i475;
+import '../../features/project_management/infrastructure/repositories/api_project_repository.dart'
+    as _i776;
 import '../../features/project_management/infrastructure/repositories/mock_project_repository.dart'
     as _i284;
+import '../../features/project_management/infrastructure/services/project_api_service.dart'
+    as _i752;
 import '../../features/work_calendar/application/work_calendar_bloc.dart'
     as _i937;
 import '../../features/work_calendar/domain/repositories/work_calendar_repository.dart'
@@ -70,12 +74,11 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i503.WorkCalendarRepository>(
       () => _i743.ApiWorkCalendarRepository(gh<_i361.Dio>()),
     );
-    gh.factory<_i1062.ProjectBloc>(
-      () =>
-          _i1062.ProjectBloc(gh<_i475.ProjectRepository>(instanceName: 'api')),
-    );
     gh.lazySingleton<_i378.AuthApiService>(
       () => authModule.authApiService(gh<_i361.Dio>()),
+    );
+    gh.factory<_i752.ProjectApiService>(
+      () => _i752.ProjectApiService(gh<_i361.Dio>(), baseUrl: gh<String>()),
     );
     gh.factory<_i937.WorkCalendarBloc>(
       () => _i937.WorkCalendarBloc(gh<_i503.WorkCalendarRepository>()),
@@ -90,10 +93,18 @@ extension GetItInjectableX on _i174.GetIt {
       ),
       instanceName: 'api',
     );
+    gh.factory<_i475.ProjectRepository>(
+      () => _i776.ApiProjectRepository(gh<_i752.ProjectApiService>()),
+      instanceName: 'api',
+    );
     gh.lazySingleton<_i202.AuthRepositoryFactory>(
       () => _i202.AuthRepositoryFactory(
         gh<_i742.AuthRepository>(instanceName: 'api'),
       ),
+    );
+    gh.factory<_i1062.ProjectBloc>(
+      () =>
+          _i1062.ProjectBloc(gh<_i475.ProjectRepository>(instanceName: 'api')),
     );
     gh.lazySingleton<_i646.CalendarManagementRepository>(
       () =>
