@@ -7,6 +7,7 @@ import 'core/navigation/app_router.dart';
 import 'features/authentication/application/auth_bloc.dart';
 import 'features/authentication/application/auth_event.dart';
 import 'features/authorization/application/authorization_bloc.dart';
+import 'features/daily_reports/application/cubits/daily_reports_cubit.dart';
 import 'features/project_management/application/project_bloc.dart';
 import 'features/work_calendar/application/work_calendar_bloc.dart';
 import 'core/utils/api_config_verifier.dart';
@@ -41,6 +42,9 @@ class MyApp extends StatelessWidget {
           create: (context) => getIt<WorkCalendarBloc>(),
         ),
         BlocProvider<ProjectBloc>(create: (context) => getIt<ProjectBloc>()),
+        BlocProvider<DailyReportsCubit>(
+          create: (context) => getIt<DailyReportsCubit>(),
+        ),
       ],
       child: MaterialApp.router(
         title: 'CONSTRUCTION INTERNAL',

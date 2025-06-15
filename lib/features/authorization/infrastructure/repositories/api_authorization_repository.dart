@@ -29,8 +29,9 @@ class ApiAuthorizationRepository implements AuthorizationRepository {
       final cachedRole = await getCachedRole(roleName);
       if (cachedRole != null) return cachedRole;
 
-      // Fetch from API
-      final response = await _dio.get('/api/roles/$roleName');
+      // Fetch from API - ensure lowercase role name for API consistency
+      final normalizedRoleName = roleName.toLowerCase();
+      final response = await _dio.get('/api/roles/$normalizedRoleName');
 
       if (response.statusCode == 200) {
         final roleResponse = RoleApiResponse.fromJson(response.data);
@@ -156,7 +157,8 @@ class ApiAuthorizationRepository implements AuthorizationRepository {
   @override
   Future<void> cacheRoleData(Role role) async {
     try {
-      final cacheKey = '$_roleCachePrefix${role.name}';
+      final normalizedRoleName = role.name.toLowerCase();
+      final cacheKey = '$_roleCachePrefix$normalizedRoleName';
       final roleJson = RoleModel.fromEntity(role).toJson();
       await _secureStorage.write(key: cacheKey, value: roleJson.toString());
     } catch (e) {
@@ -168,7 +170,8 @@ class ApiAuthorizationRepository implements AuthorizationRepository {
   @override
   Future<Role?> getCachedRole(String roleName) async {
     try {
-      final cacheKey = '$_roleCachePrefix$roleName';
+      final normalizedRoleName = roleName.toLowerCase();
+      final cacheKey = '$_roleCachePrefix$normalizedRoleName';
       final cachedData = await _secureStorage.read(key: cacheKey);
 
       if (cachedData != null) {

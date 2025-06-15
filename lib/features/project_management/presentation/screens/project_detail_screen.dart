@@ -8,18 +8,23 @@ import '../../application/project_event.dart';
 import '../../application/project_state.dart';
 import '../../domain/entities/project.dart';
 import '../../../daily_reports/presentation/screens/daily_reports_screen.dart';
-import '../../../daily_reports/application/cubits/daily_reports_cubit.dart';
-import '../../../daily_reports/domain/usecases/get_daily_reports.dart';
-import '../../../daily_reports/domain/usecases/get_daily_report_by_id.dart';
-import '../../../daily_reports/domain/usecases/create_daily_report.dart';
-import '../../../daily_reports/domain/usecases/update_daily_report.dart';
-import '../../../daily_reports/domain/usecases/delete_daily_report.dart';
-import '../../../daily_reports/domain/usecases/upload_daily_report_image.dart';
-import '../../../daily_reports/infrastructure/repositories/mock_daily_report_repository.dart';
 import '../../../work_request_approval/presentation/screens/my_work_requests_screen.dart';
-import '../../../work_request_approval/application/cubits/my_work_requests_cubit.dart';
-import '../../../work_request_approval/domain/usecases/get_my_work_requests_usecase.dart';
-import '../../../work_request_approval/infrastructure/repositories/mock_work_request_approval_repository.dart';
+import '../../../authentication/application/auth_bloc.dart';
+import '../../../authentication/application/auth_state.dart';
+import '../../../authorization/application/authorization_bloc.dart';
+import '../../../authorization/application/authorization_state.dart';
+import '../../../authorization/presentation/widgets/authorization_widgets.dart';
+
+// Import widget components
+import '../widgets/project_detail/project_header_widget.dart';
+import '../widgets/project_detail/project_stats_widget.dart';
+import '../widgets/project_detail/project_description_widget.dart';
+import '../widgets/project_detail/project_progress_widget.dart';
+import '../widgets/project_detail/project_tasks_widget.dart';
+import '../widgets/project_detail/project_reports_widget.dart';
+import '../widgets/project_detail/project_actions_widget.dart';
+import '../widgets/project_detail/project_details_widget.dart';
+import '../widgets/project_detail/quick_actions_bottom_sheet.dart';
 
 /// Screen to display detailed information about a specific project
 class ProjectDetailScreen extends StatefulWidget {
@@ -82,876 +87,413 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
           },
         ),
       ),
+      floatingActionButton: _project != null ? BlocBuilder<AuthBloc, AuthState>(
+        builder: (context, authState) {
+          if (authState is! AuthAuthenticated) return const SizedBox.shrink();
+          
+          // Handle potential role lookup errors by using a default fallback approach
+          try {
+            return PermissionBuilder(
+              user: authState.user,
+              resource: 'projects',
+              action: 'update',
+              builder: (context, hasUpdatePermission) {
+                if (!hasUpdatePermission) return const SizedBox.shrink();
+                
+                return FloatingActionButton.extended(
+                  onPressed: () => QuickActionsBottomSheet.show(context, _project!),
+                  icon: const Icon(Icons.add),
+                  label: const Text('Quick Add'),
+                  backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                  foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
+                );
+              },
+              // Add a fallback to handle loading errors
+              fallback: const SizedBox.shrink(),
+            );
+          } catch (e) {
+            // If permission check fails, default to not showing the button
+            return const SizedBox.shrink();
+          }
+        },
+      ) : null,
     );
   }
 
   Widget _buildProjectDetailView(BuildContext context, Project project) {
-    return CustomScrollView(
-      slivers: [
-        // App Bar with Project Image
-        _buildSliverAppBar(context, project),
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, authState) {
+        if (authState is! AuthAuthenticated) {
+          return const Center(
+            child: Text('Authentication required to view project details'),
+          );
+        }
 
-        // Project Content
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Project Overview Card
-                _buildProjectOverviewCard(context, project),
+        final user = authState.user;
 
-                const SizedBox(height: 16),
+        return CustomScrollView(
+          slivers: [
+            // Project Header with App Bar - with authorization controls
+            _buildAuthorizedProjectHeader(context, project, user),
 
-                // Project Details Card
-                _buildProjectDetailsCard(context, project),
-
-                const SizedBox(height: 16),
-
-                // Progress & Tasks Card
-                _buildProgressTasksCard(context, project),
-
-                const SizedBox(height: 16),
-
-                // Timeline Card
-                _buildTimelineCard(context, project),
-
-                const SizedBox(height: 16),
-
-                // Daily Reports Card
-                _buildDailyReportsCard(context, project),
-
-                const SizedBox(height: 16),
-
-                // Work Requests Card
-                _buildWorkRequestsCard(context, project),
-
-                const SizedBox(height: 16),
-
-                // Project Manager Card
-                if (project.projectManager != null)
-                  _buildProjectManagerCard(context, project.projectManager!),
-
-                const SizedBox(height: 16),
-
-                // Additional Info Card
-                _buildAdditionalInfoCard(context, project),
-
-                const SizedBox(height: 32),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSliverAppBar(BuildContext context, Project project) {
-    return SliverAppBar(
-      expandedHeight: 250,
-      pinned: true,
-      flexibleSpace: FlexibleSpaceBar(
-        title: Text(
-          project.projectName,
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-            shadows: [
-              Shadow(
-                offset: Offset(0, 1),
-                blurRadius: 3,
-                color: Colors.black54,
-              ),
-            ],
-          ),
-        ),
-        background: Stack(
-          fit: StackFit.expand,
-          children: [
-            // Project Image or Default Background
-            if (project.imageUrl != null && project.imageUrl!.isNotEmpty)
-              Image.network(
-                project.imageUrl!,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return _buildDefaultBackground(context);
-                },
-              )
-            else
-              _buildDefaultBackground(context),
-
-            // Gradient Overlay
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Colors.black.withValues(alpha: 0.7),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        PopupMenuButton<String>(
-          onSelected: (value) {
-            switch (value) {
-              case 'edit':
-                _editProject(context, project);
-                break;
-              case 'delete':
-                _deleteProject(context, project);
-                break;
-              case 'share':
-                _shareProject(context, project);
-                break;
-            }
-          },
-          itemBuilder: (context) => [
-            const PopupMenuItem(
-              value: 'edit',
-              child: ListTile(
-                leading: Icon(Icons.edit),
-                title: Text('Edit Project'),
-                contentPadding: EdgeInsets.zero,
-              ),
-            ),
-            const PopupMenuItem(
-              value: 'share',
-              child: ListTile(
-                leading: Icon(Icons.share),
-                title: Text('Share Project'),
-                contentPadding: EdgeInsets.zero,
-              ),
-            ),
-            const PopupMenuItem(
-              value: 'delete',
-              child: ListTile(
-                leading: Icon(Icons.delete, color: Colors.red),
-                title: Text(
-                  'Delete Project',
-                  style: TextStyle(color: Colors.red),
-                ),
-                contentPadding: EdgeInsets.zero,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDefaultBackground(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Theme.of(context).colorScheme.primary,
-            Theme.of(context).colorScheme.secondary,
-          ],
-        ),
-      ),
-      child: Center(
-        child: Icon(
-          Icons.solar_power,
-          size: 80,
-          color: Colors.white.withValues(alpha: 0.9),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildProjectOverviewCard(BuildContext context, Project project) {
-    return Card(
-      elevation: 4,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.info_outline,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Project Overview',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            _buildStatusChip(context, project.projectStatus),
-            const SizedBox(height: 16),
-            if (project.description.isNotEmpty) ...[
-              Text(
-                project.description,
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
-              const SizedBox(height: 16),
-            ],
-            Row(
-              children: [
-                Icon(
-                  Icons.location_on,
-                  size: 20,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    project.address,
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildProjectDetailsCard(BuildContext context, Project project) {
-    return Card(
-      elevation: 4,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.assignment,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Project Details',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            _buildDetailRow('Project ID', project.projectId),
-            _buildDetailRow('Client', project.clientInfo),
-            _buildDetailRow('Priority', project.priority.displayName),
-            if (project.tags.isNotEmpty) _buildTagsRow(context, project.tags),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildProgressTasksCard(BuildContext context, Project project) {
-    final progressPercentage = project.completionPercentage;
-
-    return Card(
-      elevation: 4,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.track_changes,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Progress & Tasks',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // Progress Section
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Overall Progress',
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                          Text(
-                            '$progressPercentage%',
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: _getProgressColor(progressPercentage),
-                                ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      LinearProgressIndicator(
-                        value: progressPercentage / 100,
-                        backgroundColor: Theme.of(
-                          context,
-                        ).colorScheme.surfaceContainerHighest,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          _getProgressColor(progressPercentage),
-                        ),
-                        minHeight: 8,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 24),
-
-            // Tasks Section
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _buildTaskStat(
-                      context,
-                      'Completed',
-                      project.completedTaskCount.toString(),
-                      Icons.check_circle,
-                      Colors.green,
-                    ),
-                  ),
-                  Container(
-                    width: 1,
-                    height: 40,
-                    color: Theme.of(context).colorScheme.outline,
-                  ),
-                  Expanded(
-                    child: _buildTaskStat(
-                      context,
-                      'Remaining',
-                      (project.taskCount - project.completedTaskCount)
-                          .toString(),
-                      Icons.pending,
-                      Colors.orange,
-                    ),
-                  ),
-                  Container(
-                    width: 1,
-                    height: 40,
-                    color: Theme.of(context).colorScheme.outline,
-                  ),
-                  Expanded(
-                    child: _buildTaskStat(
-                      context,
-                      'Total',
-                      project.taskCount.toString(),
-                      Icons.assignment,
-                      Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTimelineCard(BuildContext context, Project project) {
-    final now = DateTime.now();
-    final totalDuration = project.estimatedEndDate
-        .difference(project.startDate)
-        .inDays;
-    final elapsedDuration = now.difference(project.startDate).inDays;
-    final remainingDuration = project.estimatedEndDate.difference(now).inDays;
-
-    return Card(
-      elevation: 4,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.schedule,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Timeline',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            _buildDateRow(
-              context,
-              'Start Date',
-              project.startDate,
-              Icons.play_arrow,
-              Colors.green,
-            ),
-            const SizedBox(height: 8),
-            _buildDateRow(
-              context,
-              'Estimated End',
-              project.estimatedEndDate,
-              Icons.flag,
-              project.isOverdue ? Colors.red : Colors.blue,
-            ),
-            if (project.actualEndDate != null) ...[
-              const SizedBox(height: 8),
-              _buildDateRow(
-                context,
-                'Actual End',
-                project.actualEndDate!,
-                Icons.check_circle,
-                Colors.green,
-              ),
-            ],
-
-            const SizedBox(height: 16),
-
-            // Duration Summary
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Total Duration:',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                      Text(
-                        '$totalDuration days',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Days Elapsed:',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                      Text(
-                        '$elapsedDuration days',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Days Remaining:',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                      Text(
-                        remainingDuration > 0
-                            ? '$remainingDuration days'
-                            : 'Overdue by ${-remainingDuration} days',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: remainingDuration > 0 ? null : Colors.red,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
-            if (project.isOverdue)
-              Container(
-                margin: const EdgeInsets.only(top: 12),
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.red.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
-                ),
-                child: Row(
+            // Project Content
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.warning, color: Colors.red.shade700, size: 20),
-                    const SizedBox(width: 8),
-                    Text(
-                      'This project is overdue',
-                      style: TextStyle(
-                        color: Colors.red.shade700,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    // Project Overview Stats
+                    ProjectStatsWidget(project: project),
+                    const SizedBox(height: 20),
+                    
+                    // Project Description
+                    if (project.description.isNotEmpty) ...[
+                      ProjectDescriptionWidget(project: project),
+                      const SizedBox(height: 20),
+                    ],
+                    
+                    // Progress and Budget Section
+                    ProjectProgressWidget(project: project),
+                    const SizedBox(height: 20),
+                    
+                    // Tasks Section
+                    ProjectTasksWidget(
+                      project: project,
+                      onViewAllTasks: () {
+                        // TODO: Navigate to full tasks list
+                      },
                     ),
+                    const SizedBox(height: 20),
+                    
+                    // Recent Reports Section
+                    ProjectReportsWidget(
+                      project: project,
+                      onViewAllReports: () => _navigateToDailyReports(context, project),
+                    ),
+                    const SizedBox(height: 20),
+                    
+                    // Action Buttons - with authorization controls
+                    _buildAuthorizedActions(context, project, user),
+                    const SizedBox(height: 20),
+                    
+                    // Project Details
+                    ProjectDetailsWidget(project: project),
+                    const SizedBox(height: 32),
                   ],
                 ),
               ),
+            ),
           ],
-        ),
-      ),
+        );
+      },
     );
   }
 
-  Widget _buildProjectManagerCard(
-    BuildContext context,
-    dynamic projectManager,
-  ) {
-    return Card(
-      elevation: 4,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.person,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Project Manager',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 30,
-                  backgroundColor: Theme.of(context).colorScheme.primary,
-                  child: Text(
-                    _getUserInitials(projectManager),
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        projectManager.fullName,
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.w600),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        projectManager.email,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  onPressed: () {
-                    // TODO: Implement contact functionality
-                  },
-                  icon: const Icon(Icons.email),
-                  tooltip: 'Contact Manager',
-                ),
-              ],
-            ),
-          ],
+  Widget _buildAuthorizedProjectHeader(BuildContext context, Project project, user) {
+    try {
+      // First check update permission with fallback
+      return PermissionBuilder(
+        user: user,
+        resource: 'projects',
+        action: 'update',
+        builder: (context, hasUpdatePermission) {
+          try {
+            // Then check delete permission with fallback
+            return PermissionBuilder(
+              user: user,
+              resource: 'projects', 
+              action: 'delete',
+              builder: (context, hasDeletePermission) {
+                return ProjectHeaderWidget(
+                  project: project,
+                  onEdit: hasUpdatePermission ? () => _editProject(context, project) : null,
+                  onShare: () => _shareProject(context, project), // Share is available to all
+                  onDelete: hasDeletePermission ? () => _deleteProject(context, project) : null,
+                );
+              },
+              // Fallback for delete permission check failure
+              fallback: ProjectHeaderWidget(
+                project: project,
+                onEdit: hasUpdatePermission ? () => _editProject(context, project) : null,
+                onShare: () => _shareProject(context, project),
+                onDelete: null,
+              ),
+            );
+          } catch (e) {
+            // If nested permission check fails, use default with just update permission
+            return ProjectHeaderWidget(
+              project: project,
+              onEdit: hasUpdatePermission ? () => _editProject(context, project) : null,
+              onShare: () => _shareProject(context, project),
+              onDelete: null,
+            );
+          }
+        },
+        // Fallback for update permission check failure
+        fallback: ProjectHeaderWidget(
+          project: project,
+          onEdit: null,
+          onShare: () => _shareProject(context, project),
+          onDelete: null,
         ),
-      ),
-    );
-  }
-
-  Widget _buildAdditionalInfoCard(BuildContext context, Project project) {
-    return Card(
-      elevation: 4,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.more_horiz,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Additional Information',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            if (project.createdAt != null)
-              _buildDetailRow('Created', _formatDate(project.createdAt!)),
-            if (project.updatedAt != null)
-              _buildDetailRow('Last Updated', _formatDate(project.updatedAt!)),
-            if (project.assignedUserId != null)
-              _buildDetailRow('Assigned User ID', project.assignedUserId!),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatusChip(BuildContext context, ProjectStatus status) {
-    Color chipColor;
-    switch (status) {
-      case ProjectStatus.planning:
-        chipColor = Colors.blue;
-        break;
-      case ProjectStatus.inProgress:
-        chipColor = Colors.orange;
-        break;
-      case ProjectStatus.onHold:
-        chipColor = Colors.grey;
-        break;
-      case ProjectStatus.completed:
-        chipColor = Colors.green;
-        break;
-      case ProjectStatus.cancelled:
-        chipColor = Colors.red;
-        break;
+      );
+    } catch (e) {
+      // Complete fallback if all permission checks fail
+      return ProjectHeaderWidget(
+        project: project,
+        onEdit: null,
+        onShare: () => _shareProject(context, project),
+        onDelete: null,
+      );
     }
+  }
+  }
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: chipColor,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        status.displayName,
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-          color: Colors.white,
-          fontWeight: FontWeight.bold,
+  Widget _buildAuthorizedActions(BuildContext context, Project project, user) {
+    try {
+      return PermissionBuilder(
+        user: user,
+        resource: 'projects',
+        action: 'update',
+        builder: (context, hasUpdatePermission) {
+          if (hasUpdatePermission) {
+            // Admin/Manager view with full actions
+            return ProjectActionsWidget(
+              project: project,
+              onDailyReports: () => _navigateToDailyReports(context, project),
+              onWorkRequests: () => _navigateToWorkRequests(context, project),
+              onAddTask: () => _showAddTaskDialog(context, project),
+              onProjectTeam: () => _showProjectTeamDialog(context, project),
+            );
+          } else {
+            // Read-only view for regular users
+            return _buildReadOnlyActions(context, project);
+          }
+        },
+        // Fallback for when permission check fails - default to read-only view
+        fallback: _buildReadOnlyActions(context, project),
+      );
+    } catch (e) {
+      // Complete fallback if permission check throws an exception
+      return _buildReadOnlyActions(context, project);
+    }
+  }
+  }
+
+  Widget _buildReadOnlyActions(BuildContext context, Project project) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
         ),
       ),
-    );
-  }
-
-  Widget _buildDetailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 120,
-            child: Text(
-              '$label:',
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
-          ),
-          Expanded(child: Text(value)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTagsRow(BuildContext context, List<String> tags) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('Tags:', style: TextStyle(fontWeight: FontWeight.w600)),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 4,
-            children: tags
-                .map(
-                  (tag) => Chip(
-                    label: Text(tag),
-                    backgroundColor: Theme.of(
-                      context,
-                    ).colorScheme.surfaceContainerHighest,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.visibility_outlined,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'View Only Access',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
                   ),
-                )
-                .toList(),
-          ),
-        ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'You have read-only access to this project. Contact your manager for update permissions.',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _navigateToDailyReports(context, project),
+                    icon: const Icon(Icons.assessment_outlined, size: 20),
+                    label: const Text('View Reports'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _navigateToWorkRequests(context, project),
+                    icon: const Icon(Icons.assignment_outlined, size: 20),
+                    label: const Text('View Requests'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
-    );
-  }
-
-  Widget _buildTaskStat(
-    BuildContext context,
-    String label,
-    String value,
-    IconData icon,
-    Color color,
-  ) {
-    return Column(
-      children: [
-        Icon(icon, color: color, size: 24),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
-        ),
-        Text(
-          label,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDateRow(
-    BuildContext context,
-    String label,
-    DateTime date,
-    IconData icon,
-    Color color,
-  ) {
-    return Row(
-      children: [
-        Icon(icon, color: color, size: 20),
-        const SizedBox(width: 8),
-        SizedBox(
-          width: 120,
-          child: Text(
-            '$label:',
-            style: const TextStyle(fontWeight: FontWeight.w600),
-          ),
-        ),
-        Text(_formatDate(date)),
-      ],
     );
   }
 
   Widget _buildErrorView(BuildContext context, String message) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Project Details')),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.error_outline,
-                size: 64,
-                color: Theme.of(context).colorScheme.error,
+    final theme = Theme.of(context);
+    
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 64,
+              color: theme.colorScheme.error,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Error Loading Project',
+              style: theme.textTheme.headlineSmall?.copyWith(
+                color: theme.colorScheme.error,
+                fontWeight: FontWeight.w600,
               ),
-              const SizedBox(height: 16),
-              Text(
-                'Error Loading Project',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
               ),
-              const SizedBox(height: 8),
-              Text(
-                message,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton.icon(
-                onPressed: () {
-                  _projectBloc.add(const ProjectLoadRequested());
-                },
-                icon: const Icon(Icons.refresh),
-                label: const Text('Retry'),
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 24),
+            FilledButton(
+              onPressed: () {
+                _projectBloc.add(const ProjectLoadRequested());
+              },
+              child: const Text('Retry'),
+            ),
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: () => context.pop(),
+              child: const Text('Go Back'),
+            ),
+          ],
         ),
       ),
     );
   }
 
   Widget _buildProjectNotFoundView(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Project Not Found')),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
+    final theme = Theme.of(context);
+    
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.search_off,
+              size: 64,
+              color: theme.colorScheme.outline,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Project Not Found',
+              style: theme.textTheme.headlineSmall?.copyWith(
+                color: theme.colorScheme.onSurface,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'The project you\'re looking for could not be found.',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 24),
+            FilledButton(
+              onPressed: () => context.pop(),
+              child: const Text('Go Back'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Navigation helper methods
+  void _editProject(BuildContext context, Project project) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.6,
+        maxChildSize: 0.9,
+        minChildSize: 0.3,
+        expand: false,
+        builder: (context, scrollController) => Padding(
+          padding: const EdgeInsets.all(20.0),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.folder_open,
-                size: 64,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              Row(
+                children: [
+                  Icon(
+                    Icons.edit_outlined,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Edit Project',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
-              Text(
-                'Project Not Found',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
+              const SizedBox(height: 20),
+              Expanded(
+                child: ListView(
+                  controller: scrollController,
+                  children: [
+                    _buildEditSection(context, 'Basic Information', [
+                      _buildEditOption(context, 'Project Name', project.projectName, Icons.title),
+                      _buildEditOption(context, 'Address', project.address, Icons.location_on),
+                      _buildEditOption(context, 'Client Information', project.clientInfo, Icons.business),
+                    ]),
+                    _buildEditSection(context, 'Timeline', [
+                      _buildEditOption(context, 'Start Date', _formatDate(project.startDate), Icons.calendar_today),
+                      _buildEditOption(context, 'Estimated End Date', _formatDate(project.estimatedEndDate), Icons.schedule),
+                      _buildEditOption(context, 'Actual End Date', project.actualEndDate != null ? _formatDate(project.actualEndDate!) : 'Not set', Icons.check_circle),
+                    ]),
+                    _buildEditSection(context, 'Project Details', [
+                      _buildEditOption(context, 'Status', project.status, Icons.info),
+                      _buildEditOption(context, 'Description', project.description.isNotEmpty ? project.description : 'No description', Icons.description),
+                      _buildEditOption(context, 'Location', project.location ?? 'Not specified', Icons.location_pin),
+                    ]),
+                    _buildEditSection(context, 'Financial', [
+                      _buildEditOption(context, 'Budget', project.budget?.toString() ?? 'Not set', Icons.monetization_on),
+                      _buildEditOption(context, 'Actual Cost', project.actualCost?.toString() ?? 'Not set', Icons.trending_up),
+                      _buildEditOption(context, 'Progress', '${project.completionPercentage}%', Icons.analytics),
+                    ]),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'The project you\'re looking for could not be found.',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton.icon(
-                onPressed: () {
-                  context.pop();
-                },
-                icon: const Icon(Icons.arrow_back),
-                label: const Text('Go Back'),
               ),
             ],
           ),
@@ -960,384 +502,253 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
     );
   }
 
-  Color _getProgressColor(int percentage) {
-    if (percentage < 25) return Colors.red;
-    if (percentage < 50) return Colors.orange;
-    if (percentage < 75) return Colors.yellow.shade700;
-    return Colors.green;
-  }
-
-  String _formatDate(DateTime date) {
-    return '${date.day}/${date.month}/${date.year}';
-  }
-
-  String _getUserInitials(dynamic user) {
-    if (user?.fullName != null && user.fullName.isNotEmpty) {
-      final names = user.fullName.split(' ');
-      if (names.length >= 2) {
-        return '${names[0][0]}${names[1][0]}'.toUpperCase();
-      }
-      return names[0][0].toUpperCase();
-    }
-    return 'U';
-  }
-
-  void _editProject(BuildContext context, Project project) {
-    // TODO: Implement edit project functionality
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Edit project functionality coming soon')),
+  Widget _buildEditSection(BuildContext context, String title, List<Widget> options) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12.0),
+          child: Text(
+            title,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          ),
+        ),
+        ...options,
+        const SizedBox(height: 16),
+      ],
     );
   }
 
-  void _deleteProject(BuildContext context, Project project) {
-    // TODO: Implement delete project functionality
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Project'),
-        content: Text(
-          'Are you sure you want to delete "${project.projectName}"?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Delete functionality coming soon'),
-                ),
-              );
-            },
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
+  Widget _buildEditOption(BuildContext context, String label, String value, IconData icon) {
+    return ListTile(
+      leading: Icon(icon, size: 20),
+      title: Text(label),
+      subtitle: Text(value),
+      trailing: const Icon(Icons.edit, size: 16),
+      onTap: () {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Edit $label functionality will be implemented')),
+        );
+      },
     );
   }
 
   void _shareProject(BuildContext context, Project project) {
-    // TODO: Implement share project functionality
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Share functionality coming soon')),
+      const SnackBar(content: Text('Share project functionality coming soon')),
     );
   }
 
-  /// Build daily reports card for the project
-  Widget _buildDailyReportsCard(BuildContext context, Project project) {
-    return Card(
-      elevation: 4,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
+  void _deleteProject(BuildContext context, Project project) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(
+              Icons.warning_outlined,
+              color: Theme.of(context).colorScheme.error,
+            ),
+            const SizedBox(width: 8),
+            const Text('Delete Project'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.assignment,
-                  color: Theme.of(context).colorScheme.primary,
-                  size: 24,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Daily Reports',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                  ),
-                ),
-                Icon(
-                  Icons.chevron_right,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ],
+            Text(
+              'Are you sure you want to delete "${project.projectName}"?',
+              style: Theme.of(context).textTheme.bodyLarge,
             ),
             const SizedBox(height: 12),
-            Text(
-              'View and manage daily progress reports for this project',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.errorContainer.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(8),
               ),
-              overflow: TextOverflow.ellipsis,
-              maxLines: 2,
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildReportStat(
-                    context,
-                    'Total Reports',
-                    '12', // Mock data - replace with actual count
-                    Icons.description,
-                    Colors.blue,
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    size: 20,
+                    color: Theme.of(context).colorScheme.error,
                   ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildReportStat(
-                    context,
-                    'Pending',
-                    '3', // Mock data - replace with actual count
-                    Icons.pending_actions,
-                    Colors.orange,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => BlocProvider(
-                        create: (context) => DailyReportsCubit(
-                          getDailyReports: GetDailyReports(
-                            MockDailyReportRepository(),
-                          ),
-                          getDailyReportById: GetDailyReportById(
-                            MockDailyReportRepository(),
-                          ),
-                          createDailyReport: CreateDailyReport(
-                            MockDailyReportRepository(),
-                          ),
-                          updateDailyReport: UpdateDailyReport(
-                            MockDailyReportRepository(),
-                          ),
-                          deleteDailyReport: DeleteDailyReport(
-                            MockDailyReportRepository(),
-                          ),
-                          uploadDailyReportImage: UploadDailyReportImage(
-                            MockDailyReportRepository(),
-                          ),
-                        ),
-                        child: const DailyReportsScreen(),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'This action cannot be undone. All project data, reports, and associated files will be permanently deleted.',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.error,
                       ),
                     ),
-                  );
-                },
-                icon: const Icon(Icons.visibility),
-                label: const Text(
-                  'View All Reports',
-                  overflow: TextOverflow.ellipsis,
-                ),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                ),
+                  ),
+                ],
               ),
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  /// Build work requests card for the project
-  Widget _buildWorkRequestsCard(BuildContext context, Project project) {
-    return Card(
-      elevation: 4,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.work,
-                  color: Theme.of(context).colorScheme.primary,
-                  size: 24,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Work Requests',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                  ),
-                ),
-                Icon(
-                  Icons.chevron_right,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Manage work requests and approvals for this project',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-              overflow: TextOverflow.ellipsis,
-              maxLines: 2,
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildRequestStat(
-                    context,
-                    'Active',
-                    '8', // Mock data - replace with actual count
-                    Icons.pending,
-                    Colors.blue,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildRequestStat(
-                    context,
-                    'Approved',
-                    '15', // Mock data - replace with actual count
-                    Icons.check_circle,
-                    Colors.green,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => BlocProvider(
-                        create: (context) => MyWorkRequestsCubit(
-                          GetMyWorkRequestsUseCase(
-                            MockWorkRequestApprovalRepository(),
-                          ),
-                        ),
-                        child: const MyWorkRequestsScreen(),
-                      ),
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.list),
-                label: const Text(
-                  'View All Requests',
-                  overflow: TextOverflow.ellipsis,
-                ),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// Helper method to build report statistics
-  Widget _buildReportStat(
-    BuildContext context,
-    String label,
-    String value,
-    IconData icon,
-    Color color,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, color: color, size: 20),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  label,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: color,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
-                ),
-              ),
-            ],
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
           ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              color: color,
-              fontWeight: FontWeight.bold,
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
             ),
-            overflow: TextOverflow.ellipsis,
-            maxLines: 1,
+            onPressed: () {
+              Navigator.pop(context);
+              // TODO: Implement actual project deletion API call
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Project "${project.projectName}" deletion functionality will be implemented'),
+                  backgroundColor: Theme.of(context).colorScheme.error,
+                ),
+              );
+            },
+            child: const Text('Delete Project'),
           ),
         ],
       ),
     );
   }
 
-  /// Helper method to build request statistics
-  Widget _buildRequestStat(
-    BuildContext context,
-    String label,
-    String value,
-    IconData icon,
-    Color color,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+  void _navigateToDailyReports(BuildContext context, Project project) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const DailyReportsScreen(),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, color: color, size: 20),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  label,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: color,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
-                ),
+    );
+  }
+
+  void _navigateToWorkRequests(BuildContext context, Project project) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const MyWorkRequestsScreen(),
+      ),
+    );
+  }
+
+  // Helper methods for authorized actions
+  void _showAddTaskDialog(BuildContext context, Project project) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Add New Task'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              decoration: const InputDecoration(
+                labelText: 'Task Title',
+                border: OutlineInputBorder(),
               ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              color: color,
-              fontWeight: FontWeight.bold,
             ),
-            overflow: TextOverflow.ellipsis,
-            maxLines: 1,
+            const SizedBox(height: 16),
+            TextField(
+              decoration: const InputDecoration(
+                labelText: 'Description',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Task creation functionality will be implemented')),
+              );
+            },
+            child: const Text('Add Task'),
           ),
         ],
       ),
     );
+  }
+
+  void _showProjectTeamDialog(BuildContext context, Project project) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Project Team'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Current team members:',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 12),
+            // TODO: Display actual team members from project data
+            ListTile(
+              leading: CircleAvatar(
+                child: Text(project.projectManager?.name != null && project.projectManager!.name.isNotEmpty 
+                    ? project.projectManager!.name.substring(0, 1) 
+                    : 'PM'),
+              ),
+              title: Text(project.projectManager?.name ?? 'Project Manager'),
+              subtitle: const Text('Project Manager'),
+            ),
+            const Divider(),
+            const Text('Team management functionality will be implemented'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Team management functionality will be implemented')),
+              );
+            },
+            child: const Text('Manage Team'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Helper method for date formatting
+  String _formatDate(DateTime date) {
+    return '${date.day}/${date.month}/${date.year}';
+  }
+
+  // Helper method to safely check permissions
+  bool _hasPermission(BuildContext context, User user, String resource, String action) {
+    try {
+      final authBloc = context.read<AuthorizationBloc>();
+      final state = authBloc.state;
+      
+      if (state is AuthorizationLoaded) {
+        return state.hasPermission(resource, action);
+      } else {
+        // If the authorization data isn't loaded yet, default to false
+        return false;
+      }
+    } catch (e) {
+      // In case of any errors like the 404 with role lookup, default to false
+      print('Permission check error: $e');
+      return false;
+    }
   }
 }

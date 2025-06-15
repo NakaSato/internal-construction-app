@@ -1,6 +1,42 @@
 import 'package:equatable/equatable.dart';
 import '../../../authentication/domain/entities/user.dart';
 
+/// Task entity for project tasks
+class ProjectTask extends Equatable {
+  const ProjectTask({
+    required this.id,
+    required this.title,
+    required this.status,
+    required this.dueDate,
+  });
+
+  final String id;
+  final String title;
+  final String status;
+  final DateTime dueDate;
+
+  @override
+  List<Object?> get props => [id, title, status, dueDate];
+}
+
+/// Recent report entity for project reports
+class RecentReport extends Equatable {
+  const RecentReport({
+    required this.id,
+    required this.reportDate,
+    required this.userName,
+    required this.hoursWorked,
+  });
+
+  final String id;
+  final DateTime reportDate;
+  final String userName;
+  final double hoursWorked;
+
+  @override
+  List<Object?> get props => [id, reportDate, userName, hoursWorked];
+}
+
 /// Project entity representing a project in the system
 class Project extends Equatable {
   const Project({
@@ -16,13 +52,23 @@ class Project extends Equatable {
     this.taskCount = 0,
     this.completedTaskCount = 0,
     this.imageUrl,
-    // Legacy fields for backward compatibility
+    // Enhanced fields matching API response
     this.description = '',
+    this.location,
+    this.budget,
+    this.actualCost,
+    this.totalTasks,
+    this.completedTasks,
+    this.progressPercentage,
+    this.tasks = const [],
+    this.recentReports = const [],
+    // Additional API fields
+    this.createdAt,
+    this.updatedAt,
+    // Legacy fields for backward compatibility
     this.priority = ProjectPriority.medium,
     this.assignedUserId,
     this.tags = const [],
-    this.createdAt,
-    this.updatedAt,
     this.dueDate,
   });
 
@@ -39,13 +85,25 @@ class Project extends Equatable {
   final int completedTaskCount;
   final String? imageUrl;
 
-  // Legacy fields for backward compatibility
+  // Enhanced fields matching API response
   final String description;
+  final String? location;
+  final double? budget;
+  final double? actualCost;
+  final int? totalTasks;
+  final int? completedTasks;
+  final double? progressPercentage;
+  final List<ProjectTask> tasks;
+  final List<RecentReport> recentReports;
+
+  // Additional API fields
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+
+  // Legacy fields for backward compatibility
   final ProjectPriority priority;
   final String? assignedUserId;
   final List<String> tags;
-  final DateTime? createdAt;
-  final DateTime? updatedAt;
   final DateTime? dueDate;
 
   /// Legacy getters for backward compatibility
@@ -54,8 +112,33 @@ class Project extends Equatable {
 
   /// Calculate completion percentage based on tasks
   int get completionPercentage {
+    // Use API progress percentage if available
+    if (progressPercentage != null) {
+      return progressPercentage!.round();
+    }
+
+    // Use totalTasks and completedTasks if available
+    if (totalTasks != null && totalTasks! > 0) {
+      final completed = completedTasks ?? 0;
+      return ((completed / totalTasks!) * 100).round();
+    }
+
+    // Fallback to legacy task count
     if (taskCount == 0) return 0;
     return ((completedTaskCount / taskCount) * 100).round();
+  }
+
+  /// Get budget utilization percentage
+  double get budgetUtilization {
+    if (budget == null || budget! == 0) return 0.0;
+    final cost = actualCost ?? 0.0;
+    return (cost / budget!) * 100;
+  }
+
+  /// Check if project is over budget
+  bool get isOverBudget {
+    if (budget == null || actualCost == null) return false;
+    return actualCost! > budget!;
   }
 
   /// Parse status string to ProjectStatus enum
@@ -93,11 +176,19 @@ class Project extends Equatable {
     completedTaskCount,
     imageUrl,
     description,
+    location,
+    budget,
+    actualCost,
+    totalTasks,
+    completedTasks,
+    progressPercentage,
+    tasks,
+    recentReports,
+    createdAt,
+    updatedAt,
     priority,
     assignedUserId,
     tags,
-    createdAt,
-    updatedAt,
     dueDate,
   ];
 
@@ -115,6 +206,14 @@ class Project extends Equatable {
     int? completedTaskCount,
     String? imageUrl,
     String? description,
+    String? location,
+    double? budget,
+    double? actualCost,
+    int? totalTasks,
+    int? completedTasks,
+    double? progressPercentage,
+    List<ProjectTask>? tasks,
+    List<RecentReport>? recentReports,
     ProjectPriority? priority,
     String? assignedUserId,
     List<String>? tags,
@@ -136,6 +235,14 @@ class Project extends Equatable {
       completedTaskCount: completedTaskCount ?? this.completedTaskCount,
       imageUrl: imageUrl ?? this.imageUrl,
       description: description ?? this.description,
+      location: location ?? this.location,
+      budget: budget ?? this.budget,
+      actualCost: actualCost ?? this.actualCost,
+      totalTasks: totalTasks ?? this.totalTasks,
+      completedTasks: completedTasks ?? this.completedTasks,
+      progressPercentage: progressPercentage ?? this.progressPercentage,
+      tasks: tasks ?? this.tasks,
+      recentReports: recentReports ?? this.recentReports,
       priority: priority ?? this.priority,
       assignedUserId: assignedUserId ?? this.assignedUserId,
       tags: tags ?? this.tags,

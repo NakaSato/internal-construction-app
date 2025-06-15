@@ -5,6 +5,7 @@ import 'package:injectable/injectable.dart';
 import 'injection.config.dart';
 import '../../features/authorization/config/authorization_di.dart';
 import '../../features/calendar_management/config/mock_calendar_management_di.dart';
+import '../../features/daily_reports/config/daily_reports_di.dart';
 import '../../features/project_management/config/project_management_di.dart';
 import '../../features/work_calendar/config/mock_work_calendar_di.dart';
 
@@ -35,6 +36,9 @@ Future<void> initializeDependencies() async {
 
   // Configure project management dependencies
   configureProjectManagementDependencies();
+
+  // Configure daily reports dependencies
+  configureDailyReportsDependencies();
 }
 
 @module
