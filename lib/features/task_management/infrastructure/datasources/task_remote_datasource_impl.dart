@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 
-import '../../../../core/error/exceptions.dart';
+import '../../../../common/models/errors/exceptions.dart';
 import '../models/task_model.dart';
 import 'task_remote_datasource.dart';
 

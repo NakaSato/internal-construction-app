@@ -3,7 +3,7 @@ import 'package:injectable/injectable.dart';
 
 import '../domain/entities/project.dart';
 import '../domain/repositories/project_repository.dart';
-import '../infrastructure/repositories/api_project_repository.dart';
+import '../data/repositories/api_project_repository.dart';
 import 'project_event.dart';
 import 'project_state.dart';
 

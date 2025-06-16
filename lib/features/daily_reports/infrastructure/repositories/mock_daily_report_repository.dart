@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:dartz/dartz.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../../../core/error/failures.dart';
+import '../../../../common/models/errors/failures.dart';
 import '../../domain/entities/daily_report.dart';
 import '../../domain/repositories/daily_report_repository.dart';
 

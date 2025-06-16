@@ -11,7 +11,7 @@ import '../../domain/entities/user.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../models/auth_response_model.dart';
 import '../models/user_model.dart';
-import '../services/auth_api_service.dart';
+import '../datasources/auth_api_service.dart';
 
 /// API-based implementation of AuthRepository
 @Named('api')

@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/navigation/app_router.dart';
-import '../../../../core/utils/extensions.dart';
+import '../../../../common/utils/extensions.dart';
 import '../../application/auth_bloc.dart';
 import '../../application/auth_event.dart';
 import '../../application/auth_state.dart';

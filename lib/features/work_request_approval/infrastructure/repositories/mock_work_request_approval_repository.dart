@@ -4,7 +4,7 @@ import '../../domain/entities/approval_history.dart';
 import '../../domain/entities/approval_statistics.dart';
 import '../../domain/entities/approval_requests.dart';
 import '../../domain/repositories/work_request_approval_repository.dart';
-import '../../../../core/errors/failures.dart';
+import '../../../../common/models/errors/failures.dart';
 import '../datasources/mock_work_request_service.dart';
 
 class MockWorkRequestApprovalRepository
@@ -15,7 +15,7 @@ class MockWorkRequestApprovalRepository
       final requests = await MockWorkRequestService.getMyWorkRequests();
       return Right(requests);
     } catch (e) {
-      return Left(UnknownFailure(e.toString()));
+      return Left(UnexpectedFailure(e.toString()));
     }
   }
 
@@ -28,7 +28,7 @@ class MockWorkRequestApprovalRepository
       await MockWorkRequestService.submitForApproval(requestId, comments);
       return const Right(null);
     } catch (e) {
-      return Left(UnknownFailure(e.toString()));
+      return Left(UnexpectedFailure(e.toString()));
     }
   }
 
@@ -38,7 +38,7 @@ class MockWorkRequestApprovalRepository
       final requests = await MockWorkRequestService.getPendingApprovals();
       return Right(requests);
     } catch (e) {
-      return Left(UnknownFailure(e.toString()));
+      return Left(UnexpectedFailure(e.toString()));
     }
   }
 
@@ -48,7 +48,7 @@ class MockWorkRequestApprovalRepository
       final requests = await MockWorkRequestService.getAllPendingApprovals();
       return Right(requests);
     } catch (e) {
-      return Left(UnknownFailure(e.toString()));
+      return Left(UnexpectedFailure(e.toString()));
     }
   }
 
@@ -66,7 +66,7 @@ class MockWorkRequestApprovalRepository
       );
       return const Right(null);
     } catch (e) {
-      return Left(UnknownFailure(e.toString()));
+      return Left(UnexpectedFailure(e.toString()));
     }
   }
 
@@ -80,7 +80,7 @@ class MockWorkRequestApprovalRepository
       await Future.delayed(const Duration(milliseconds: 300));
       return const Right(null);
     } catch (e) {
-      return Left(UnknownFailure(e.toString()));
+      return Left(UnexpectedFailure(e.toString()));
     }
   }
 
@@ -100,7 +100,7 @@ class MockWorkRequestApprovalRepository
       }
       return const Right(null);
     } catch (e) {
-      return Left(UnknownFailure(e.toString()));
+      return Left(UnexpectedFailure(e.toString()));
     }
   }
 
@@ -116,7 +116,7 @@ class MockWorkRequestApprovalRepository
         return const Left(NotFoundFailure('Work request not found'));
       }
     } catch (e) {
-      return Left(UnknownFailure(e.toString()));
+      return Left(UnexpectedFailure(e.toString()));
     }
   }
 
@@ -132,7 +132,7 @@ class MockWorkRequestApprovalRepository
       );
       return Right(history);
     } catch (e) {
-      return Left(UnknownFailure(e.toString()));
+      return Left(UnexpectedFailure(e.toString()));
     }
   }
 
@@ -157,7 +157,7 @@ class MockWorkRequestApprovalRepository
       );
       return Right(stats);
     } catch (e) {
-      return Left(UnknownFailure(e.toString()));
+      return Left(UnexpectedFailure(e.toString()));
     }
   }
 
@@ -170,7 +170,7 @@ class MockWorkRequestApprovalRepository
       await Future.delayed(const Duration(milliseconds: 500));
       return const Right(null);
     } catch (e) {
-      return Left(UnknownFailure(e.toString()));
+      return Left(UnexpectedFailure(e.toString()));
     }
   }
 }

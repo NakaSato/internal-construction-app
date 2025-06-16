@@ -1,6 +1,6 @@
 import 'package:injectable/injectable.dart';
 
-import '../domain/repositories/auth_repository.dart';
+import '../../domain/repositories/auth_repository.dart';
 
 /// Factory for creating the appropriate auth repository based on configuration
 @lazySingleton

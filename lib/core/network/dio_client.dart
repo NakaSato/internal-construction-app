@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:injectable/injectable.dart';
 
-import '../config/app_constants.dart';
+import '../../common/constants/app_constants.dart';
 import '../config/environment_config.dart';
 
 @module

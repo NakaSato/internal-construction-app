@@ -1,7 +1,7 @@
 import 'package:dartz/dartz.dart';
 import '../entities/approval_history.dart';
 import '../repositories/work_request_approval_repository.dart';
-import '../../../../core/errors/failures.dart';
+import '../../../../common/models/errors/failures.dart';
 
 class GetApprovalHistoryUseCase {
   const GetApprovalHistoryUseCase(this._repository);

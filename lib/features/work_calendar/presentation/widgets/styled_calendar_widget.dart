@@ -153,22 +153,6 @@ class _StyledCalendarWidgetState extends State<StyledCalendarWidget> {
               color: colorScheme.onSurfaceVariant,
               fontWeight: FontWeight.w500,
             ),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  colorScheme.surfaceVariant.withOpacity(0.9),
-                  colorScheme.surfaceVariant.withOpacity(0.7),
-                ],
-              ),
-              border: Border(
-                bottom: BorderSide(
-                  color: colorScheme.outlineVariant.withOpacity(0.6),
-                  width: 1,
-                ),
-              ),
-            ),
           ),
 
           // Month view settings with enhanced styling
@@ -235,9 +219,6 @@ class _StyledCalendarWidgetState extends State<StyledCalendarWidget> {
             ),
             timeRulerSize: 64,
             nonWorkingDays: const <int>[DateTime.saturday, DateTime.sunday],
-            timeRulerColor: colorScheme.surfaceVariant,
-            timeIntervalColor: colorScheme.surface,
-            nonWorkingDayColor: colorScheme.surfaceVariant.withOpacity(0.2),
           ),
         ),
       ),
@@ -282,7 +263,6 @@ class _StyledCalendarWidgetState extends State<StyledCalendarWidget> {
     ConstructionTask task,
     CalendarAppointmentDetails details,
   ) {
-    final colorScheme = Theme.of(context).colorScheme;
     final statusColor = _parseColor(task.statusColor);
     final priorityColor = _parseColor(task.priorityColor);
     final isCompact = details.bounds.width < 100 || details.bounds.height < 30;
@@ -327,7 +307,7 @@ class _StyledCalendarWidgetState extends State<StyledCalendarWidget> {
 
   Widget _buildCompactTaskDisplay(BuildContext context, ConstructionTask task) {
     return Center(
-      child: Icon(_getTaskIcon(task.type), color: Colors.white, size: 16),
+      child: Icon(_getTaskIcon(task.status), color: Colors.white, size: 16),
     );
   }
 
@@ -340,7 +320,7 @@ class _StyledCalendarWidgetState extends State<StyledCalendarWidget> {
       children: [
         Row(
           children: [
-            Icon(_getTaskIcon(task.type), color: Colors.white, size: 14),
+            Icon(_getTaskIcon(task.status), color: Colors.white, size: 14),
             const SizedBox(width: 4),
             Expanded(
               child: Text(
@@ -355,9 +335,9 @@ class _StyledCalendarWidgetState extends State<StyledCalendarWidget> {
           ],
         ),
         const Spacer(),
-        if (task.assignee != null && task.assignee!.isNotEmpty)
+        if (task.assignedTeam != null && task.assignedTeam!.isNotEmpty)
           Text(
-            'Assigned: ${task.assignee}',
+            'Assigned: ${task.assignedTeam}',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: Colors.white.withOpacity(0.9),
               fontSize: 10,
@@ -374,7 +354,9 @@ class _StyledCalendarWidgetState extends State<StyledCalendarWidget> {
     CalendarAppointmentDetails details,
   ) {
     final colorScheme = Theme.of(context).colorScheme;
-    final eventColor = event.color ?? colorScheme.tertiary;
+    final eventColor = event.color != null
+        ? _parseColor(event.color!)
+        : colorScheme.tertiary;
     final isCompact = details.bounds.width < 100 || details.bounds.height < 30;
 
     return Container(
@@ -441,22 +423,20 @@ class _StyledCalendarWidgetState extends State<StyledCalendarWidget> {
     );
   }
 
-  IconData _getTaskIcon(TaskType type) {
-    switch (type) {
-      case TaskType.construction:
+  IconData _getTaskIcon(TaskStatus status) {
+    switch (status) {
+      case TaskStatus.notStarted:
+        return Icons.schedule;
+      case TaskStatus.inProgress:
         return Icons.construction;
-      case TaskType.installation:
-        return Icons.handyman;
-      case TaskType.inspection:
-        return Icons.search;
-      case TaskType.maintenance:
-        return Icons.build;
-      case TaskType.planning:
-        return Icons.edit_calendar;
-      case TaskType.meeting:
-        return Icons.people;
-      default:
-        return Icons.work;
+      case TaskStatus.completed:
+        return Icons.check_circle;
+      case TaskStatus.delayed:
+        return Icons.warning;
+      case TaskStatus.onHold:
+        return Icons.pause_circle;
+      case TaskStatus.cancelled:
+        return Icons.cancel;
     }
   }
 
@@ -510,7 +490,7 @@ class ConstructionDataSource extends CalendarDataSource {
   DateTime getStartTime(int index) {
     final appointment = appointments![index];
     if (appointment is ConstructionTask) {
-      return appointment.startTime;
+      return appointment.startDate;
     } else if (appointment is WorkEvent) {
       return appointment.startTime;
     }
@@ -521,7 +501,7 @@ class ConstructionDataSource extends CalendarDataSource {
   DateTime getEndTime(int index) {
     final appointment = appointments![index];
     if (appointment is ConstructionTask) {
-      return appointment.endTime;
+      return appointment.endDate;
     } else if (appointment is WorkEvent) {
       return appointment.endTime;
     }
@@ -545,7 +525,9 @@ class ConstructionDataSource extends CalendarDataSource {
     if (appointment is ConstructionTask) {
       return _parseColor(appointment.statusColor);
     } else if (appointment is WorkEvent) {
-      return appointment.color ?? Colors.blue;
+      return appointment.color != null
+          ? _parseColor(appointment.color!)
+          : Colors.blue;
     }
     return Colors.blue;
   }
@@ -554,7 +536,8 @@ class ConstructionDataSource extends CalendarDataSource {
   bool isAllDay(int index) {
     final appointment = appointments![index];
     if (appointment is ConstructionTask) {
-      return appointment.isAllDay;
+      // Construction tasks are typically all-day events
+      return true;
     } else if (appointment is WorkEvent) {
       return appointment.isAllDay;
     }

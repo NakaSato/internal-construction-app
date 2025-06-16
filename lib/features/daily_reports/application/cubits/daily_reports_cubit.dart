@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:flutter_architecture_app/core/error/failures.dart';
+import '../../../../common/models/errors/failures.dart';
 import '../../domain/entities/daily_report.dart';
 import '../../domain/usecases/create_daily_report.dart';
 import '../../domain/usecases/delete_daily_report.dart';

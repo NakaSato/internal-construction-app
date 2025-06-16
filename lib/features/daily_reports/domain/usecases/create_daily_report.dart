@@ -1,8 +1,8 @@
 import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
 
-import '../../../../core/error/failures.dart';
-import '../../../../core/usecases/usecase.dart';
+import '../../../../common/models/errors/failures.dart';
+import '../../../../common/models/usecase/usecase.dart';
 import '../entities/daily_report.dart';
 import '../repositories/daily_report_repository.dart';
 

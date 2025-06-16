@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:injectable/injectable.dart';
 
-import '../../features/authentication/infrastructure/services/auth_api_service.dart';
+import '../../features/authentication/data/datasources/auth_api_service.dart';
 
 @module
 abstract class AuthModule {

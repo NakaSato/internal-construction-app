@@ -3,7 +3,7 @@ import '../entities/work_request.dart';
 import '../entities/approval_history.dart';
 import '../entities/approval_statistics.dart';
 import '../entities/approval_requests.dart';
-import '../../../../core/errors/failures.dart';
+import '../../../../common/models/errors/failures.dart';
 
 abstract class WorkRequestApprovalRepository {
   // User's own work requests

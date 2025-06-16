@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../domain/usecases/task_usecases.dart';
-import '../../../../core/usecases/usecase.dart';
+import '../../../../common/models/usecase/usecase.dart';
 import 'task_event.dart';
 import 'task_state.dart';
 

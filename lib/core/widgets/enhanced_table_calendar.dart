@@ -72,178 +72,182 @@ class _EnhancedTableCalendarState extends State<EnhancedTableCalendar> {
         shadowColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: BorderSide(
-            color: theme.colorScheme.outlineVariant,
-            width: 1,
-          ),
+          side: BorderSide(color: theme.colorScheme.outlineVariant, width: 1),
         ),
         margin: const EdgeInsets.all(8.0),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Custom header with month/year and format toggle
-            _buildCustomHeader(context),
-            const SizedBox(height: 16),
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Custom header with month/year and format toggle
+              _buildCustomHeader(context),
+              const SizedBox(height: 16),
 
-            // Table Calendar
-            TableCalendar<dynamic>(
-              firstDay: DateTime.utc(2020, 1, 1),
-              lastDay: DateTime.utc(2030, 12, 31),
-              focusedDay: _focusedDay,
-              calendarFormat: _calendarFormat,
-              eventLoader: widget.eventLoader ?? (day) => [],
-              startingDayOfWeek: widget.startingDayOfWeek,
+              // Table Calendar
+              TableCalendar<dynamic>(
+                firstDay: DateTime.utc(2020, 1, 1),
+                lastDay: DateTime.utc(2030, 12, 31),
+                focusedDay: _focusedDay,
+                calendarFormat: _calendarFormat,
+                eventLoader: widget.eventLoader ?? (day) => [],
+                startingDayOfWeek: widget.startingDayOfWeek,
 
-              headerStyle: HeaderStyle(
-                titleCentered: true,
-                formatButtonVisible: false,
-                leftChevronIcon: Icon(
-                  Icons.chevron_left,
-                  color: theme.colorScheme.primary,
+                headerStyle: HeaderStyle(
+                  titleCentered: true,
+                  formatButtonVisible: false,
+                  leftChevronIcon: Icon(
+                    Icons.chevron_left,
+                    color: theme.colorScheme.primary,
+                  ),
+                  rightChevronIcon: Icon(
+                    Icons.chevron_right,
+                    color: theme.colorScheme.primary,
+                  ),
                 ),
-                rightChevronIcon: Icon(
-                  Icons.chevron_right,
-                  color: theme.colorScheme.primary,
-                ),
+
+                // Selection
+                selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+
+                // Callbacks
+                onDaySelected: (selectedDay, focusedDay) {
+                  setState(() {
+                    _selectedDay = selectedDay;
+                    _focusedDay = focusedDay;
+                  });
+                  widget.onDaySelected?.call(selectedDay, focusedDay);
+                },
+
+                onPageChanged: (focusedDay) {
+                  setState(() {
+                    _focusedDay = focusedDay;
+                  });
+                  widget.onPageChanged?.call(focusedDay);
+                },
+
+                onFormatChanged: (format) {
+                  setState(() {
+                    _calendarFormat = format;
+                  });
+                  widget.onFormatChanged?.call(format);
+                },
+
+                // Styling
+                headerVisible: false, // We use custom header
+                calendarStyle:
+                    widget.calendarStyle ??
+                    CalendarStyle(
+                      outsideDaysVisible: true,
+                      isTodayHighlighted: true,
+                      weekendTextStyle: TextStyle(
+                        color: theme.colorScheme.error,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      holidayTextStyle: TextStyle(
+                        color: theme.colorScheme.error,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      selectedDecoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            theme.colorScheme.primary,
+                            theme.colorScheme.primary.withOpacity(0.85),
+                          ],
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: theme.colorScheme.primary.withOpacity(0.3),
+                            blurRadius: 4,
+                            spreadRadius: 0.5,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      selectedTextStyle: TextStyle(
+                        color: theme.colorScheme.onPrimary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      todayDecoration: BoxDecoration(
+                        color: theme.colorScheme.primaryContainer.withOpacity(
+                          0.3,
+                        ),
+                        border: Border.all(
+                          color: theme.colorScheme.primary,
+                          width: 1.5,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      todayTextStyle: TextStyle(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      defaultDecoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      weekendDecoration: BoxDecoration(
+                        color: theme.colorScheme.surfaceVariant.withOpacity(
+                          0.2,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      holidayDecoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      outsideDecoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      markerDecoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            theme.colorScheme.tertiary,
+                            theme.colorScheme.tertiaryContainer,
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      markerSize: 6,
+                      markerMargin: const EdgeInsets.symmetric(horizontal: 0.5),
+                      markersMaxCount: 3,
+                      canMarkersOverflow: true,
+                      cellMargin: const EdgeInsets.all(4),
+                    ),
+
+                daysOfWeekStyle:
+                    widget.daysOfWeekStyle ??
+                    DaysOfWeekStyle(
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surfaceVariant.withOpacity(
+                          0.3,
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      weekdayStyle: TextStyle(
+                        color: theme.colorScheme.onSurface,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                        letterSpacing: 0.5,
+                      ),
+                      weekendStyle: TextStyle(
+                        color: theme.colorScheme.error,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+
+                availableCalendarFormats: widget.availableCalendarFormats,
               ),
 
-              // Selection
-              selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-
-              // Callbacks
-              onDaySelected: (selectedDay, focusedDay) {
-                setState(() {
-                  _selectedDay = selectedDay;
-                  _focusedDay = focusedDay;
-                });
-                widget.onDaySelected?.call(selectedDay, focusedDay);
-              },
-
-              onPageChanged: (focusedDay) {
-                setState(() {
-                  _focusedDay = focusedDay;
-                });
-                widget.onPageChanged?.call(focusedDay);
-              },
-
-              onFormatChanged: (format) {
-                setState(() {
-                  _calendarFormat = format;
-                });
-                widget.onFormatChanged?.call(format);
-              },
-
-              // Styling
-              headerVisible: false, // We use custom header
-              calendarStyle:
-                  widget.calendarStyle ??
-                  CalendarStyle(
-                    outsideDaysVisible: true,
-                    isTodayHighlighted: true,
-                    weekendTextStyle: TextStyle(
-                      color: theme.colorScheme.error,
-                      fontWeight: FontWeight.w500,
-                    ),
-                    holidayTextStyle: TextStyle(
-                      color: theme.colorScheme.error,
-                      fontWeight: FontWeight.w500,
-                    ),
-                    selectedDecoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          theme.colorScheme.primary,
-                          theme.colorScheme.primary.withOpacity(0.85),
-                        ],
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: theme.colorScheme.primary.withOpacity(0.3),
-                          blurRadius: 4,
-                          spreadRadius: 0.5,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    selectedTextStyle: TextStyle(
-                      color: theme.colorScheme.onPrimary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    todayDecoration: BoxDecoration(
-                      color: theme.colorScheme.primaryContainer.withOpacity(0.3),
-                      border: Border.all(
-                        color: theme.colorScheme.primary,
-                        width: 1.5,
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    todayTextStyle: TextStyle(
-                      color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    defaultDecoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    weekendDecoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceVariant.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    holidayDecoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    outsideDecoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    markerDecoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          theme.colorScheme.tertiary,
-                          theme.colorScheme.tertiaryContainer,
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    markerSize: 6,
-                    markerMargin: const EdgeInsets.symmetric(horizontal: 0.5),
-                    markersMaxCount: 3,
-                    canMarkersOverflow: true,
-                    cellMargin: const EdgeInsets.all(4),
-                  ),
-
-              daysOfWeekStyle:
-                  widget.daysOfWeekStyle ??
-                  DaysOfWeekStyle(
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    weekdayStyle: TextStyle(
-                      color: theme.colorScheme.onSurface,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                      letterSpacing: 0.5,
-                    ),
-                    weekendStyle: TextStyle(
-                      color: theme.colorScheme.error,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-
-              availableCalendarFormats: widget.availableCalendarFormats,
-            ),
-
-            // Selected day info
-            if (widget.selectedDay != null || _selectedDay != DateTime.now())
-              _buildSelectedDayInfo(context),
-          ],
+              // Selected day info
+              if (widget.selectedDay != null || _selectedDay != DateTime.now())
+                _buildSelectedDayInfo(context),
+            ],
+          ),
         ),
       ),
     );
@@ -282,7 +286,10 @@ class _EnhancedTableCalendarState extends State<EnhancedTableCalendar> {
               ),
               onPressed: () {
                 setState(() {
-                  _focusedDay = DateTime(_focusedDay.year, _focusedDay.month - 1);
+                  _focusedDay = DateTime(
+                    _focusedDay.year,
+                    _focusedDay.month - 1,
+                  );
                 });
               },
               tooltip: 'Previous month',
@@ -323,64 +330,68 @@ class _EnhancedTableCalendarState extends State<EnhancedTableCalendar> {
               ),
               onPressed: () {
                 setState(() {
-                  _focusedDay = DateTime(_focusedDay.year, _focusedDay.month + 1);
+                  _focusedDay = DateTime(
+                    _focusedDay.year,
+                    _focusedDay.month + 1,
+                  );
                 });
               },
               tooltip: 'Next month',
             ),
           ),
 
-        const SizedBox(width: 8),
+          const SizedBox(width: 8),
 
-        // Format toggle button
-        Container(
-          decoration: BoxDecoration(
-            color: theme.colorScheme.primaryContainer.withOpacity(0.4),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: theme.colorScheme.outlineVariant.withOpacity(0.5),
-              width: 1,
+          // Format toggle button
+          Container(
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primaryContainer.withOpacity(0.4),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+                width: 1,
+              ),
+            ),
+            child: PopupMenuButton<CalendarFormat>(
+              padding: EdgeInsets.zero,
+              tooltip: 'Calendar view',
+              icon: Icon(
+                _getFormatIcon(_calendarFormat),
+                color: theme.colorScheme.primary,
+              ),
+              onSelected: (format) {
+                setState(() {
+                  _calendarFormat = format;
+                });
+                widget.onFormatChanged?.call(format);
+              },
+              itemBuilder: (context) => widget.availableCalendarFormats.entries
+                  .map(
+                    (entry) => PopupMenuItem(
+                      value: entry.key,
+                      child: Row(
+                        children: [
+                          Icon(
+                            _getFormatIcon(entry.key),
+                            size: 20,
+                            color: theme.colorScheme.primary,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            entry.value,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                  .toList(),
             ),
           ),
-          child: PopupMenuButton<CalendarFormat>(
-            padding: EdgeInsets.zero,
-            tooltip: 'Calendar view',
-            icon: Icon(
-              _getFormatIcon(_calendarFormat),
-              color: theme.colorScheme.primary,
-            ),
-          onSelected: (format) {
-            setState(() {
-              _calendarFormat = format;
-            });
-            widget.onFormatChanged?.call(format);
-          },
-          itemBuilder: (context) => widget.availableCalendarFormats.entries
-              .map(
-                (entry) => PopupMenuItem(
-                  value: entry.key,
-                  child: Row(
-                    children: [
-                      Icon(
-                        _getFormatIcon(entry.key),
-                        size: 20,
-                        color: theme.colorScheme.primary,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        entry.value,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              )
-              .toList(),
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 

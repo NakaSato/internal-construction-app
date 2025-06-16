@@ -6,10 +6,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 
-import 'package:flutter_architecture_app/features/authentication/infrastructure/repositories/api_auth_repository.dart';
-import 'package:flutter_architecture_app/features/authentication/infrastructure/services/auth_api_service.dart';
-import 'package:flutter_architecture_app/features/authentication/infrastructure/models/auth_response_model.dart';
-import 'package:flutter_architecture_app/features/authentication/infrastructure/models/user_model.dart';
+import 'package:flutter_architecture_app/features/authentication/data/repositories/api_auth_repository.dart';
+import 'package:flutter_architecture_app/features/authentication/data/datasources/auth_api_service.dart';
+import 'package:flutter_architecture_app/features/authentication/data/models/auth_response_model.dart';
+import 'package:flutter_architecture_app/features/authentication/data/models/user_model.dart';
 
 import 'api_auth_repository_test.mocks.dart';
 

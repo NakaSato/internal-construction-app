@@ -1,7 +1,7 @@
 import 'package:dartz/dartz.dart';
 
-import '../../../../core/error/exceptions.dart';
-import '../../../../core/error/failures.dart';
+import '../../../../common/models/errors/exceptions.dart';
+import '../../../../common/models/errors/failures.dart';
 import '../../../../core/network/network_info.dart';
 import '../../domain/entities/task.dart' as task_entity;
 import '../../domain/repositories/task_repository.dart';

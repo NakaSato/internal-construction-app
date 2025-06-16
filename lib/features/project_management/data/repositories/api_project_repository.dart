@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 import '../../domain/entities/project.dart';
 import '../../domain/repositories/project_repository.dart';
-import '../services/project_api_service.dart';
+import '../datasources/project_api_service.dart';
 import '../models/project_response.dart';
 
 /// API-based implementation of ProjectRepository

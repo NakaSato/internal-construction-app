@@ -461,6 +461,8 @@ class _ImageProjectCardListScreenState
         onTap: () => _showProjectDetails(project),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize
+              .min, // Fix: Allow Column to size itself based on content
           children: [
             // Project Image
             Expanded(
@@ -552,56 +554,69 @@ class _ImageProjectCardListScreenState
               ),
             ),
 
-            // Project Info
-            Expanded(
-              flex: 2,
-              child: Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Project name
-                    Text(
+            // Project Info - Fixed height to prevent overflow
+            Container(
+              height: 80, // Fix: Set a fixed height for the info section
+              padding: const EdgeInsets.all(8.0), // Reduced padding
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Project name
+                  Flexible(
+                    child: Text(
                       project.projectName,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.bold,
+                        fontSize: 12, // Slightly smaller text
                       ),
-                      maxLines: 2,
+                      maxLines: 1, // Reduced to 1 line to fit better
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 4),
-
-                    // Address
-                    Text(
+                  ),
+                  const SizedBox(height: 2), // Reduced spacing
+                  // Address
+                  Flexible(
+                    child: Text(
                       project.address,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 10, // Smaller text
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const Spacer(),
-
-                    // Progress bar
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Progress',
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
-                            Text(
-                              '${project.completionPercentage.toInt()}%',
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(fontWeight: FontWeight.bold),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 2),
-                        LinearProgressIndicator(
+                  ),
+                  const SizedBox(height: 4), // Reduced spacing
+                  // Progress bar - more compact
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Progress',
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  fontSize: 10, // Smaller text
+                                ),
+                          ),
+                          Text(
+                            '${project.completionPercentage.toInt()}%',
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 10, // Smaller text
+                                ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      SizedBox(
+                        height: 4, // Thinner progress bar
+                        child: LinearProgressIndicator(
                           value: project.completionPercentage / 100,
                           backgroundColor: Theme.of(
                             context,
@@ -610,10 +625,10 @@ class _ImageProjectCardListScreenState
                             project.statusColor,
                           ),
                         ),
-                      ],
-                    ),
-                  ],
-                ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ],

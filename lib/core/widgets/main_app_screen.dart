@@ -6,7 +6,7 @@ import 'package:get_it/get_it.dart';
 // Core imports
 import '../navigation/app_router.dart';
 import 'app_bottom_bar.dart';
-import 'common_widgets.dart';
+import '../../common/widgets/common_widgets.dart';
 import 'app_header.dart';
 
 // Feature imports - Authentication
@@ -324,6 +324,7 @@ class _MainAppScreenState extends State<MainAppScreen>
     return Card(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min, // Fix: Set column to minimum size
         children: [
           // Header section
           Padding(
@@ -548,25 +549,32 @@ class _MainAppScreenState extends State<MainAppScreen>
         // Wait a bit for the refresh to complete
         await Future.delayed(const Duration(milliseconds: 250));
       },
-      child: ListView.separated(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: allProjects.length,
-        separatorBuilder: (context, index) => const SizedBox(height: 1.0),
-        itemBuilder: (context, index) {
-          final project = allProjects[index];
-          return AnimatedContainer(
-            duration: Duration(milliseconds: 200 + (index * 50)),
-            curve: Curves.easeOutCubic,
-            child: ProjectCard(
-              project: project,
-              isCompact: true,
-              onTap: () {
-                context.push('/projects/${project.id}');
-              },
-            ),
-          );
-        },
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(
+          maxHeight:
+              300, // Fix: Add maximum height constraint to prevent overflow
+        ),
+        child: ListView.separated(
+          shrinkWrap: true,
+          physics:
+              const ClampingScrollPhysics(), // Fix: Allow scrolling when needed
+          itemCount: allProjects.length,
+          separatorBuilder: (context, index) => const SizedBox(height: 1.0),
+          itemBuilder: (context, index) {
+            final project = allProjects[index];
+            return AnimatedContainer(
+              duration: Duration(milliseconds: 200 + (index * 50)),
+              curve: Curves.easeOutCubic,
+              child: ProjectCard(
+                project: project,
+                isCompact: true,
+                onTap: () {
+                  context.push('/projects/${project.id}');
+                },
+              ),
+            );
+          },
+        ),
       ),
     );
   }

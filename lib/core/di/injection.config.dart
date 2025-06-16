@@ -20,9 +20,9 @@ import '../../features/authentication/domain/repositories/auth_repository.dart'
     as _i742;
 import '../../features/authentication/infrastructure/auth_repository_factory.dart'
     as _i202;
-import '../../features/authentication/infrastructure/repositories/api_auth_repository.dart'
+import '../../features/authentication/data/repositories/api_auth_repository.dart'
     as _i793;
-import '../../features/authentication/infrastructure/services/auth_api_service.dart'
+import '../../features/authentication/data/datasources/auth_api_service.dart'
     as _i378;
 import '../../features/calendar_management/application/calendar_management_bloc.dart'
     as _i185;
@@ -36,11 +36,11 @@ import '../../features/project_management/application/project_bloc.dart'
     as _i1062;
 import '../../features/project_management/domain/repositories/project_repository.dart'
     as _i475;
-import '../../features/project_management/infrastructure/repositories/api_project_repository.dart'
+import '../../features/project_management/data/repositories/api_project_repository.dart'
     as _i776;
-import '../../features/project_management/infrastructure/repositories/mock_project_repository.dart'
+import '../../features/project_management/data/repositories/mock_project_repository.dart'
     as _i284;
-import '../../features/project_management/infrastructure/services/project_api_service.dart'
+import '../../features/project_management/data/datasources/project_api_service.dart'
     as _i752;
 import '../../features/work_calendar/application/work_calendar_bloc.dart'
     as _i937;

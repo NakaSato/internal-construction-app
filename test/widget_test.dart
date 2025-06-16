@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 
-import 'package:flutter_architecture_app/main.dart';
+import 'package:flutter_architecture_app/app.dart';
 import 'test_helpers/test_helpers.dart';
 
 void main() {
@@ -27,7 +27,7 @@ void main() {
       WidgetTester tester,
     ) async {
       // Build our app and trigger a frame
-      await tester.pumpWidget(const MyApp());
+      await tester.pumpWidget(const ConstructionApp());
       await tester.pumpAndSettle();
 
       // Verify the app launches without errors
@@ -39,7 +39,7 @@ void main() {
     });
 
     testWidgets('Navigation works correctly', (WidgetTester tester) async {
-      await tester.pumpWidget(const MyApp());
+      await tester.pumpWidget(const ConstructionApp());
       await tester.pumpAndSettle();
 
       // Test navigation flows based on your routing setup
