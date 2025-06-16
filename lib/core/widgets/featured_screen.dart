@@ -303,7 +303,9 @@ class SmallDot extends StatelessWidget {
       height: 4,
       width: 4,
       decoration: BoxDecoration(
-        color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha: 0.4),
+        color: Theme.of(
+          context,
+        ).textTheme.bodyLarge!.color!.withValues(alpha: 0.4),
         shape: BoxShape.circle,
       ),
     );

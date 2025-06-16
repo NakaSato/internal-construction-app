@@ -421,7 +421,10 @@ class AppTheme {
                 return const BorderSide(color: primaryColor, width: 1);
               }
               if (states.contains(WidgetState.disabled)) {
-                return BorderSide(color: onSurface.withValues(alpha: 0.12), width: 1);
+                return BorderSide(
+                  color: onSurface.withValues(alpha: 0.12),
+                  width: 1,
+                );
               }
               return const BorderSide(color: outline, width: 1);
             }),
@@ -526,7 +529,10 @@ class AppTheme {
       ),
       disabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(radiusS),
-        borderSide: BorderSide(color: onSurface.withValues(alpha: 0.12), width: 1),
+        borderSide: BorderSide(
+          color: onSurface.withValues(alpha: 0.12),
+          width: 1,
+        ),
       ),
       contentPadding: const EdgeInsets.symmetric(
         horizontal: spacingL,

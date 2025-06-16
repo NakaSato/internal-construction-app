@@ -1,24 +1,19 @@
-# Flutter Architecture App - Project Structure
+# Project Structure
 
-## Overview
-This document outlines the organized structure of the Flutter Architecture App project following Feature-First architecture with Clean Architecture principles.
+> **Note**: This file has been deprecated in favor of the more comprehensive [detailed_project_structure.md](/docs/detailed_project_structure.md).
 
-## Root Directory Structure
+## Redirecting to Updated Documentation
 
-```
-flutter-dev/
-├── lib/                          # Main application code
-├── test/                         # Test files organized by type
-├── docs/                         # Documentation and summaries
-├── assets/                       # Static assets (images, etc.)
-├── android/                      # Android platform specific code
-├── ios/                          # iOS platform specific code
-├── web/                          # Web platform specific code
-├── windows/                      # Windows platform specific code
-├── linux/                        # Linux platform specific code
-├── macos/                        # macOS platform specific code
-└── pubspec.yaml                  # Project dependencies
-```
+Please refer to the [Detailed Project Structure](/docs/detailed_project_structure.md) document for the most up-to-date and comprehensive information about the project's structure and organization.
+
+The detailed document includes:
+- Complete folder structure
+- File listings for each feature
+- Clean Architecture layer explanations
+- Testing structure
+- Generated code information
+
+This file is maintained for legacy references only.
 
 ## Lib Directory Structure
 

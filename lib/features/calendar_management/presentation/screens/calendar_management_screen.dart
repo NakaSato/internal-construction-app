@@ -199,7 +199,7 @@ class _CalendarManagementViewState extends State<CalendarManagementView>
 
   Widget _buildWeekHeader() {
     final theme = Theme.of(context);
-    
+
     return Container(
       margin: const EdgeInsets.all(8.0),
       padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
@@ -231,10 +231,7 @@ class _CalendarManagementViewState extends State<CalendarManagementView>
               ),
             ),
             child: IconButton(
-              icon: Icon(
-                Icons.chevron_left,
-                color: theme.colorScheme.primary,
-              ),
+              icon: Icon(Icons.chevron_left, color: theme.colorScheme.primary),
               onPressed: () {
                 final newSelectedDay =
                     _selectedDay?.subtract(const Duration(days: 7)) ??
@@ -253,7 +250,10 @@ class _CalendarManagementViewState extends State<CalendarManagementView>
                 final weekEnd = weekStart.add(const Duration(days: 6));
 
                 context.read<CalendarManagementBloc>().add(
-                  CalendarEventsRequested(startDate: weekStart, endDate: weekEnd),
+                  CalendarEventsRequested(
+                    startDate: weekStart,
+                    endDate: weekEnd,
+                  ),
                 );
               },
               tooltip: 'Previous week',
@@ -289,10 +289,7 @@ class _CalendarManagementViewState extends State<CalendarManagementView>
               ),
             ),
             child: IconButton(
-              icon: Icon(
-                Icons.chevron_right,
-                color: theme.colorScheme.primary,
-              ),
+              icon: Icon(Icons.chevron_right, color: theme.colorScheme.primary),
               onPressed: () {
                 final newSelectedDay =
                     _selectedDay?.add(const Duration(days: 7)) ??
@@ -311,11 +308,15 @@ class _CalendarManagementViewState extends State<CalendarManagementView>
                 final weekEnd = weekStart.add(const Duration(days: 6));
 
                 context.read<CalendarManagementBloc>().add(
-                  CalendarEventsRequested(startDate: weekStart, endDate: weekEnd),
+                  CalendarEventsRequested(
+                    startDate: weekStart,
+                    endDate: weekEnd,
+                  ),
                 );
               },
               tooltip: 'Next week',
             ),
+          ),
         ],
       ),
     );
@@ -365,7 +366,9 @@ class _CalendarManagementViewState extends State<CalendarManagementView>
               color: isSelected
                   ? Theme.of(context).colorScheme.primary
                   : isToday
-                  ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.4)
+                  ? Theme.of(
+                      context,
+                    ).colorScheme.primaryContainer.withOpacity(0.4)
                   : Theme.of(context).colorScheme.surface,
               gradient: isSelected
                   ? LinearGradient(
@@ -382,14 +385,18 @@ class _CalendarManagementViewState extends State<CalendarManagementView>
                 color: isToday && !isSelected
                     ? Theme.of(context).colorScheme.primary
                     : isSelected
-                        ? Colors.transparent
-                        : Theme.of(context).colorScheme.outlineVariant.withOpacity(0.5),
+                    ? Colors.transparent
+                    : Theme.of(
+                        context,
+                      ).colorScheme.outlineVariant.withOpacity(0.5),
                 width: isToday && !isSelected ? 1.5 : 1,
               ),
               boxShadow: isSelected
                   ? [
                       BoxShadow(
-                        color: Theme.of(context).colorScheme.shadow.withOpacity(0.2),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.shadow.withOpacity(0.2),
                         blurRadius: 6,
                         spreadRadius: 1,
                         offset: const Offset(0, 3),
@@ -485,12 +492,19 @@ class _CalendarManagementViewState extends State<CalendarManagementView>
                         children: [
                           Container(
                             width: 64,
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.primaryContainer.withOpacity(0.3),
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
-                                color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.5),
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.outlineVariant.withOpacity(0.5),
                                 width: 1,
                               ),
                             ),
@@ -512,9 +526,15 @@ class _CalendarManagementViewState extends State<CalendarManagementView>
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
                                   colors: [
-                                    Theme.of(context).colorScheme.primary.withOpacity(0.4),
-                                    Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                                    Theme.of(context).colorScheme.primary.withOpacity(0.0),
+                                    Theme.of(
+                                      context,
+                                    ).colorScheme.primary.withOpacity(0.4),
+                                    Theme.of(
+                                      context,
+                                    ).colorScheme.primary.withOpacity(0.1),
+                                    Theme.of(
+                                      context,
+                                    ).colorScheme.primary.withOpacity(0.0),
                                   ],
                                 ),
                                 borderRadius: BorderRadius.circular(1),
@@ -551,7 +571,7 @@ class _CalendarManagementViewState extends State<CalendarManagementView>
 
   Widget _buildDayHeader(DateTime date) {
     final theme = Theme.of(context);
-    
+
     return Container(
       margin: const EdgeInsets.all(8.0),
       padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
@@ -583,10 +603,7 @@ class _CalendarManagementViewState extends State<CalendarManagementView>
               ),
             ),
             child: IconButton(
-              icon: Icon(
-                Icons.chevron_left,
-                color: theme.colorScheme.primary,
-              ),
+              icon: Icon(Icons.chevron_left, color: theme.colorScheme.primary),
               onPressed: () {
                 final newDay = date.subtract(const Duration(days: 1));
                 setState(() {
@@ -617,7 +634,10 @@ class _CalendarManagementViewState extends State<CalendarManagementView>
               if (_isToday(date))
                 Container(
                   margin: const EdgeInsets.only(top: 4),
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: theme.colorScheme.primary,
                     borderRadius: BorderRadius.circular(12),
@@ -651,10 +671,7 @@ class _CalendarManagementViewState extends State<CalendarManagementView>
               ),
             ),
             child: IconButton(
-              icon: Icon(
-                Icons.chevron_right,
-                color: theme.colorScheme.primary,
-              ),
+              icon: Icon(Icons.chevron_right, color: theme.colorScheme.primary),
               onPressed: () {
                 final newDay = date.add(const Duration(days: 1));
                 setState(() {

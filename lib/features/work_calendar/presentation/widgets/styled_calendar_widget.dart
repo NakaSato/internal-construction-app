@@ -188,50 +188,57 @@ class _StyledCalendarWidgetState extends State<StyledCalendarWidget> {
               dateTextStyle: Theme.of(
                 context,
               ).textTheme.titleMedium?.copyWith(color: colorScheme.secondary),
-            ),          monthCellStyle: MonthCellStyle(
-            backgroundColor: colorScheme.surface,
-            todayBackgroundColor: colorScheme.primaryContainer.withOpacity(0.3),
-            leadingDatesBackgroundColor: colorScheme.surfaceVariant.withOpacity(0.4),
-            trailingDatesBackgroundColor: colorScheme.surfaceVariant.withOpacity(0.4),
-            textStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: colorScheme.onSurface,
-              fontWeight: FontWeight.w500,
             ),
-            leadingDatesTextStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: colorScheme.onSurfaceVariant.withOpacity(0.6),
-              fontSize: 11,
+            monthCellStyle: MonthCellStyle(
+              backgroundColor: colorScheme.surface,
+              todayBackgroundColor: colorScheme.primaryContainer.withOpacity(
+                0.3,
+              ),
+              leadingDatesBackgroundColor: colorScheme.surfaceVariant
+                  .withOpacity(0.4),
+              trailingDatesBackgroundColor: colorScheme.surfaceVariant
+                  .withOpacity(0.4),
+              textStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurface,
+                fontWeight: FontWeight.w500,
+              ),
+              leadingDatesTextStyle: Theme.of(context).textTheme.bodySmall
+                  ?.copyWith(
+                    color: colorScheme.onSurfaceVariant.withOpacity(0.6),
+                    fontSize: 11,
+                  ),
+              trailingDatesTextStyle: Theme.of(context).textTheme.bodySmall
+                  ?.copyWith(
+                    color: colorScheme.onSurfaceVariant.withOpacity(0.6),
+                    fontSize: 11,
+                  ),
+              todayTextStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: colorScheme.primary,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-            trailingDatesTextStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: colorScheme.onSurfaceVariant.withOpacity(0.6),
-              fontSize: 11,
-            ),
-            todayTextStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: colorScheme.primary,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
             agendaViewHeight: 150,
             navigationDirection: MonthNavigationDirection.horizontal,
-          ),        // Enhanced time slot view settings with modern styling
-        timeSlotViewSettings: TimeSlotViewSettings(
-          startHour: 6,
-          endHour: 22,
-          timeInterval: const Duration(minutes: 30),
-          timeIntervalHeight: 60,
-          timeFormat: 'HH:mm',
-          dateFormat: 'd',
-          dayFormat: 'EEE',
-          timeTextStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: colorScheme.onSurface,
-            fontWeight: FontWeight.w500,
-            letterSpacing: 0.3,
+          ), // Enhanced time slot view settings with modern styling
+          timeSlotViewSettings: TimeSlotViewSettings(
+            startHour: 6,
+            endHour: 22,
+            timeInterval: const Duration(minutes: 30),
+            timeIntervalHeight: 60,
+            timeFormat: 'HH:mm',
+            dateFormat: 'd',
+            dayFormat: 'EEE',
+            timeTextStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurface,
+              fontWeight: FontWeight.w500,
+              letterSpacing: 0.3,
+            ),
+            timeRulerSize: 64,
+            nonWorkingDays: const <int>[DateTime.saturday, DateTime.sunday],
+            timeRulerColor: colorScheme.surfaceVariant,
+            timeIntervalColor: colorScheme.surface,
+            nonWorkingDayColor: colorScheme.surfaceVariant.withOpacity(0.2),
           ),
-          timeRulerSize: 64,
-          nonWorkingDays: const <int>[DateTime.saturday, DateTime.sunday],
-          timeRulerColor: colorScheme.surfaceVariant,
-          timeIntervalColor: colorScheme.surface,
-          nonWorkingDayColor: colorScheme.surfaceVariant.withOpacity(0.2),
-        ),
         ),
       ),
     );
@@ -376,10 +383,7 @@ class _StyledCalendarWidgetState extends State<StyledCalendarWidget> {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            eventColor.withOpacity(0.15),
-            eventColor.withOpacity(0.25),
-          ],
+          colors: [eventColor.withOpacity(0.15), eventColor.withOpacity(0.25)],
         ),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: eventColor, width: 1.5),

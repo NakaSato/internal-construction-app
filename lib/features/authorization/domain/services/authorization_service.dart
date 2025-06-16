@@ -14,14 +14,16 @@ class AuthorizationService {
   Future<bool> hasPermission(User user, String resource, String action) async {
     try {
       Role? role;
-      
+
       // For the "User" role, use the default employee role from config
       if (user.roleName.toLowerCase() == 'user') {
-        role = AuthorizationConfig.getRoleByName(AuthorizationConfig.employeeRole);
+        role = AuthorizationConfig.getRoleByName(
+          AuthorizationConfig.employeeRole,
+        );
       } else {
         role = await _authorizationRepository.getRoleByName(user.roleName);
       }
-      
+
       if (role == null || !role.isActive) return false;
       return role.hasPermission(resource, action);
     } catch (e) {
@@ -33,14 +35,16 @@ class AuthorizationService {
   Future<bool> hasResourceAccess(User user, String resource) async {
     try {
       Role? role;
-      
+
       // For the "User" role, use the default employee role from config
       if (user.roleName.toLowerCase() == 'user') {
-        role = AuthorizationConfig.getRoleByName(AuthorizationConfig.employeeRole);
+        role = AuthorizationConfig.getRoleByName(
+          AuthorizationConfig.employeeRole,
+        );
       } else {
         role = await _authorizationRepository.getRoleByName(user.roleName);
       }
-      
+
       if (role == null || !role.isActive) return false;
       return role.hasResourceAccess(resource);
     } catch (e) {
@@ -54,7 +58,9 @@ class AuthorizationService {
       // For the "User" role, use the default employee role from config
       if (user.roleName.toLowerCase() == 'user') {
         // Map "User" role to the employee role in our system
-        return AuthorizationConfig.getRoleByName(AuthorizationConfig.employeeRole);
+        return AuthorizationConfig.getRoleByName(
+          AuthorizationConfig.employeeRole,
+        );
       }
       return await _authorizationRepository.getRoleByName(user.roleName);
     } catch (e) {
@@ -67,7 +73,9 @@ class AuthorizationService {
     try {
       // For the "User" role, use the default employee role from config
       if (user.roleName.toLowerCase() == 'user') {
-        final role = AuthorizationConfig.getRoleByName(AuthorizationConfig.employeeRole);
+        final role = AuthorizationConfig.getRoleByName(
+          AuthorizationConfig.employeeRole,
+        );
         return role?.permissions ?? [];
       }
       final role = await _authorizationRepository.getRoleByName(user.roleName);
@@ -84,14 +92,16 @@ class AuthorizationService {
   ) async {
     try {
       Role? role;
-      
+
       // For the "User" role, use the default employee role from config
       if (user.roleName.toLowerCase() == 'user') {
-        role = AuthorizationConfig.getRoleByName(AuthorizationConfig.employeeRole);
+        role = AuthorizationConfig.getRoleByName(
+          AuthorizationConfig.employeeRole,
+        );
       } else {
         role = await _authorizationRepository.getRoleByName(user.roleName);
       }
-      
+
       if (role == null || !role.isActive) return [];
       return role.getResourcePermissions(resource);
     } catch (e) {
@@ -107,14 +117,16 @@ class AuthorizationService {
   ) async {
     try {
       Role? role;
-      
+
       // For the "User" role, use the default employee role from config
       if (user.roleName.toLowerCase() == 'user') {
-        role = AuthorizationConfig.getRoleByName(AuthorizationConfig.employeeRole);
+        role = AuthorizationConfig.getRoleByName(
+          AuthorizationConfig.employeeRole,
+        );
       } else {
         role = await _authorizationRepository.getRoleByName(user.roleName);
       }
-      
+
       if (role == null || !role.isActive) return false;
       return actions.every((action) => role!.hasPermission(resource, action));
     } catch (e) {
@@ -130,14 +142,16 @@ class AuthorizationService {
   ) async {
     try {
       Role? role;
-      
+
       // For the "User" role, use the default employee role from config
       if (user.roleName.toLowerCase() == 'user') {
-        role = AuthorizationConfig.getRoleByName(AuthorizationConfig.employeeRole);
+        role = AuthorizationConfig.getRoleByName(
+          AuthorizationConfig.employeeRole,
+        );
       } else {
         role = await _authorizationRepository.getRoleByName(user.roleName);
       }
-      
+
       if (role == null || !role.isActive) return false;
       return actions.any((action) => role!.hasPermission(resource, action));
     } catch (e) {
@@ -150,10 +164,12 @@ class AuthorizationService {
     try {
       // For the "User" role, use the default employee role from config
       if (user.roleName.toLowerCase() == 'user') {
-        final role = AuthorizationConfig.getRoleByName(AuthorizationConfig.employeeRole);
+        final role = AuthorizationConfig.getRoleByName(
+          AuthorizationConfig.employeeRole,
+        );
         return role?.isActive ?? false;
       }
-      
+
       final role = await _authorizationRepository.getRoleByName(user.roleName);
       return role?.isActive ?? false;
     } catch (e) {

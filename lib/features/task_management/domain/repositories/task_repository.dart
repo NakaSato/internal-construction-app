@@ -1,5 +1,5 @@
 import 'package:dartz/dartz.dart';
-import '../../../../core/error/failures.dart';
+import '../../../../common/models/errors/failures.dart';
 import '../entities/task.dart' as task_entity;
 
 /// Repository interface for task management

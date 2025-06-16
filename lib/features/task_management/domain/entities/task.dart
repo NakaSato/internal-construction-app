@@ -1,21 +1,10 @@
 import 'package:equatable/equatable.dart';
 
 /// Status values for a task
-enum TaskStatus {
-  todo,
-  inProgress,
-  review,
-  completed,
-  cancelled,
-}
+enum TaskStatus { todo, inProgress, review, completed, cancelled }
 
 /// Priority levels for a task
-enum TaskPriority {
-  low,
-  medium,
-  high,
-  urgent,
-}
+enum TaskPriority { low, medium, high, urgent }
 
 /// Task entity representing a work item in the system
 class Task extends Equatable {
@@ -36,7 +25,7 @@ class Task extends Equatable {
     this.attachments = const [],
     this.tags = const [],
   });
-  
+
   final String id;
   final String title;
   final String description;
@@ -52,7 +41,7 @@ class Task extends Equatable {
   final int completionPercentage;
   final List<String> attachments;
   final List<String> tags;
-  
+
   /// Create a copy of this task with specific properties changed
   Task copyWith({
     String? id,
@@ -89,20 +78,20 @@ class Task extends Equatable {
       tags: tags ?? this.tags,
     );
   }
-  
+
   @override
   List<Object?> get props => [
-    id, 
-    title, 
-    description, 
-    status, 
-    priority, 
-    dueDate, 
+    id,
+    title,
+    description,
+    status,
+    priority,
+    dueDate,
     projectId,
-    assigneeId, 
-    assigneeName, 
-    createdAt, 
-    updatedAt, 
+    assigneeId,
+    assigneeName,
+    createdAt,
+    updatedAt,
     completedAt,
     completionPercentage,
     attachments,
