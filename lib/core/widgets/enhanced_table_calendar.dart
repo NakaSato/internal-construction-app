@@ -55,12 +55,32 @@ class _EnhancedTableCalendarState extends State<EnhancedTableCalendar> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Card(
-      elevation: 2,
-      margin: const EdgeInsets.all(8.0),
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: theme.colorScheme.shadow.withOpacity(0.08),
+            blurRadius: 12,
+            spreadRadius: 2,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Card(
+        elevation: 0,
+        shadowColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(
+            color: theme.colorScheme.outlineVariant,
+            width: 1,
+          ),
+        ),
+        margin: const EdgeInsets.all(8.0),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             // Custom header with month/year and format toggle
@@ -121,60 +141,99 @@ class _EnhancedTableCalendarState extends State<EnhancedTableCalendar> {
                   widget.calendarStyle ??
                   CalendarStyle(
                     outsideDaysVisible: true,
+                    isTodayHighlighted: true,
                     weekendTextStyle: TextStyle(
                       color: theme.colorScheme.error,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w500,
                     ),
                     holidayTextStyle: TextStyle(
                       color: theme.colorScheme.error,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w500,
                     ),
                     selectedDecoration: BoxDecoration(
-                      color: theme.colorScheme.primary,
-                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          theme.colorScheme.primary,
+                          theme.colorScheme.primary.withOpacity(0.85),
+                        ],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: theme.colorScheme.primary.withOpacity(0.3),
+                          blurRadius: 4,
+                          spreadRadius: 0.5,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     selectedTextStyle: TextStyle(
                       color: theme.colorScheme.onPrimary,
                       fontWeight: FontWeight.bold,
                     ),
                     todayDecoration: BoxDecoration(
-                      color: theme.colorScheme.secondary,
-                      shape: BoxShape.circle,
+                      color: theme.colorScheme.primaryContainer.withOpacity(0.3),
+                      border: Border.all(
+                        color: theme.colorScheme.primary,
+                        width: 1.5,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     todayTextStyle: TextStyle(
-                      color: theme.colorScheme.onSecondary,
+                      color: theme.colorScheme.primary,
                       fontWeight: FontWeight.bold,
                     ),
-                    defaultDecoration: const BoxDecoration(
-                      shape: BoxShape.circle,
+                    defaultDecoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    weekendDecoration: const BoxDecoration(
-                      shape: BoxShape.circle,
+                    weekendDecoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceVariant.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    holidayDecoration: const BoxDecoration(
-                      shape: BoxShape.circle,
+                    holidayDecoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    outsideDecoration: const BoxDecoration(
-                      shape: BoxShape.circle,
+                    outsideDecoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     markerDecoration: BoxDecoration(
-                      color: theme.colorScheme.tertiary,
-                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: [
+                          theme.colorScheme.tertiary,
+                          theme.colorScheme.tertiaryContainer,
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(4),
                     ),
+                    markerSize: 6,
+                    markerMargin: const EdgeInsets.symmetric(horizontal: 0.5),
                     markersMaxCount: 3,
                     canMarkersOverflow: true,
+                    cellMargin: const EdgeInsets.all(4),
                   ),
 
               daysOfWeekStyle:
                   widget.daysOfWeekStyle ??
                   DaysOfWeekStyle(
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                     weekdayStyle: TextStyle(
                       color: theme.colorScheme.onSurface,
                       fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                      letterSpacing: 0.5,
                     ),
                     weekendStyle: TextStyle(
                       color: theme.colorScheme.error,
                       fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                      letterSpacing: 0.5,
                     ),
                   ),
 
@@ -193,47 +252,103 @@ class _EnhancedTableCalendarState extends State<EnhancedTableCalendar> {
   Widget _buildCustomHeader(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Row(
-      children: [
-        // Month navigation
-        IconButton(
-          icon: const Icon(Icons.chevron_left),
-          onPressed: () {
-            setState(() {
-              _focusedDay = DateTime(_focusedDay.year, _focusedDay.month - 1);
-            });
-          },
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+          width: 1,
         ),
-
-        // Month and year display
-        Expanded(
-          child: Text(
-            _getMonthYearString(_focusedDay),
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
+      ),
+      child: Row(
+        children: [
+          // Month navigation
+          Container(
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surface,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+                width: 1,
+              ),
             ),
-            textAlign: TextAlign.center,
+            child: IconButton(
+              icon: Icon(
+                Icons.chevron_left,
+                color: theme.colorScheme.primary,
+                size: 22,
+              ),
+              onPressed: () {
+                setState(() {
+                  _focusedDay = DateTime(_focusedDay.year, _focusedDay.month - 1);
+                });
+              },
+              tooltip: 'Previous month',
+            ),
           ),
-        ),
 
-        // Month navigation
-        IconButton(
-          icon: const Icon(Icons.chevron_right),
-          onPressed: () {
-            setState(() {
-              _focusedDay = DateTime(_focusedDay.year, _focusedDay.month + 1);
-            });
-          },
-        ),
+          // Month and year display
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Text(
+                _getMonthYearString(_focusedDay),
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+
+          // Month navigation
+          Container(
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surface,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+                width: 1,
+              ),
+            ),
+            child: IconButton(
+              icon: Icon(
+                Icons.chevron_right,
+                color: theme.colorScheme.primary,
+                size: 22,
+              ),
+              onPressed: () {
+                setState(() {
+                  _focusedDay = DateTime(_focusedDay.year, _focusedDay.month + 1);
+                });
+              },
+              tooltip: 'Next month',
+            ),
+          ),
 
         const SizedBox(width: 8),
 
         // Format toggle button
-        PopupMenuButton<CalendarFormat>(
-          icon: Icon(
-            _getFormatIcon(_calendarFormat),
-            color: theme.colorScheme.primary,
+        Container(
+          decoration: BoxDecoration(
+            color: theme.colorScheme.primaryContainer.withOpacity(0.4),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+              width: 1,
+            ),
           ),
+          child: PopupMenuButton<CalendarFormat>(
+            padding: EdgeInsets.zero,
+            tooltip: 'Calendar view',
+            icon: Icon(
+              _getFormatIcon(_calendarFormat),
+              color: theme.colorScheme.primary,
+            ),
           onSelected: (format) {
             setState(() {
               _calendarFormat = format;
@@ -246,14 +361,24 @@ class _EnhancedTableCalendarState extends State<EnhancedTableCalendar> {
                   value: entry.key,
                   child: Row(
                     children: [
-                      Icon(_getFormatIcon(entry.key), size: 20),
+                      Icon(
+                        _getFormatIcon(entry.key),
+                        size: 20,
+                        color: theme.colorScheme.primary,
+                      ),
                       const SizedBox(width: 8),
-                      Text(entry.value),
+                      Text(
+                        entry.value,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                     ],
                   ),
                 ),
               )
               .toList(),
+          ),
         ),
       ],
     );
@@ -265,10 +390,28 @@ class _EnhancedTableCalendarState extends State<EnhancedTableCalendar> {
 
     return Container(
       margin: const EdgeInsets.only(top: 16),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(8),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            theme.colorScheme.primaryContainer.withOpacity(0.3),
+            theme.colorScheme.primaryContainer.withOpacity(0.15),
+          ],
+        ),
+        border: Border.all(
+          color: theme.colorScheme.primary.withOpacity(0.2),
+          width: 1,
+        ),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: theme.colorScheme.shadow.withOpacity(0.05),
+            blurRadius: 3,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -287,17 +430,43 @@ class _EnhancedTableCalendarState extends State<EnhancedTableCalendar> {
           const Spacer(),
           if (events.isNotEmpty)
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: theme.colorScheme.tertiary,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                '${events.length} event${events.length == 1 ? '' : 's'}',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onTertiary,
-                  fontWeight: FontWeight.bold,
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    theme.colorScheme.tertiary,
+                    theme.colorScheme.tertiary.withOpacity(0.8),
+                  ],
                 ),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: theme.colorScheme.tertiary.withOpacity(0.3),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.event_note,
+                    color: theme.colorScheme.onTertiary,
+                    size: 16,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${events.length} event${events.length == 1 ? '' : 's'}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onTertiary,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ],
               ),
             ),
         ],

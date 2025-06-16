@@ -198,64 +198,124 @@ class _CalendarManagementViewState extends State<CalendarManagementView>
   }
 
   Widget _buildWeekHeader() {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
+    final theme = Theme.of(context);
+    
+    return Container(
+      margin: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: theme.colorScheme.shadow.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          IconButton(
-            icon: const Icon(Icons.chevron_left),
-            onPressed: () {
-              final newSelectedDay =
-                  _selectedDay?.subtract(const Duration(days: 7)) ??
-                  DateTime.now().subtract(const Duration(days: 7));
-              setState(() {
-                _selectedDay = newSelectedDay;
-                _focusedDay = newSelectedDay;
-              });
+          Container(
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+                width: 1,
+              ),
+            ),
+            child: IconButton(
+              icon: Icon(
+                Icons.chevron_left,
+                color: theme.colorScheme.primary,
+              ),
+              onPressed: () {
+                final newSelectedDay =
+                    _selectedDay?.subtract(const Duration(days: 7)) ??
+                    DateTime.now().subtract(const Duration(days: 7));
+                setState(() {
+                  _selectedDay = newSelectedDay;
+                  _focusedDay = newSelectedDay;
+                });
 
-              // Load events for the new week
-              final weekStart = DateTime(
-                newSelectedDay.year,
-                newSelectedDay.month,
-                newSelectedDay.day,
-              ).subtract(Duration(days: newSelectedDay.weekday - 1));
-              final weekEnd = weekStart.add(const Duration(days: 6));
+                // Load events for the new week
+                final weekStart = DateTime(
+                  newSelectedDay.year,
+                  newSelectedDay.month,
+                  newSelectedDay.day,
+                ).subtract(Duration(days: newSelectedDay.weekday - 1));
+                final weekEnd = weekStart.add(const Duration(days: 6));
 
-              context.read<CalendarManagementBloc>().add(
-                CalendarEventsRequested(startDate: weekStart, endDate: weekEnd),
-              );
-            },
+                context.read<CalendarManagementBloc>().add(
+                  CalendarEventsRequested(startDate: weekStart, endDate: weekEnd),
+                );
+              },
+              tooltip: 'Previous week',
+            ),
           ),
-          Text(
-            _getWeekRange(_focusedDay),
-            style: Theme.of(context).textTheme.titleMedium,
-            textAlign: TextAlign.center,
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primaryContainer.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: theme.colorScheme.primary.withOpacity(0.2),
+                width: 1,
+              ),
+            ),
+            child: Text(
+              _getWeekRange(_focusedDay),
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.onSurfaceVariant,
+                letterSpacing: 0.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
           ),
-          IconButton(
-            icon: const Icon(Icons.chevron_right),
-            onPressed: () {
-              final newSelectedDay =
-                  _selectedDay?.add(const Duration(days: 7)) ??
-                  DateTime.now().add(const Duration(days: 7));
-              setState(() {
-                _selectedDay = newSelectedDay;
-                _focusedDay = newSelectedDay;
-              });
+          Container(
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+                width: 1,
+              ),
+            ),
+            child: IconButton(
+              icon: Icon(
+                Icons.chevron_right,
+                color: theme.colorScheme.primary,
+              ),
+              onPressed: () {
+                final newSelectedDay =
+                    _selectedDay?.add(const Duration(days: 7)) ??
+                    DateTime.now().add(const Duration(days: 7));
+                setState(() {
+                  _selectedDay = newSelectedDay;
+                  _focusedDay = newSelectedDay;
+                });
 
-              // Load events for the new week
-              final weekStart = DateTime(
-                newSelectedDay.year,
-                newSelectedDay.month,
-                newSelectedDay.day,
-              ).subtract(Duration(days: newSelectedDay.weekday - 1));
-              final weekEnd = weekStart.add(const Duration(days: 6));
+                // Load events for the new week
+                final weekStart = DateTime(
+                  newSelectedDay.year,
+                  newSelectedDay.month,
+                  newSelectedDay.day,
+                ).subtract(Duration(days: newSelectedDay.weekday - 1));
+                final weekEnd = weekStart.add(const Duration(days: 6));
 
-              context.read<CalendarManagementBloc>().add(
-                CalendarEventsRequested(startDate: weekStart, endDate: weekEnd),
-              );
-            },
-          ),
+                context.read<CalendarManagementBloc>().add(
+                  CalendarEventsRequested(startDate: weekStart, endDate: weekEnd),
+                );
+              },
+              tooltip: 'Next week',
+            ),
         ],
       ),
     );
@@ -305,14 +365,37 @@ class _CalendarManagementViewState extends State<CalendarManagementView>
               color: isSelected
                   ? Theme.of(context).colorScheme.primary
                   : isToday
-                  ? Theme.of(context).colorScheme.primaryContainer
+                  ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.4)
                   : Theme.of(context).colorScheme.surface,
-              borderRadius: BorderRadius.circular(12),
+              gradient: isSelected
+                  ? LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Theme.of(context).colorScheme.primary,
+                        Theme.of(context).colorScheme.primary.withOpacity(0.85),
+                      ],
+                    )
+                  : null,
+              borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: isToday && !isSelected
                     ? Theme.of(context).colorScheme.primary
-                    : Colors.transparent,
+                    : isSelected
+                        ? Colors.transparent
+                        : Theme.of(context).colorScheme.outlineVariant.withOpacity(0.5),
+                width: isToday && !isSelected ? 1.5 : 1,
               ),
+              boxShadow: isSelected
+                  ? [
+                      BoxShadow(
+                        color: Theme.of(context).colorScheme.shadow.withOpacity(0.2),
+                        blurRadius: 6,
+                        spreadRadius: 1,
+                        offset: const Offset(0, 3),
+                      ),
+                    ]
+                  : null,
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -320,24 +403,26 @@ class _CalendarManagementViewState extends State<CalendarManagementView>
                 Text(
                   ['M', 'T', 'W', 'T', 'F', 'S', 'S'][index],
                   style: TextStyle(
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.5,
+                    fontSize: 12,
                     color: isSelected
                         ? Theme.of(context).colorScheme.onPrimary
                         : isToday
-                        ? Theme.of(context).colorScheme.onPrimaryContainer
+                        ? Theme.of(context).colorScheme.primary
                         : Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 6),
                 Text(
                   day.day.toString(),
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: isSelected
                         ? Theme.of(context).colorScheme.onPrimary
                         : isToday
-                        ? Theme.of(context).colorScheme.onPrimaryContainer
+                        ? Theme.of(context).colorScheme.primary
                         : Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
@@ -398,20 +483,42 @@ class _CalendarManagementViewState extends State<CalendarManagementView>
                       // Hour label
                       Row(
                         children: [
-                          SizedBox(
-                            width: 60,
+                          Container(
+                            width: 64,
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.5),
+                                width: 1,
+                              ),
+                            ),
                             child: Text(
                               hourString,
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                                letterSpacing: 0.5,
                                 color: Theme.of(context).colorScheme.primary,
                               ),
+                              textAlign: TextAlign.center,
                             ),
                           ),
+                          const SizedBox(width: 8),
                           Expanded(
                             child: Container(
-                              height: 1,
-                              color: Theme.of(context).dividerColor,
+                              height: 1.5,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Theme.of(context).colorScheme.primary.withOpacity(0.4),
+                                    Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                                    Theme.of(context).colorScheme.primary.withOpacity(0.0),
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(1),
+                              ),
                             ),
                           ),
                         ],
@@ -443,61 +550,128 @@ class _CalendarManagementViewState extends State<CalendarManagementView>
   }
 
   Widget _buildDayHeader(DateTime date) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
+    final theme = Theme.of(context);
+    
+    return Container(
+      margin: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: theme.colorScheme.shadow.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          IconButton(
-            icon: const Icon(Icons.chevron_left),
-            onPressed: () {
-              final newDay = date.subtract(const Duration(days: 1));
-              setState(() {
-                _selectedDay = newDay;
-                _focusedDay = newDay;
-              });
+          Container(
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+                width: 1,
+              ),
+            ),
+            child: IconButton(
+              icon: Icon(
+                Icons.chevron_left,
+                color: theme.colorScheme.primary,
+              ),
+              onPressed: () {
+                final newDay = date.subtract(const Duration(days: 1));
+                setState(() {
+                  _selectedDay = newDay;
+                  _focusedDay = newDay;
+                });
 
-              // Load events for the new day
-              context.read<CalendarManagementBloc>().add(
-                CalendarEventsRequested(
-                  startDate: newDay,
-                  endDate: newDay.add(const Duration(days: 1)),
-                ),
-              );
-            },
+                // Load events for the new day
+                context.read<CalendarManagementBloc>().add(
+                  CalendarEventsRequested(
+                    startDate: newDay,
+                    endDate: newDay.add(const Duration(days: 1)),
+                  ),
+                );
+              },
+              tooltip: 'Previous day',
+            ),
           ),
           Column(
             children: [
               Text(
                 '${_getDayOfWeek(date)}, ${_formatDate(date)}',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              Text(
-                _isToday(date) ? 'Today' : '',
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.primary,
+                style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5,
                 ),
               ),
+              if (_isToday(date))
+                Container(
+                  margin: const EdgeInsets.only(top: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: theme.colorScheme.primary.withOpacity(0.3),
+                        blurRadius: 4,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
+                  ),
+                  child: Text(
+                    'Today',
+                    style: TextStyle(
+                      color: theme.colorScheme.onPrimary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ),
             ],
           ),
-          IconButton(
-            icon: const Icon(Icons.chevron_right),
-            onPressed: () {
-              final newDay = date.add(const Duration(days: 1));
-              setState(() {
-                _selectedDay = newDay;
-                _focusedDay = newDay;
-              });
+          Container(
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+                width: 1,
+              ),
+            ),
+            child: IconButton(
+              icon: Icon(
+                Icons.chevron_right,
+                color: theme.colorScheme.primary,
+              ),
+              onPressed: () {
+                final newDay = date.add(const Duration(days: 1));
+                setState(() {
+                  _selectedDay = newDay;
+                  _focusedDay = newDay;
+                });
 
-              // Load events for the new day
-              context.read<CalendarManagementBloc>().add(
-                CalendarEventsRequested(
-                  startDate: newDay,
-                  endDate: newDay.add(const Duration(days: 1)),
-                ),
-              );
-            },
+                // Load events for the new day
+                context.read<CalendarManagementBloc>().add(
+                  CalendarEventsRequested(
+                    startDate: newDay,
+                    endDate: newDay.add(const Duration(days: 1)),
+                  ),
+                );
+              },
+              tooltip: 'Next day',
+            ),
           ),
         ],
       ),
