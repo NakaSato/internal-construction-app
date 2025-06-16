@@ -30,7 +30,6 @@ class ProfileScreen extends StatelessWidget {
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 children: [
-                  _buildProfileHeader(context, state.user),
                   const SizedBox(height: 24),
                   _buildProfileMenuItems(context),
                 ],
@@ -43,103 +42,6 @@ class ProfileScreen extends StatelessWidget {
         return const Scaffold(body: Center(child: CircularProgressIndicator()));
       },
     );
-  }
-
-  /// Profile header with user avatar and information
-  Widget _buildProfileHeader(BuildContext context, dynamic user) {
-    final initials = _getUserInitials(user);
-    final userName = _getUserDisplayName(user);
-    final userEmail = _getUserEmail(user);
-
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          children: [
-            CircleAvatar(
-              radius: 32.0,
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              child: Text(
-                initials,
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onPrimary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    userName,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    userEmail,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            IconButton(
-              icon: const Icon(Icons.edit),
-              onPressed: () => _showComingSoonSnackBar(context, 'Edit profile'),
-              tooltip: 'Edit profile',
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// Gets user initials for avatar with proper null safety
-  String _getUserInitials(dynamic user) {
-    try {
-      final name = _getUserDisplayName(user);
-      if (name != 'User') {
-        final nameParts = name.trim().split(' ');
-        if (nameParts.length >= 2) {
-          return '${nameParts.first[0]}${nameParts.last[0]}'.toUpperCase();
-        }
-        return name[0].toUpperCase();
-      }
-
-      // Fall back to email if no name
-      final email = _getUserEmail(user);
-      return email[0].toUpperCase();
-    } catch (e) {
-      // Return placeholder if anything fails
-      return 'U';
-    }
-  }
-
-  /// Gets user display name with proper null safety
-  String _getUserDisplayName(dynamic user) {
-    try {
-      final name = user?.name as String?;
-      return (name != null && name.isNotEmpty) ? name : 'User';
-    } catch (e) {
-      return 'User';
-    }
-  }
-
-  /// Gets user email with proper null safety
-  String _getUserEmail(dynamic user) {
-    try {
-      final email = user?.email as String?;
-      return (email != null && email.isNotEmpty) ? email : 'No email';
-    } catch (e) {
-      return 'No email';
-    }
   }
 
   /// Shows a coming soon snackbar
