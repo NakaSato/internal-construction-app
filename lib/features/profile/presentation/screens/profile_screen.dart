@@ -20,6 +20,8 @@ class ProfileScreen extends StatelessWidget {
               user: state.user,
               title: 'My Profile',
               heroContext: 'profile', // Add unique context
+              showSearchIcon: false, // Hide search icon
+              showNotificationIcon: false, // Hide notification icon
               onProfileTap: () {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Edit profile coming soon!')),

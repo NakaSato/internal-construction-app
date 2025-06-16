@@ -7,50 +7,41 @@ import '../../../features/project_management/application/project_bloc.dart';
 import '../../../features/project_management/application/project_state.dart';
 import '../../../features/project_management/application/project_event.dart';
 import '../../../features/project_management/presentation/widgets/project_card.dart';
-import 'dashboard_constants.dart';
 
 /// Project list section with loading, empty, and error states
 class ProjectListSection extends StatelessWidget {
   const ProjectListSection({super.key});
 
-  static const double _defaultPadding = DashboardConstants.defaultPadding;
-
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Content section
-          Padding(
-            padding: const EdgeInsets.all(_defaultPadding),
-            child: BlocProvider(
-              create: (context) =>
-                  GetIt.instance<ProjectBloc>()
-                    ..add(const ProjectLoadRequested()),
-              child: BlocBuilder<ProjectBloc, ProjectState>(
-                builder: (context, state) {
-                  if (state is ProjectLoading) {
-                    return const _LoadingState();
-                  } else if (state is ProjectLoaded) {
-                    final allProjects = state.projects;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Content section
+        BlocProvider(
+          create: (context) =>
+              GetIt.instance<ProjectBloc>()..add(const ProjectLoadRequested()),
+          child: BlocBuilder<ProjectBloc, ProjectState>(
+            builder: (context, state) {
+              if (state is ProjectLoading) {
+                return const _LoadingState();
+              } else if (state is ProjectLoaded) {
+                final allProjects = state.projects;
 
-                    if (allProjects.isEmpty) {
-                      return const _EmptyState();
-                    }
+                if (allProjects.isEmpty) {
+                  return const _EmptyState();
+                }
 
-                    return _ProjectList(projects: allProjects);
-                  } else if (state is ProjectError) {
-                    return _ErrorState(message: state.message);
-                  }
+                return _ProjectList(projects: allProjects);
+              } else if (state is ProjectError) {
+                return _ErrorState(message: state.message);
+              }
 
-                  return const SizedBox.shrink();
-                },
-              ),
-            ),
+              return const SizedBox.shrink();
+            },
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -239,7 +230,7 @@ class _ProjectList extends StatelessWidget {
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: projects.length,
-        separatorBuilder: (context, index) => const SizedBox(height: 1.0),
+        separatorBuilder: (context, index) => const SizedBox.shrink(),
         itemBuilder: (context, index) {
           final project = projects[index];
           return AnimatedContainer(

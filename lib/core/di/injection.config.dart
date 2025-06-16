@@ -16,14 +16,16 @@ import 'package:injectable/injectable.dart' as _i526;
 
 import '../../features/authentication/application/auth_bloc.dart' as _i574;
 import '../../features/authentication/application/auth_cubit.dart' as _i153;
+import '../../features/authentication/data/datasources/auth_api_service.dart'
+    as _i1066;
+import '../../features/authentication/data/repositories/api_auth_repository.dart'
+    as _i410;
+import '../../features/authentication/data/repositories/auth_repository_factory.dart'
+    as _i580;
 import '../../features/authentication/domain/repositories/auth_repository.dart'
     as _i742;
 import '../../features/authentication/infrastructure/auth_repository_factory.dart'
     as _i202;
-import '../../features/authentication/data/repositories/api_auth_repository.dart'
-    as _i793;
-import '../../features/authentication/data/datasources/auth_api_service.dart'
-    as _i378;
 import '../../features/calendar_management/application/calendar_management_bloc.dart'
     as _i185;
 import '../../features/calendar_management/domain/repositories/calendar_management_repository.dart'
@@ -34,14 +36,14 @@ import '../../features/calendar_management/infrastructure/services/calendar_api_
     as _i1036;
 import '../../features/project_management/application/project_bloc.dart'
     as _i1062;
+import '../../features/project_management/data/datasources/project_api_service.dart'
+    as _i421;
+import '../../features/project_management/data/repositories/api_project_repository.dart'
+    as _i677;
+import '../../features/project_management/data/repositories/mock_project_repository.dart'
+    as _i270;
 import '../../features/project_management/domain/repositories/project_repository.dart'
     as _i475;
-import '../../features/project_management/data/repositories/api_project_repository.dart'
-    as _i776;
-import '../../features/project_management/data/repositories/mock_project_repository.dart'
-    as _i284;
-import '../../features/project_management/data/datasources/project_api_service.dart'
-    as _i752;
 import '../../features/work_calendar/application/work_calendar_bloc.dart'
     as _i937;
 import '../../features/work_calendar/domain/repositories/work_calendar_repository.dart'
@@ -67,18 +69,18 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<String>(() => externalDependenciesModule.baseUrl);
     gh.lazySingleton<_i361.Dio>(() => networkModule.dio());
-    gh.lazySingleton<_i475.ProjectRepository>(
-      () => const _i284.MockProjectRepository(),
-      instanceName: 'mock',
-    );
     gh.lazySingleton<_i503.WorkCalendarRepository>(
       () => _i743.ApiWorkCalendarRepository(gh<_i361.Dio>()),
     );
-    gh.lazySingleton<_i378.AuthApiService>(
+    gh.lazySingleton<_i1066.AuthApiService>(
       () => authModule.authApiService(gh<_i361.Dio>()),
     );
-    gh.factory<_i752.ProjectApiService>(
-      () => _i752.ProjectApiService(gh<_i361.Dio>(), baseUrl: gh<String>()),
+    gh.lazySingleton<_i475.ProjectRepository>(
+      () => const _i270.MockProjectRepository(),
+      instanceName: 'mock',
+    );
+    gh.factory<_i421.ProjectApiService>(
+      () => _i421.ProjectApiService(gh<_i361.Dio>(), baseUrl: gh<String>()),
     );
     gh.factory<_i937.WorkCalendarBloc>(
       () => _i937.WorkCalendarBloc(gh<_i503.WorkCalendarRepository>()),
@@ -86,19 +88,24 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i1036.CalendarApiService>(
       () => _i1036.CalendarApiService(gh<_i361.Dio>(), baseUrl: gh<String>()),
     );
+    gh.factory<_i475.ProjectRepository>(
+      () => _i677.ApiProjectRepository(gh<_i421.ProjectApiService>()),
+      instanceName: 'api',
+    );
     gh.lazySingleton<_i742.AuthRepository>(
-      () => _i793.ApiAuthRepository(
-        gh<_i378.AuthApiService>(),
+      () => _i410.ApiAuthRepository(
+        gh<_i1066.AuthApiService>(),
         gh<_i558.FlutterSecureStorage>(),
       ),
       instanceName: 'api',
     );
-    gh.factory<_i475.ProjectRepository>(
-      () => _i776.ApiProjectRepository(gh<_i752.ProjectApiService>()),
-      instanceName: 'api',
-    );
     gh.lazySingleton<_i202.AuthRepositoryFactory>(
       () => _i202.AuthRepositoryFactory(
+        gh<_i742.AuthRepository>(instanceName: 'api'),
+      ),
+    );
+    gh.lazySingleton<_i580.AuthRepositoryFactory>(
+      () => _i580.AuthRepositoryFactory(
         gh<_i742.AuthRepository>(instanceName: 'api'),
       ),
     );

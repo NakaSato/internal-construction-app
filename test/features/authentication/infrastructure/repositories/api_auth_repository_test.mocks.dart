@@ -6,10 +6,10 @@
 import 'dart:async' as _i5;
 
 import 'package:flutter/foundation.dart' as _i6;
-import 'package:flutter_architecture_app/features/authentication/data/models/auth_response_model.dart'
-    as _i2;
 import 'package:flutter_architecture_app/features/authentication/data/datasources/auth_api_service.dart'
     as _i4;
+import 'package:flutter_architecture_app/features/authentication/data/models/auth_response_model.dart'
+    as _i2;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart' as _i3;
 import 'package:mockito/mockito.dart' as _i1;
 

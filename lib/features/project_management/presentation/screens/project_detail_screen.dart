@@ -39,100 +39,191 @@ class ProjectDetailScreen extends StatefulWidget {
   State<ProjectDetailScreen> createState() => _ProjectDetailScreenState();
 }
 
-class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
+class _ProjectDetailScreenState extends State<ProjectDetailScreen>
+    with TickerProviderStateMixin {
   late ProjectBloc _projectBloc;
+  late AnimationController _fadeController;
+  late AnimationController _slideController;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
   Project? _project;
 
   @override
   void initState() {
     super.initState();
     _projectBloc = GetIt.instance<ProjectBloc>();
+
+    // Initialize animations
+    _fadeController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+    _slideController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+
+    _fadeAnimation = CurvedAnimation(
+      parent: _fadeController,
+      curve: Curves.easeInOut,
+    );
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(
+          CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic),
+        );
+
     _projectBloc.add(const ProjectLoadRequested());
   }
 
   @override
+  void dispose() {
+    _fadeController.dispose();
+    _slideController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
+      backgroundColor: theme.colorScheme.surface,
       body: BlocProvider.value(
         value: _projectBloc,
-        child: BlocBuilder<ProjectBloc, ProjectState>(
-          builder: (context, state) {
-            if (state is ProjectLoading) {
-              return const Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 16),
-                    Text('Loading project details...'),
-                  ],
-                ),
-              );
-            }
-
-            if (state is ProjectError) {
-              return _buildErrorView(context, state.message);
-            }
-
+        child: BlocListener<ProjectBloc, ProjectState>(
+          listener: (context, state) {
             if (state is ProjectLoaded) {
-              // Find the specific project by ID
-              try {
-                _project = state.projects.firstWhere(
-                  (project) => project.projectId == widget.projectId,
-                );
-                return _buildProjectDetailView(context, _project!);
-              } catch (e) {
-                return _buildProjectNotFoundView(context);
-              }
+              _fadeController.forward();
+              _slideController.forward();
             }
-
-            return const Center(child: Text('No project data available'));
           },
+          child: BlocBuilder<ProjectBloc, ProjectState>(
+            builder: (context, state) {
+              if (state is ProjectLoading) {
+                return _buildEnhancedLoadingView(context);
+              }
+
+              if (state is ProjectError) {
+                return _buildEnhancedErrorView(context, state.message);
+              }
+
+              if (state is ProjectLoaded) {
+                try {
+                  _project = state.projects.firstWhere(
+                    (project) => project.projectId == widget.projectId,
+                  );
+                  return FadeTransition(
+                    opacity: _fadeAnimation,
+                    child: SlideTransition(
+                      position: _slideAnimation,
+                      child: _buildProjectDetailView(context, _project!),
+                    ),
+                  );
+                } catch (e) {
+                  return _buildEnhancedProjectNotFoundView(context);
+                }
+              }
+
+              return _buildEmptyStateView(context);
+            },
+          ),
         ),
       ),
       floatingActionButton: _project != null
-          ? BlocBuilder<AuthBloc, AuthState>(
-              builder: (context, authState) {
-                if (authState is! AuthAuthenticated) {
-                  return const SizedBox.shrink();
-                }
-
-                // Capture the project to avoid null check issues
-                final project = _project;
-                if (project == null) return const SizedBox.shrink();
-
-                // Handle potential role lookup errors by using a default fallback approach
-                try {
-                  return PermissionBuilder(
-                    user: authState.user,
-                    resource: 'projects',
-                    action: 'update',
-                    builder: (context, hasUpdatePermission) {
-                      if (!hasUpdatePermission) return const SizedBox.shrink();
-
-                      return FloatingActionButton.extended(
-                        onPressed: () =>
-                            QuickActionsBottomSheet.show(context, project),
-                        icon: const Icon(Icons.add),
-                        label: const Text('Quick Add'),
-                        backgroundColor: Theme.of(
-                          context,
-                        ).colorScheme.primaryContainer,
-                        foregroundColor: Theme.of(
-                          context,
-                        ).colorScheme.onPrimaryContainer,
-                      );
-                    },
-                    // Add a fallback to handle loading errors
-                    fallback: const SizedBox.shrink(),
-                  );
-                } catch (e) {
-                  // If permission check fails, default to not showing the button
-                  return const SizedBox.shrink();
-                }
-              },
-            )
+          ? _buildEnhancedFloatingActionButton(context)
           : null,
+    );
+  }
+
+  Widget _buildEnhancedLoadingView(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            theme.colorScheme.primary.withValues(alpha: 0.1),
+            theme.colorScheme.surface,
+          ],
+        ),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Modern loading indicator with custom animation
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                    blurRadius: 20,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Center(
+                child: CircularProgressIndicator(
+                  strokeWidth: 3,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+            ),
+            const SizedBox(height: 32),
+
+            // Loading text with animation
+            TweenAnimationBuilder<double>(
+              duration: const Duration(seconds: 2),
+              tween: Tween(begin: 0.5, end: 1.0),
+              builder: (context, value, child) {
+                return Opacity(
+                  opacity: value,
+                  child: Text(
+                    'Loading project details...',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 8),
+
+            // Subtle progress indicator
+            Container(
+              width: 120,
+              height: 2,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.outline.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(1),
+              ),
+              child: TweenAnimationBuilder<double>(
+                duration: const Duration(seconds: 3),
+                tween: Tween(begin: 0.0, end: 1.0),
+                builder: (context, value, child) {
+                  return FractionallySizedBox(
+                    alignment: Alignment.centerLeft,
+                    widthFactor: value,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary,
+                        borderRadius: BorderRadius.circular(1),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -140,67 +231,61 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, authState) {
         if (authState is! AuthAuthenticated) {
-          return Scaffold(
-            appBar: AppBar(title: const Text('Authentication Required')),
-            body: const Center(
-              child: Text('Authentication required to view project details'),
-            ),
-          );
+          return _buildAuthenticationRequiredView(context);
         }
 
         final user = authState.user;
 
         return CustomScrollView(
+          physics: const BouncingScrollPhysics(),
           slivers: [
-            // Project Header with App Bar - with authorization controls
+            // Enhanced Project Header
             _buildAuthorizedProjectHeader(context, project, user),
 
-            // Project Content
+            // Project Content with improved spacing and design
             SliverToBoxAdapter(
-              child: Padding(
-                padding: ProjectManagementUIConstants.paddingDefault,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Project Overview Stats
-                    ProjectStatsWidget(project: project),
-                    const SizedBox(height: 20),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface,
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(24),
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Project Overview Stats with enhanced design
+                      _buildEnhancedStatsSection(project),
+                      const SizedBox(height: 32),
 
-                    // Project Description
-                    if (project.description.isNotEmpty) ...[
-                      ProjectDescriptionWidget(project: project),
-                      const SizedBox(height: 20),
+                      // Project Description with improved typography
+                      if (project.description.isNotEmpty) ...[
+                        _buildEnhancedDescriptionSection(project),
+                        const SizedBox(height: 32),
+                      ],
+
+                      // Progress and Budget Section with visual improvements
+                      _buildEnhancedProgressSection(project),
+                      const SizedBox(height: 32),
+
+                      // Tasks Section with modern card design
+                      _buildEnhancedTasksSection(project),
+                      const SizedBox(height: 32),
+
+                      // Recent Reports Section
+                      _buildEnhancedReportsSection(project),
+                      const SizedBox(height: 32),
+
+                      // Action Buttons with enhanced design
+                      _buildAuthorizedActions(context, project, user),
+                      const SizedBox(height: 32),
+
+                      // Project Details with improved layout
+                      _buildEnhancedDetailsSection(project),
                     ],
-
-                    // Progress and Budget Section
-                    ProjectProgressWidget(project: project),
-                    const SizedBox(height: 20),
-
-                    // Tasks Section
-                    ProjectTasksWidget(
-                      project: project,
-                      onViewAllTasks: () {
-                        // TODO: Navigate to full tasks list
-                      },
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Recent Reports Section
-                    ProjectReportsWidget(
-                      project: project,
-                      onViewAllReports: () =>
-                          _navigateToDailyReports(context, project),
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Action Buttons - with authorization controls
-                    _buildAuthorizedActions(context, project, user),
-                    const SizedBox(height: 20),
-
-                    // Project Details
-                    ProjectDetailsWidget(project: project),
-                    const SizedBox(height: 32),
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -210,24 +295,327 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
     );
   }
 
+  Widget _buildEnhancedStatsSection(Project project) {
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Project Overview',
+          style: theme.textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: theme.colorScheme.onSurface,
+          ),
+        ),
+        const SizedBox(height: 16),
+        ProjectStatsWidget(project: project),
+      ],
+    );
+  }
+
+  Widget _buildEnhancedDescriptionSection(Project project) {
+    final theme = Theme.of(context);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: 0.1),
+        ),
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.description_outlined,
+                color: theme.colorScheme.primary,
+                size: 24,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Description',
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.onSurface,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ProjectDescriptionWidget(project: project),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEnhancedProgressSection(Project project) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Progress & Budget',
+          style: Theme.of(
+            context,
+          ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 16),
+        ProjectProgressWidget(project: project),
+      ],
+    );
+  }
+
+  Widget _buildEnhancedTasksSection(Project project) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Tasks',
+              style: Theme.of(
+                context,
+              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            TextButton.icon(
+              onPressed: () {
+                // TODO: Navigate to full tasks list
+              },
+              icon: const Icon(Icons.arrow_forward, size: 16),
+              label: const Text('View All'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        ProjectTasksWidget(
+          project: project,
+          onViewAllTasks: () {
+            // TODO: Navigate to full tasks list
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEnhancedReportsSection(Project project) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Recent Reports',
+              style: Theme.of(
+                context,
+              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            TextButton.icon(
+              onPressed: () => _navigateToDailyReports(context, project),
+              icon: const Icon(Icons.arrow_forward, size: 16),
+              label: const Text('View All'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        ProjectReportsWidget(
+          project: project,
+          onViewAllReports: () => _navigateToDailyReports(context, project),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEnhancedDetailsSection(Project project) {
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Project Details',
+          style: theme.textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Container(
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: theme.colorScheme.outline.withValues(alpha: 0.1),
+            ),
+          ),
+          child: ProjectDetailsWidget(project: project),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEnhancedFloatingActionButton(BuildContext context) {
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, authState) {
+        if (authState is! AuthAuthenticated) {
+          return const SizedBox.shrink();
+        }
+
+        final project = _project;
+        if (project == null) return const SizedBox.shrink();
+
+        try {
+          return PermissionBuilder(
+            user: authState.user,
+            resource: 'projects',
+            action: 'update',
+            builder: (context, hasUpdatePermission) {
+              if (!hasUpdatePermission) return const SizedBox.shrink();
+
+              return AnimatedScale(
+                scale: 1.0,
+                duration: const Duration(milliseconds: 200),
+                child: FloatingActionButton.extended(
+                  onPressed: () =>
+                      QuickActionsBottomSheet.show(context, project),
+                  icon: const Icon(Icons.add_rounded),
+                  label: const Text('Quick Add'),
+                  backgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.primaryContainer,
+                  foregroundColor: Theme.of(
+                    context,
+                  ).colorScheme.onPrimaryContainer,
+                  elevation: 4,
+                  extendedPadding: const EdgeInsets.symmetric(horizontal: 20),
+                ),
+              );
+            },
+            fallback: const SizedBox.shrink(),
+          );
+        } catch (e) {
+          return const SizedBox.shrink();
+        }
+      },
+    );
+  }
+
+  Widget _buildAuthenticationRequiredView(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Authentication Required'),
+        backgroundColor: theme.colorScheme.surface,
+        surfaceTintColor: theme.colorScheme.surfaceTint,
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.lock_outline,
+                size: 64,
+                color: theme.colorScheme.outline,
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'Authentication Required',
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Please sign in to view project details',
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 32),
+              FilledButton.icon(
+                onPressed: () => context.go('/auth'),
+                icon: const Icon(Icons.login),
+                label: const Text('Sign In'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyStateView(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.folder_open_outlined,
+              size: 64,
+              color: theme.colorScheme.outline,
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'No Project Data',
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'No project data is currently available',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 32),
+            FilledButton.icon(
+              onPressed: () {
+                _projectBloc.add(const ProjectLoadRequested());
+              },
+              icon: const Icon(Icons.refresh),
+              label: const Text('Retry'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   // Helper method to create sliver-compatible loading widgets
   Widget _buildSliverLoadingHeader(Project project) {
+    final theme = Theme.of(context);
+
     return SliverAppBar(
-      expandedHeight: 240.0,
+      expandedHeight: 280.0,
       floating: false,
       pinned: true,
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: theme.colorScheme.surface,
+      surfaceTintColor: theme.colorScheme.surfaceTint,
       flexibleSpace: FlexibleSpaceBar(
         title: Text(
           project.projectName,
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: theme.colorScheme.onPrimary,
             fontWeight: FontWeight.w600,
             shadows: [
               Shadow(
-                offset: Offset(0, 1),
+                offset: const Offset(0, 1),
                 blurRadius: 3.0,
-                color: Color.fromARGB(130, 0, 0, 0),
+                color: Colors.black.withValues(alpha: 0.3),
               ),
             ],
           ),
@@ -236,33 +624,53 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
         background: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
               colors: [
-                Theme.of(context).colorScheme.primary,
-                Theme.of(context).colorScheme.primaryContainer,
+                theme.colorScheme.primary,
+                theme.colorScheme.primaryContainer,
+                theme.colorScheme.primary.withValues(alpha: 0.8),
               ],
             ),
           ),
-          child: const Center(
-            child: CircularProgressIndicator(color: Colors.white),
+          child: Center(
+            child: Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Center(
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 3,
+                ),
+              ),
+            ),
           ),
         ),
       ),
       actions: [
-        IconButton(
-          icon: const Icon(Icons.refresh),
-          onPressed: () {
-            // Retry loading permissions
-            context.read<AuthorizationBloc>().add(
-              AuthorizationPermissionCheckRequested(
-                user:
-                    (context.read<AuthBloc>().state as AuthAuthenticated).user,
-                resource: 'projects',
-                action: 'update',
-              ),
-            );
-          },
+        Container(
+          margin: const EdgeInsets.only(right: 8),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.2),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.white),
+            onPressed: () {
+              context.read<AuthorizationBloc>().add(
+                AuthorizationPermissionCheckRequested(
+                  user: (context.read<AuthBloc>().state as AuthAuthenticated)
+                      .user,
+                  resource: 'projects',
+                  action: 'update',
+                ),
+              );
+            },
+          ),
         ),
       ],
     );
@@ -273,15 +681,12 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
     Project project,
     User user,
   ) {
-    // Use a BlocBuilder directly to have better control over sliver states
     return BlocBuilder<AuthorizationBloc, AuthorizationState>(
       builder: (context, authState) {
-        // Always return a sliver widget regardless of authorization state
         if (authState is AuthorizationLoading) {
           return _buildSliverLoadingHeader(project);
         }
 
-        // Check if we have permission data
         bool hasUpdatePermission = false;
         bool hasDeletePermission = false;
 
@@ -289,7 +694,6 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
           hasUpdatePermission = authState.hasPermission('projects', 'update');
           hasDeletePermission = authState.hasPermission('projects', 'delete');
         } else {
-          // If we don't have authorization data, trigger the check
           context.read<AuthorizationBloc>().add(
             AuthorizationPermissionCheckRequested(
               user: user,
@@ -304,11 +708,9 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
               action: 'delete',
             ),
           );
-          // Return loading state while permissions are being checked
           return _buildSliverLoadingHeader(project);
         }
 
-        // Return the header with appropriate permissions
         return ProjectHeaderWidget(
           project: project,
           onEdit: hasUpdatePermission
@@ -329,6 +731,8 @@ Widget _buildAuthorizedActions(
   Project project,
   User user,
 ) {
+  final theme = Theme.of(context);
+
   try {
     return PermissionBuilder(
       user: user,
@@ -336,7 +740,6 @@ Widget _buildAuthorizedActions(
       action: 'update',
       builder: (context, hasUpdatePermission) {
         if (hasUpdatePermission) {
-          // Admin/Manager view with full actions
           return ProjectActionsWidget(
             project: project,
             onDailyReports: () => _navigateToDailyReports(context, project),
@@ -345,71 +748,99 @@ Widget _buildAuthorizedActions(
             onProjectTeam: () => _showProjectTeamDialog(context, project),
           );
         } else {
-          // Read-only view for regular users
-          return _buildReadOnlyActions(context, project);
+          return _buildEnhancedReadOnlyActions(context, project);
         }
       },
-      // Fallback for when permission check fails - default to read-only view
-      fallback: _buildReadOnlyActions(context, project),
+      fallback: _buildEnhancedReadOnlyActions(context, project),
     );
   } catch (e) {
-    // Complete fallback if permission check throws an exception
-    return _buildReadOnlyActions(context, project);
+    return _buildEnhancedReadOnlyActions(context, project);
   }
 }
 
-Widget _buildReadOnlyActions(BuildContext context, Project project) {
-  return Card(
-    elevation: 2,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(16),
-      side: BorderSide(
-        color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+Widget _buildEnhancedReadOnlyActions(BuildContext context, Project project) {
+  final theme = Theme.of(context);
+
+  return Container(
+    decoration: BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          theme.colorScheme.surfaceContainerLow,
+          theme.colorScheme.surfaceContainer.withValues(alpha: 0.5),
+        ],
+      ),
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(
+        color: theme.colorScheme.outline.withValues(alpha: 0.1),
       ),
     ),
     child: Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(
-                Icons.visibility_outlined,
-                color: Theme.of(context).colorScheme.primary,
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.visibility_outlined,
+                  color: theme.colorScheme.primary,
+                  size: 20,
+                ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 12),
               Text(
                 'View Only Access',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.onSurface,
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           Text(
             'You have read-only access to this project. Contact your manager for update permissions.',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              height: 1.5,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           Row(
             children: [
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: () => _navigateToDailyReports(context, project),
-                  icon: const Icon(Icons.assessment_outlined, size: 20),
+                  icon: const Icon(Icons.assessment_outlined, size: 18),
                   label: const Text('View Reports'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 16),
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: () => _navigateToWorkRequests(context, project),
-                  icon: const Icon(Icons.assignment_outlined, size: 20),
+                  icon: const Icon(Icons.assignment_outlined, size: 18),
                   label: const Text('View Requests'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -420,82 +851,157 @@ Widget _buildReadOnlyActions(BuildContext context, Project project) {
   );
 }
 
-Widget _buildErrorView(BuildContext context, String message) {
+Widget _buildEnhancedErrorView(BuildContext context, String message) {
   final theme = Theme.of(context);
 
-  return Center(
-    child: Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.error_outline, size: 64, color: theme.colorScheme.error),
-          const SizedBox(height: 16),
-          Text(
-            'Error Loading Project',
-            style: theme.textTheme.headlineSmall?.copyWith(
-              color: theme.colorScheme.error,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            message,
-            textAlign: TextAlign.center,
-            style: theme.textTheme.bodyLarge?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 24),
-          FilledButton(
-            onPressed: () {
-              context.read<ProjectBloc>().add(const ProjectLoadRequested());
-            },
-            child: const Text('Retry'),
-          ),
-          const SizedBox(height: 12),
-          TextButton(
-            onPressed: () => context.pop(),
-            child: const Text('Go Back'),
-          ),
+  return Container(
+    decoration: BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          theme.colorScheme.errorContainer.withValues(alpha: 0.1),
+          theme.colorScheme.surface,
         ],
+      ),
+    ),
+    child: Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.errorContainer,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: theme.colorScheme.error.withValues(alpha: 0.2),
+                    blurRadius: 20,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Icon(
+                Icons.error_outline_rounded,
+                size: 40,
+                color: theme.colorScheme.error,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Something went wrong',
+              style: theme.textTheme.headlineSmall?.copyWith(
+                color: theme.colorScheme.error,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.errorContainer.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                message,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onErrorContainer,
+                ),
+              ),
+            ),
+            const SizedBox(height: 32),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                FilledButton.icon(
+                  onPressed: () {
+                    context.read<ProjectBloc>().add(
+                      const ProjectLoadRequested(),
+                    );
+                  },
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Try Again'),
+                ),
+                const SizedBox(width: 16),
+                OutlinedButton.icon(
+                  onPressed: () => context.pop(),
+                  icon: const Icon(Icons.arrow_back),
+                  label: const Text('Go Back'),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     ),
   );
 }
 
-Widget _buildProjectNotFoundView(BuildContext context) {
+Widget _buildEnhancedProjectNotFoundView(BuildContext context) {
   final theme = Theme.of(context);
 
-  return Center(
-    child: Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.search_off, size: 64, color: theme.colorScheme.outline),
-          const SizedBox(height: 16),
-          Text(
-            'Project Not Found',
-            style: theme.textTheme.headlineSmall?.copyWith(
-              color: theme.colorScheme.onSurface,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'The project you\'re looking for could not be found.',
-            textAlign: TextAlign.center,
-            style: theme.textTheme.bodyLarge?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 24),
-          FilledButton(
-            onPressed: () => context.pop(),
-            child: const Text('Go Back'),
-          ),
+  return Container(
+    decoration: BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          theme.colorScheme.surfaceContainer.withValues(alpha: 0.3),
+          theme.colorScheme.surface,
         ],
+      ),
+    ),
+    child: Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainer,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: theme.colorScheme.outline.withValues(alpha: 0.2),
+                ),
+              ),
+              child: Icon(
+                Icons.search_off_rounded,
+                size: 40,
+                color: theme.colorScheme.outline,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Project Not Found',
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'The project you\'re looking for could not be found or you may not have access to it.',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 32),
+            FilledButton.icon(
+              onPressed: () => context.pop(),
+              icon: const Icon(Icons.arrow_back),
+              label: const Text('Go Back'),
+            ),
+          ],
+        ),
       ),
     ),
   );
@@ -503,132 +1009,168 @@ Widget _buildProjectNotFoundView(BuildContext context) {
 
 // Navigation helper methods
 void _editProject(BuildContext context, Project project) {
+  final theme = Theme.of(context);
+
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
-    builder: (context) => DraggableScrollableSheet(
-      initialChildSize: 0.6,
-      maxChildSize: 0.9,
-      minChildSize: 0.3,
-      expand: false,
-      builder: (context, scrollController) => Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.edit_outlined,
-                  color: Theme.of(context).colorScheme.primary,
+    backgroundColor: Colors.transparent,
+    builder: (context) => Container(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      child: DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        maxChildSize: 0.95,
+        minChildSize: 0.4,
+        expand: false,
+        builder: (context, scrollController) => Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            children: [
+              // Handle bar
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.outline.withValues(alpha: 0.4),
+                  borderRadius: BorderRadius.circular(2),
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  'Edit Project',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const Spacer(),
-                IconButton(
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.close),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            Expanded(
-              child: ListView(
-                controller: scrollController,
+              ),
+              const SizedBox(height: 20),
+
+              // Header
+              Row(
                 children: [
-                  _buildEditSection(context, 'Basic Information', [
-                    _buildEditOption(
-                      context,
-                      'Project Name',
-                      project.projectName,
-                      Icons.title,
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    _buildEditOption(
-                      context,
-                      'Address',
-                      project.address,
-                      Icons.location_on,
+                    child: Icon(
+                      Icons.edit_outlined,
+                      color: theme.colorScheme.onPrimaryContainer,
+                      size: 20,
                     ),
-                    _buildEditOption(
-                      context,
-                      'Client Information',
-                      project.clientInfo,
-                      Icons.business,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Edit Project',
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
                     ),
-                  ]),
-                  _buildEditSection(context, 'Timeline', [
-                    _buildEditOption(
-                      context,
-                      'Start Date',
-                      _formatDate(project.startDate),
-                      Icons.calendar_today,
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close),
+                    style: IconButton.styleFrom(
+                      backgroundColor: theme.colorScheme.surfaceContainer,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
-                    _buildEditOption(
-                      context,
-                      'Estimated End Date',
-                      _formatDate(project.estimatedEndDate),
-                      Icons.schedule,
-                    ),
-                    _buildEditOption(
-                      context,
-                      'Actual End Date',
-                      project.actualEndDate != null
-                          ? _formatDate(project.actualEndDate!)
-                          : 'Not set',
-                      Icons.check_circle,
-                    ),
-                  ]),
-                  _buildEditSection(context, 'Project Details', [
-                    _buildEditOption(
-                      context,
-                      'Status',
-                      project.status,
-                      Icons.info,
-                    ),
-                    _buildEditOption(
-                      context,
-                      'Description',
-                      project.description.isNotEmpty
-                          ? project.description
-                          : 'No description',
-                      Icons.description,
-                    ),
-                    _buildEditOption(
-                      context,
-                      'Location',
-                      project.location ?? 'Not specified',
-                      Icons.location_pin,
-                    ),
-                  ]),
-                  _buildEditSection(context, 'Financial', [
-                    _buildEditOption(
-                      context,
-                      'Budget',
-                      project.budget?.toString() ?? 'Not set',
-                      Icons.monetization_on,
-                    ),
-                    _buildEditOption(
-                      context,
-                      'Actual Cost',
-                      project.actualCost?.toString() ?? 'Not set',
-                      Icons.trending_up,
-                    ),
-                    _buildEditOption(
-                      context,
-                      'Progress',
-                      '${project.completionPercentage}%',
-                      Icons.analytics,
-                    ),
-                  ]),
+                  ),
                 ],
               ),
-            ),
-          ],
+              const SizedBox(height: 24),
+
+              // Content
+              Expanded(
+                child: ListView(
+                  controller: scrollController,
+                  children: [
+                    _buildEditSection(context, 'Basic Information', [
+                      _buildEditOption(
+                        context,
+                        'Project Name',
+                        project.projectName,
+                        Icons.title,
+                      ),
+                      _buildEditOption(
+                        context,
+                        'Address',
+                        project.address,
+                        Icons.location_on,
+                      ),
+                      _buildEditOption(
+                        context,
+                        'Client Information',
+                        project.clientInfo,
+                        Icons.business,
+                      ),
+                    ]),
+                    _buildEditSection(context, 'Timeline', [
+                      _buildEditOption(
+                        context,
+                        'Start Date',
+                        _formatDate(project.startDate),
+                        Icons.calendar_today,
+                      ),
+                      _buildEditOption(
+                        context,
+                        'Estimated End Date',
+                        _formatDate(project.estimatedEndDate),
+                        Icons.schedule,
+                      ),
+                      _buildEditOption(
+                        context,
+                        'Actual End Date',
+                        project.actualEndDate != null
+                            ? _formatDate(project.actualEndDate!)
+                            : 'Not set',
+                        Icons.check_circle,
+                      ),
+                    ]),
+                    _buildEditSection(context, 'Project Details', [
+                      _buildEditOption(
+                        context,
+                        'Status',
+                        project.status,
+                        Icons.info,
+                      ),
+                      _buildEditOption(
+                        context,
+                        'Description',
+                        project.description.isNotEmpty
+                            ? project.description
+                            : 'No description',
+                        Icons.description,
+                      ),
+                      _buildEditOption(
+                        context,
+                        'Location',
+                        project.location ?? 'Not specified',
+                        Icons.location_pin,
+                      ),
+                    ]),
+                    _buildEditSection(context, 'Financial', [
+                      _buildEditOption(
+                        context,
+                        'Budget',
+                        project.budget?.toString() ?? 'Not set',
+                        Icons.monetization_on,
+                      ),
+                      _buildEditOption(
+                        context,
+                        'Actual Cost',
+                        project.actualCost?.toString() ?? 'Not set',
+                        Icons.trending_up,
+                      ),
+                      _buildEditOption(
+                        context,
+                        'Progress',
+                        '${project.completionPercentage}%',
+                        Icons.analytics,
+                      ),
+                    ]),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     ),
@@ -640,21 +1182,32 @@ Widget _buildEditSection(
   String title,
   List<Widget> options,
 ) {
+  final theme = Theme.of(context);
+
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12.0),
+        padding: const EdgeInsets.symmetric(vertical: 16.0),
         child: Text(
           title,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+          style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w600,
-            color: Theme.of(context).colorScheme.primary,
+            color: theme.colorScheme.primary,
           ),
         ),
       ),
-      ...options,
-      const SizedBox(height: 16),
+      Container(
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: theme.colorScheme.outline.withValues(alpha: 0.1),
+          ),
+        ),
+        child: Column(children: options),
+      ),
+      const SizedBox(height: 20),
     ],
   );
 }
@@ -665,39 +1218,103 @@ Widget _buildEditOption(
   String value,
   IconData icon,
 ) {
-  return ListTile(
-    leading: Icon(icon, size: 20),
-    title: Text(label),
-    subtitle: Text(value),
-    trailing: const Icon(Icons.edit, size: 16),
-    onTap: () {
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Edit $label functionality will be implemented'),
+  final theme = Theme.of(context);
+
+  return Material(
+    color: Colors.transparent,
+    child: InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: () {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Edit $label functionality will be implemented'),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, size: 18, color: theme.colorScheme.primary),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    value,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.edit_outlined,
+              size: 16,
+              color: theme.colorScheme.outline,
+            ),
+          ],
         ),
-      );
-    },
+      ),
+    ),
   );
 }
 
 void _shareProject(BuildContext context, Project project) {
   ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(content: Text('Share project functionality coming soon')),
+    SnackBar(
+      content: const Text('Share project functionality coming soon'),
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    ),
   );
 }
 
 void _deleteProject(BuildContext context, Project project) {
+  final theme = Theme.of(context);
+
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
+      backgroundColor: theme.colorScheme.surface,
+      surfaceTintColor: theme.colorScheme.surfaceTint,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       title: Row(
         children: [
-          Icon(
-            Icons.warning_outlined,
-            color: Theme.of(context).colorScheme.error,
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.errorContainer,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              Icons.warning_outlined,
+              color: theme.colorScheme.error,
+              size: 20,
+            ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 12),
           const Text('Delete Project'),
         ],
       ),
@@ -707,30 +1324,35 @@ void _deleteProject(BuildContext context, Project project) {
         children: [
           Text(
             'Are you sure you want to delete "${project.projectName}"?',
-            style: Theme.of(context).textTheme.bodyLarge,
+            style: theme.textTheme.bodyLarge?.copyWith(
+              fontWeight: FontWeight.w500,
+            ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Theme.of(
-                context,
-              ).colorScheme.errorContainer.withValues(alpha: 0.3),
-              borderRadius: BorderRadius.circular(8),
+              color: theme.colorScheme.errorContainer.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: theme.colorScheme.error.withValues(alpha: 0.2),
+              ),
             ),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Icon(
                   Icons.info_outline,
                   size: 20,
-                  color: Theme.of(context).colorScheme.error,
+                  color: theme.colorScheme.error,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     'This action cannot be undone. All project data, reports, and associated files will be permanently deleted.',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.error,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.error,
+                      height: 1.4,
                     ),
                   ),
                 ),
@@ -746,17 +1368,21 @@ void _deleteProject(BuildContext context, Project project) {
         ),
         FilledButton(
           style: FilledButton.styleFrom(
-            backgroundColor: Theme.of(context).colorScheme.error,
+            backgroundColor: theme.colorScheme.error,
+            foregroundColor: theme.colorScheme.onError,
           ),
           onPressed: () {
             Navigator.pop(context);
-            // TODO: Implement actual project deletion API call
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
                   'Project "${project.projectName}" deletion functionality will be implemented',
                 ),
-                backgroundColor: Theme.of(context).colorScheme.error,
+                backgroundColor: theme.colorScheme.error,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             );
           },
@@ -770,37 +1396,96 @@ void _deleteProject(BuildContext context, Project project) {
 void _navigateToDailyReports(BuildContext context, Project project) {
   Navigator.push(
     context,
-    MaterialPageRoute(builder: (context) => const DailyReportsScreen()),
+    PageRouteBuilder(
+      pageBuilder: (context, animation, secondaryAnimation) =>
+          const DailyReportsScreen(),
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        const begin = Offset(1.0, 0.0);
+        const end = Offset.zero;
+        const curve = Curves.easeInOut;
+
+        var tween = Tween(
+          begin: begin,
+          end: end,
+        ).chain(CurveTween(curve: curve));
+        var offsetAnimation = animation.drive(tween);
+
+        return SlideTransition(position: offsetAnimation, child: child);
+      },
+    ),
   );
 }
 
 void _navigateToWorkRequests(BuildContext context, Project project) {
   Navigator.push(
     context,
-    MaterialPageRoute(builder: (context) => const MyWorkRequestsScreen()),
+    PageRouteBuilder(
+      pageBuilder: (context, animation, secondaryAnimation) =>
+          const MyWorkRequestsScreen(),
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        const begin = Offset(1.0, 0.0);
+        const end = Offset.zero;
+        const curve = Curves.easeInOut;
+
+        var tween = Tween(
+          begin: begin,
+          end: end,
+        ).chain(CurveTween(curve: curve));
+        var offsetAnimation = animation.drive(tween);
+
+        return SlideTransition(position: offsetAnimation, child: child);
+      },
+    ),
   );
 }
 
-// Helper methods for authorized actions
 void _showAddTaskDialog(BuildContext context, Project project) {
+  final theme = Theme.of(context);
+
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('Add New Task'),
+      backgroundColor: theme.colorScheme.surface,
+      surfaceTintColor: theme.colorScheme.surfaceTint,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      title: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primaryContainer,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              Icons.add_task,
+              color: theme.colorScheme.onPrimaryContainer,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 12),
+          const Text('Add New Task'),
+        ],
+      ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           TextField(
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'Task Title',
-              border: OutlineInputBorder(),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              prefixIcon: const Icon(Icons.title),
             ),
           ),
           const SizedBox(height: 16),
           TextField(
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'Description',
-              border: OutlineInputBorder(),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              prefixIcon: const Icon(Icons.description),
             ),
             maxLines: 3,
           ),
@@ -815,9 +1500,13 @@ void _showAddTaskDialog(BuildContext context, Project project) {
           onPressed: () {
             Navigator.pop(context);
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text(
+              SnackBar(
+                content: const Text(
                   'Task creation functionality will be implemented',
+                ),
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
               ),
             );
@@ -830,34 +1519,82 @@ void _showAddTaskDialog(BuildContext context, Project project) {
 }
 
 void _showProjectTeamDialog(BuildContext context, Project project) {
+  final theme = Theme.of(context);
+
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('Project Team'),
+      backgroundColor: theme.colorScheme.surface,
+      surfaceTintColor: theme.colorScheme.surfaceTint,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      title: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primaryContainer,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              Icons.groups,
+              color: theme.colorScheme.onPrimaryContainer,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 12),
+          const Text('Project Team'),
+        ],
+      ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'Current team members:',
-            style: Theme.of(context).textTheme.titleMedium,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
           ),
-          const SizedBox(height: 12),
-          // TODO: Display actual team members from project data
-          ListTile(
-            leading: CircleAvatar(
-              child: Text(
-                project.projectManager?.name != null &&
-                        project.projectManager!.name.isNotEmpty
-                    ? project.projectManager!.name.substring(0, 1)
-                    : 'PM',
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: CircleAvatar(
+                backgroundColor: theme.colorScheme.primaryContainer,
+                child: Text(
+                  project.projectManager?.name != null &&
+                          project.projectManager!.name.isNotEmpty
+                      ? project.projectManager!.name.substring(0, 1)
+                      : 'PM',
+                  style: TextStyle(
+                    color: theme.colorScheme.onPrimaryContainer,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              title: Text(project.projectManager?.name ?? 'Project Manager'),
+              subtitle: const Text('Project Manager'),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainer.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              'Team management functionality will be implemented',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
-            title: Text(project.projectManager?.name ?? 'Project Manager'),
-            subtitle: const Text('Project Manager'),
           ),
-          const Divider(),
-          const Text('Team management functionality will be implemented'),
         ],
       ),
       actions: [
@@ -869,9 +1606,13 @@ void _showProjectTeamDialog(BuildContext context, Project project) {
           onPressed: () {
             Navigator.pop(context);
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text(
+              SnackBar(
+                content: const Text(
                   'Team management functionality will be implemented',
+                ),
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
               ),
             );

@@ -54,7 +54,8 @@ class ProjectCard extends StatelessWidget {
         ],
       ),
       child: Material(
-        color: Colors.transparent,
+        color: Colors.white, // Changed from Colors.transparent to white
+        borderRadius: BorderRadius.circular(20),
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(20),
@@ -506,16 +507,9 @@ class ProjectCard extends StatelessWidget {
 
   Widget _buildCompactCard(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 4.0),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outlineVariant,
-          width: 1.0,
-        ),
-      ),
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
       child: Material(
-        color: Colors.transparent,
+        color: Colors.white, // Changed from Colors.transparent to white
         borderRadius: BorderRadius.circular(12),
         child: InkWell(
           onTap: onTap,

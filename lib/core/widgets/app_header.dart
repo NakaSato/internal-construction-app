@@ -48,6 +48,7 @@ class AppHeader extends StatefulWidget implements PreferredSizeWidget {
   final Color? backgroundColor;
   final bool centerTitle;
   final bool showSearchIcon;
+  final bool showNotificationIcon;
   final VoidCallback? onSearchTap;
   final String? subtitle;
   final bool showGradient;
@@ -67,6 +68,7 @@ class AppHeader extends StatefulWidget implements PreferredSizeWidget {
     this.backgroundColor,
     this.centerTitle = false,
     this.showSearchIcon = true,
+    this.showNotificationIcon = true,
     this.onSearchTap,
     this.subtitle,
     this.showGradient = true,
@@ -363,7 +365,9 @@ class _AppHeaderState extends State<AppHeader>
       rightSideActions.add(_buildSearchIcon(context));
     }
 
-    rightSideActions.add(_buildNotificationIcon(context));
+    if (widget.showNotificationIcon) {
+      rightSideActions.add(_buildNotificationIcon(context));
+    }
 
     if (widget.actions != null) {
       rightSideActions.addAll(_buildCustomActions());
