@@ -1,34 +1,22 @@
 import 'package:get_it/get_it.dart';
 import 'package:dio/dio.dart';
 import '../network/api_client.dart';
-import '../../features/projects/domain/repositories/project_repository.dart';
-import '../../features/projects/domain/usecases/get_project_detail.dart';
-import '../../features/projects/infrastructure/datasources/project_remote_datasource.dart';
-import '../../features/projects/infrastructure/repositories/project_repository_impl.dart';
-import '../../features/projects/application/cubits/project_detail_cubit.dart';
+
+// Feature DI configurations
+import '../../features/project_management/config/project_management_di.dart';
+import '../../features/daily_reports/config/daily_reports_di.dart';
 
 final getIt = GetIt.instance;
 
 Future<void> setupDependencies() async {
-  // Core
+  // Core services
   getIt.registerLazySingleton<Dio>(() => Dio());
   getIt.registerLazySingleton<ApiClient>(() => ApiClient());
 
-  // Data sources
-  getIt.registerLazySingleton<ProjectRemoteDataSource>(
-    () => ProjectRemoteDataSourceImpl(getIt<Dio>()),
-  );
+  // Register base URL for features
+  getIt.registerLazySingleton<String>(() => 'https://api.example.com');
 
-  // Repositories
-  getIt.registerLazySingleton<ProjectRepository>(
-    () => ProjectRepositoryImpl(getIt()),
-  );
-
-  // Use cases
-  getIt.registerLazySingleton<GetProjectDetail>(
-    () => GetProjectDetail(getIt()),
-  );
-
-  // Cubits
-  getIt.registerFactory<ProjectDetailCubit>(() => ProjectDetailCubit(getIt()));
+  // Configure feature dependencies
+  configureProjectManagementDependencies();
+  configureDailyReportsDependencies();
 }

@@ -6,10 +6,12 @@ class ProjectReportsWidget extends StatelessWidget {
     super.key,
     required this.project,
     this.onViewAllReports,
+    this.onCreateNewReport,
   });
 
   final Project project;
   final VoidCallback? onViewAllReports;
+  final VoidCallback? onCreateNewReport;
 
   @override
   Widget build(BuildContext context) {
@@ -32,25 +34,58 @@ class ProjectReportsWidget extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
+                Expanded(
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.description_outlined,
+                        color: theme.colorScheme.primary,
+                      ),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          'Recent Reports',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Wrap(
+                  spacing: 4,
                   children: [
-                    Icon(
-                      Icons.description_outlined,
-                      color: theme.colorScheme.primary,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Recent Reports',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
+                    FilledButton.icon(
+                      onPressed: onCreateNewReport,
+                      icon: const Icon(Icons.add, size: 14),
+                      label: const Text('New', style: TextStyle(fontSize: 12)),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: theme.colorScheme.primary,
+                        foregroundColor: theme.colorScheme.onPrimary,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 6,
+                        ),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
                     ),
+                    TextButton(
+                      onPressed: onViewAllReports,
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 6,
+                        ),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: const Text('View All', style: TextStyle(fontSize: 12)),
+                    ),
                   ],
-                ),
-                TextButton.icon(
-                  onPressed: onViewAllReports,
-                  icon: const Icon(Icons.visibility, size: 16),
-                  label: const Text('View All'),
                 ),
               ],
             ),
@@ -73,6 +108,14 @@ class ProjectReportsWidget extends StatelessWidget {
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Use the "New" button above to create your first report',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                        textAlign: TextAlign.center,
                       ),
                     ],
                   ),

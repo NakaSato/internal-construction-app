@@ -164,7 +164,7 @@ class ProfileScreen extends StatelessWidget {
           icon: Icon(
             Icons.logout,
             size: 32,
-            color: Theme.of(context).colorScheme.error,
+            color: Theme.of(dialogContext).colorScheme.error,
           ),
           title: const Text('Sign Out'),
           content: const Text(
@@ -181,7 +181,7 @@ class ProfileScreen extends StatelessWidget {
                 context.read<AuthBloc>().add(const AuthSignOutRequested());
               },
               style: FilledButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.error,
+                backgroundColor: Theme.of(dialogContext).colorScheme.error,
               ),
               child: const Text('Sign Out'),
             ),
