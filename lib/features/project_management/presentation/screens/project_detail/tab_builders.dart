@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../domain/entities/project.dart';
-import '../../../../../authentication/domain/entities/user.dart';
-import '../../../../../daily_reports/application/cubits/daily_reports_cubit.dart';
-import '../../../../../daily_reports/application/states/daily_reports_state.dart';
-import '../../../../../daily_reports/domain/entities/daily_report.dart';
+import '../../../domain/entities/project.dart';
+import '../../../../authentication/domain/entities/user.dart';
+import '../../../../daily_reports/application/cubits/daily_reports_cubit.dart';
+import '../../../../daily_reports/application/states/daily_reports_state.dart';
+import '../../../../daily_reports/domain/entities/daily_report.dart';
 import 'constants.dart';
 import 'daily_reports_helpers.dart';
 import 'utils.dart';
 
 /// Tab content builders for project detail screen
 class ProjectDetailTabBuilders {
-  
   /// Build overview tab
   static Widget buildOverviewTab(
     BuildContext context,
@@ -47,9 +46,7 @@ class ProjectDetailTabBuilders {
   static Widget buildTasksTab(BuildContext context, Project project) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(ProjectDetailConstants.cardPadding),
-      child: Column(
-        children: [_buildEnhancedTasksSection(context, project)],
-      ),
+      child: Column(children: [_buildEnhancedTasksSection(context, project)]),
     );
   }
 
@@ -64,7 +61,6 @@ class ProjectDetailTabBuilders {
     Function(DailyReport) onViewReportDetails,
     VoidCallback onLoadProjectReports,
   ) {
-    final theme = Theme.of(context);
     final isUser = currentUserRole.isFieldUser;
     final isManagerOrAdmin = currentUserRole.hasFullAccess;
 
@@ -107,7 +103,10 @@ class ProjectDetailTabBuilders {
 
   // Private helper methods
 
-  static Widget _buildEnhancedStatsSection(BuildContext context, Project project) {
+  static Widget _buildEnhancedStatsSection(
+    BuildContext context,
+    Project project,
+  ) {
     final theme = Theme.of(context);
 
     return Column(
@@ -127,13 +126,18 @@ class ProjectDetailTabBuilders {
     );
   }
 
-  static Widget _buildEnhancedDescriptionSection(BuildContext context, Project project) {
+  static Widget _buildEnhancedDescriptionSection(
+    BuildContext context,
+    Project project,
+  ) {
     final theme = Theme.of(context);
 
     return Container(
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(ProjectDetailConstants.borderRadius),
+        borderRadius: BorderRadius.circular(
+          ProjectDetailConstants.borderRadius,
+        ),
         border: Border.all(
           color: theme.colorScheme.outline.withValues(alpha: 0.1),
         ),
@@ -167,7 +171,10 @@ class ProjectDetailTabBuilders {
     );
   }
 
-  static Widget _buildEnhancedDetailsSection(BuildContext context, Project project) {
+  static Widget _buildEnhancedDetailsSection(
+    BuildContext context,
+    Project project,
+  ) {
     final theme = Theme.of(context);
 
     return Column(
@@ -183,20 +190,27 @@ class ProjectDetailTabBuilders {
         Container(
           decoration: BoxDecoration(
             color: theme.colorScheme.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(ProjectDetailConstants.borderRadius),
+            borderRadius: BorderRadius.circular(
+              ProjectDetailConstants.borderRadius,
+            ),
             border: Border.all(
               color: theme.colorScheme.outline.withValues(alpha: 0.1),
             ),
           ),
-          child: const Placeholder(fallbackHeight: 200), // Replace with ProjectDetailsWidget
+          child: const Placeholder(
+            fallbackHeight: 200,
+          ), // Replace with ProjectDetailsWidget
         ),
       ],
     );
   }
 
-  static Widget _buildEnhancedProgressSection(BuildContext context, Project project) {
+  static Widget _buildEnhancedProgressSection(
+    BuildContext context,
+    Project project,
+  ) {
     final theme = Theme.of(context);
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -207,14 +221,19 @@ class ProjectDetailTabBuilders {
           ),
         ),
         const SizedBox(height: ProjectDetailConstants.defaultSpacing),
-        const Placeholder(fallbackHeight: 300), // Replace with ProjectProgressWidget
+        const Placeholder(
+          fallbackHeight: 300,
+        ), // Replace with ProjectProgressWidget
       ],
     );
   }
 
-  static Widget _buildEnhancedTasksSection(BuildContext context, Project project) {
+  static Widget _buildEnhancedTasksSection(
+    BuildContext context,
+    Project project,
+  ) {
     final theme = Theme.of(context);
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -229,7 +248,10 @@ class ProjectDetailTabBuilders {
             ),
             TextButton.icon(
               onPressed: () {
-                ProjectDetailUtils.showFeatureComingSoonSnackBar(context, 'Task management');
+                ProjectDetailUtils.showFeatureComingSoonSnackBar(
+                  context,
+                  'Task management',
+                );
               },
               icon: const Icon(Icons.arrow_forward, size: 16),
               label: const Text('View All'),
@@ -237,7 +259,9 @@ class ProjectDetailTabBuilders {
           ],
         ),
         const SizedBox(height: ProjectDetailConstants.defaultSpacing),
-        const Placeholder(fallbackHeight: 300), // Replace with ProjectTasksWidget
+        const Placeholder(
+          fallbackHeight: 300,
+        ), // Replace with ProjectTasksWidget
       ],
     );
   }
@@ -251,7 +275,7 @@ class ProjectDetailTabBuilders {
     Function(Project) onNavigateToDailyReports,
   ) {
     final theme = Theme.of(context);
-    
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -432,8 +456,6 @@ class ProjectDetailTabBuilders {
     Function(DailyReport) onViewReportDetails,
     VoidCallback onLoadProjectReports,
   ) {
-    final theme = Theme.of(context);
-
     return BlocBuilder<DailyReportsCubit, DailyReportsState>(
       builder: (context, state) {
         if (state is DailyReportsLoading) {
@@ -453,7 +475,11 @@ class ProjectDetailTabBuilders {
               .toList();
 
           if (userReports.isEmpty) {
-            return _buildEmptyReportsCard(context, 'No reports yet', 'Create your first daily report to get started');
+            return _buildEmptyReportsCard(
+              context,
+              'No reports yet',
+              'Create your first daily report to get started',
+            );
           }
 
           return Column(
@@ -502,7 +528,8 @@ class ProjectDetailTabBuilders {
 
           return Column(
             children: teamReports.map((report) {
-              final technicianName = report.technician?.fullName ?? 'Unknown User';
+              final technicianName =
+                  report.technician?.fullName ?? 'Unknown User';
               return _buildTeamReportCard(
                 context,
                 report,
@@ -538,7 +565,10 @@ class ProjectDetailTabBuilders {
       ),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: DailyReportsHelpers.getStatusColor(report.status, theme),
+          backgroundColor: DailyReportsHelpers.getStatusColor(
+            report.status,
+            theme,
+          ),
           child: Icon(
             DailyReportsHelpers.getStatusIcon(report.status),
             color: Colors.white,
@@ -557,7 +587,7 @@ class ProjectDetailTabBuilders {
             Text('${report.workStartTime} - ${report.workEndTime}'),
             if (report.workProgressItems.isNotEmpty)
               Text(
-                report.workProgressItems.first.description,
+                report.workProgressItems.first.taskDescription,
                 overflow: TextOverflow.ellipsis,
               ),
           ],
@@ -567,7 +597,10 @@ class ProjectDetailTabBuilders {
             report.status.displayName,
             style: theme.textTheme.bodySmall,
           ),
-          backgroundColor: DailyReportsHelpers.getStatusColor(report.status, theme).withValues(alpha: 0.2),
+          backgroundColor: DailyReportsHelpers.getStatusColor(
+            report.status,
+            theme,
+          ).withValues(alpha: 0.2),
           side: BorderSide.none,
           materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
         ),
@@ -584,7 +617,7 @@ class ProjectDetailTabBuilders {
   ) {
     final theme = Theme.of(context);
     final initials = ProjectDetailUtils.getInitials(technicianName);
-    
+
     return Card(
       elevation: 0,
       margin: const EdgeInsets.only(bottom: 12),
@@ -629,7 +662,7 @@ class ProjectDetailTabBuilders {
             Text('${report.workStartTime} - ${report.workEndTime}'),
             if (report.workProgressItems.isNotEmpty)
               Text(
-                report.workProgressItems.first.description,
+                report.workProgressItems.first.taskDescription,
                 overflow: TextOverflow.ellipsis,
               ),
           ],
@@ -643,9 +676,13 @@ class ProjectDetailTabBuilders {
     );
   }
 
-  static Widget _buildEmptyReportsCard(BuildContext context, String title, String? subtitle) {
+  static Widget _buildEmptyReportsCard(
+    BuildContext context,
+    String title,
+    String? subtitle,
+  ) {
     final theme = Theme.of(context);
-    
+
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -688,9 +725,12 @@ class ProjectDetailTabBuilders {
     );
   }
 
-  static Widget _buildErrorReportsCard(BuildContext context, VoidCallback onRetry) {
+  static Widget _buildErrorReportsCard(
+    BuildContext context,
+    VoidCallback onRetry,
+  ) {
     final theme = Theme.of(context);
-    
+
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -717,10 +757,7 @@ class ProjectDetailTabBuilders {
                 ),
               ),
               const SizedBox(height: 8),
-              TextButton(
-                onPressed: onRetry,
-                child: const Text('Retry'),
-              ),
+              TextButton(onPressed: onRetry, child: const Text('Retry')),
             ],
           ),
         ),

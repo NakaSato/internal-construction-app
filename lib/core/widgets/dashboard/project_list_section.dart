@@ -152,111 +152,186 @@ class _ErrorState extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Determine if we have enough space for the full layout
-        final hasEnoughSpace = constraints.maxHeight > 200;
-        
-        if (hasEnoughSpace) {
-          // Full layout for larger spaces
-          return Container(
-            height: 200,
-            padding: const EdgeInsets.all(24),
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.error.withValues(alpha: 0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.error_outline,
-                      size: 32,
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Failed to load projects',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    message,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 16),
-                  OutlinedButton.icon(
-                    onPressed: () {
-                      context.read<ProjectBloc>().add(
-                        const ProjectRefreshRequested(),
-                      );
-                    },
-                    icon: const Icon(Icons.refresh, size: 18),
-                    label: const Text('Try Again'),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 12,
-                      ),
-                    ),
-                  ),
-                ],
+        final availableHeight = constraints.maxHeight.isFinite
+            ? constraints.maxHeight.toDouble()
+            : 120.0;
+
+        return SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: availableHeight,
+              maxHeight: availableHeight,
+            ),
+            child: _buildAdaptiveErrorLayout(context, availableHeight),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildAdaptiveErrorLayout(BuildContext context, double height) {
+    // Determine layout based on available height
+    if (height > 180) {
+      return _buildFullErrorLayout(context, height);
+    } else if (height > 100) {
+      return _buildCompactErrorLayout(context, height);
+    } else {
+      return _buildMiniErrorLayout(context, height);
+    }
+  }
+
+  Widget _buildFullErrorLayout(BuildContext context, double height) {
+    return Container(
+      height: height,
+      padding: const EdgeInsets.all(20),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Theme.of(
+                  context,
+                ).colorScheme.error.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.error_outline,
+                size: 28,
+                color: Theme.of(context).colorScheme.error,
               ),
             ),
-          );
-        } else {
-          // Compact layout for constrained spaces
-          return Container(
-            height: constraints.maxHeight.isFinite ? constraints.maxHeight : 120,
-            padding: const EdgeInsets.all(12),
-            child: Center(
-              child: Column(
+            const SizedBox(height: 12),
+            Text(
+              'Failed to load projects',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.error,
+                fontSize: 16,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Flexible(
+              child: Text(
+                message,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontSize: 13,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: () {
+                context.read<ProjectBloc>().add(
+                  const ProjectRefreshRequested(),
+                );
+              },
+              icon: const Icon(Icons.refresh, size: 16),
+              label: const Text('Try Again'),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                textStyle: Theme.of(context).textTheme.bodySmall,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCompactErrorLayout(BuildContext context, double height) {
+    return Container(
+      height: height,
+      padding: const EdgeInsets.all(6),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 20,
+              color: Theme.of(context).colorScheme.error,
+            ),
+            const SizedBox(height: 3),
+            Text(
+              'Failed to load',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.error,
+                fontSize: 13,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 2),
+            Flexible(
+              child: Text(
+                message,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontSize: 11,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(height: 3),
+            SizedBox(
+              height: 22,
+              child: OutlinedButton(
+                onPressed: () {
+                  context.read<ProjectBloc>().add(
+                    const ProjectRefreshRequested(),
+                  );
+                },
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 1,
+                  ),
+                  minimumSize: const Size(0, 22),
+                  textStyle: const TextStyle(fontSize: 10),
+                ),
+                child: const Text('Retry'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMiniErrorLayout(BuildContext context, double height) {
+    // For extremely small heights, show just icon and button
+    final isExtremelySmall = height < 50;
+
+    return Container(
+      height: height,
+      padding: const EdgeInsets.all(2),
+      child: Center(
+        child: isExtremelySmall
+            ? Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
                     Icons.error_outline,
-                    size: 20,
+                    size: 12,
                     color: Theme.of(context).colorScheme.error,
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Failed to load',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 2),
-                  Flexible(
-                    child: Text(
-                      message,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        fontSize: 11,
-                      ),
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
+                  const SizedBox(width: 4),
                   SizedBox(
-                    height: 28,
+                    height: 18,
                     child: OutlinedButton(
                       onPressed: () {
                         context.read<ProjectBloc>().add(
@@ -265,21 +340,63 @@ class _ErrorState extends StatelessWidget {
                       },
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 4,
+                          horizontal: 4,
+                          vertical: 0,
                         ),
-                        minimumSize: const Size(0, 28),
-                        textStyle: const TextStyle(fontSize: 11),
+                        minimumSize: const Size(0, 18),
+                        textStyle: const TextStyle(fontSize: 7),
+                      ),
+                      child: const Text('Retry'),
+                    ),
+                  ),
+                ],
+              )
+            : Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 16,
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                  const SizedBox(height: 2),
+                  Flexible(
+                    child: Text(
+                      'Failed to load',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).colorScheme.error,
+                        fontSize: 11,
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  SizedBox(
+                    height: 20,
+                    child: OutlinedButton(
+                      onPressed: () {
+                        context.read<ProjectBloc>().add(
+                          const ProjectRefreshRequested(),
+                        );
+                      },
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 0,
+                        ),
+                        minimumSize: const Size(0, 20),
+                        textStyle: const TextStyle(fontSize: 9),
                       ),
                       child: const Text('Retry'),
                     ),
                   ),
                 ],
               ),
-            ),
-          );
-        }
-      },
+      ),
     );
   }
 }

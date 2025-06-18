@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
-import '../../../../domain/entities/project.dart';
-import 'constants.dart';
+import '../../../domain/entities/project.dart';
 
 /// Utility methods for project detail screen
 class ProjectDetailUtils {
-  
   /// Format date for daily report display
   static String formatReportDate(DateTime date) {
     final now = DateTime.now();
     final difference = now.difference(date).inDays;
-    
+
     if (difference == 0) {
       return 'Today';
     } else if (difference == 1) {
@@ -33,7 +31,10 @@ class ProjectDetailUtils {
   }
 
   /// Show feature coming soon snackbar
-  static void showFeatureComingSoonSnackBar(BuildContext context, String featureName) {
+  static void showFeatureComingSoonSnackBar(
+    BuildContext context,
+    String featureName,
+  ) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('$featureName functionality coming soon'),
@@ -49,7 +50,9 @@ class ProjectDetailUtils {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Project'),
-        content: Text('Are you sure you want to delete "${project.projectName}"?'),
+        content: Text(
+          'Are you sure you want to delete "${project.projectName}"?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),

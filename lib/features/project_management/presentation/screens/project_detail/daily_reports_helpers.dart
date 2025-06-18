@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../../../../daily_reports/domain/entities/daily_report.dart';
+import '../../../../daily_reports/domain/entities/daily_report.dart';
 import 'constants.dart';
 
 /// Helper methods for daily reports functionality
 class DailyReportsHelpers {
-  
   /// Get status color based on daily report status
   static Color getStatusColor(DailyReportStatus status, ThemeData theme) {
     switch (status) {
@@ -48,9 +47,7 @@ class DailyReportsHelpers {
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: color.withValues(alpha: 0.2),
-        ),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -85,7 +82,9 @@ class DailyReportsHelpers {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(ProjectDetailConstants.borderRadius),
+        borderRadius: BorderRadius.circular(
+          ProjectDetailConstants.borderRadius,
+        ),
         side: BorderSide(
           color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
         ),

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:get_it/get_it.dart';
 
 // Project Management imports
@@ -25,7 +24,6 @@ import '../../../daily_reports/presentation/screens/daily_report_details_screen.
 
 // Project Detail widgets
 import '../widgets/project_detail/project_header_widget.dart';
-import '../widgets/project_detail/project_reports_widget.dart';
 import '../widgets/project_detail/quick_actions_bottom_sheet.dart';
 
 // Project Detail modules
@@ -36,7 +34,7 @@ import 'project_detail/tab_builders.dart';
 
 /// Project detail screen that displays comprehensive project information
 /// with role-based access control and integrated daily reports functionality.
-/// 
+///
 /// Features:
 /// - Role-based tab access (Admin/Manager: 7 tabs, User: 4 tabs)
 /// - Real-time daily reports integration
@@ -59,16 +57,16 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
   // Dependencies
   late final ProjectBloc _projectBloc;
   late final DailyReportsCubit _dailyReportsCubit;
-  
+
   // Animation controllers
   late final AnimationController _fadeController;
   late final AnimationController _slideController;
   late final Animation<double> _fadeAnimation;
   late final Animation<Offset> _slideAnimation;
-  
+
   // UI controllers
   late TabController _tabController;
-  
+
   // State
   Project? _project;
   UserRole _currentUserRole = UserRole.user;
@@ -113,13 +111,13 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
       parent: _fadeController,
       curve: ProjectDetailConstants.defaultCurve,
     );
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.1),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _slideController,
-      curve: ProjectDetailConstants.slideInCurve,
-    ));
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _slideController,
+            curve: ProjectDetailConstants.slideInCurve,
+          ),
+        );
   }
 
   /// Initialize tab controller with proper tab count for current user role
@@ -184,15 +182,15 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
     return switch (state) {
       ProjectLoading() => ProjectDetailStateWidgets.buildLoadingView(context),
       ProjectError() => ProjectDetailStateWidgets.buildErrorView(
-          context,
-          state.message,
-          () => _projectBloc.add(const ProjectLoadRequested()),
-        ),
+        context,
+        state.message,
+        () => _projectBloc.add(const ProjectLoadRequested()),
+      ),
       ProjectLoaded() => _buildLoadedContent(context, state),
       _ => ProjectDetailStateWidgets.buildEmptyStateView(
-          context,
-          () => _projectBloc.add(const ProjectLoadRequested()),
-        ),
+        context,
+        () => _projectBloc.add(const ProjectLoadRequested()),
+      ),
     };
   }
 
@@ -202,7 +200,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
         (project) => project.projectId == widget.projectId,
       );
       _loadProjectDailyReports();
-      
+
       return FadeTransition(
         opacity: _fadeAnimation,
         child: SlideTransition(
@@ -234,7 +232,9 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, authState) {
         if (authState is! AuthAuthenticated) {
-          return ProjectDetailStateWidgets.buildAuthenticationRequiredView(context);
+          return ProjectDetailStateWidgets.buildAuthenticationRequiredView(
+            context,
+          );
         }
 
         final user = authState.user;
@@ -269,7 +269,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
 
   Widget _buildTabBar(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return SliverToBoxAdapter(
       child: Container(
         color: theme.colorScheme.surface,
@@ -308,7 +308,8 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
               scale: 1.0,
               duration: ProjectDetailConstants.animationDuration,
               child: FloatingActionButton.extended(
-                onPressed: () => QuickActionsBottomSheet.show(context, _project!),
+                onPressed: () =>
+                    QuickActionsBottomSheet.show(context, _project!),
                 icon: const Icon(Icons.add_rounded),
                 label: const Text('Quick Add'),
                 backgroundColor: theme.colorScheme.primaryContainer,
@@ -336,7 +337,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
   /// Update tab controller when user role changes
   void _updateTabControllerForUser() {
     final newLength = _getTabCountForRole(_currentUserRole);
-    
+
     if (_tabController.length != newLength) {
       _tabController.dispose();
       _tabController = TabController(length: newLength, vsync: this);
@@ -353,17 +354,26 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
     return switch (role) {
       UserRole.admin || UserRole.manager => const [
         Tab(text: 'Overview', icon: Icon(Icons.dashboard_outlined, size: 20)),
-        Tab(text: 'Master Plan', icon: Icon(Icons.account_tree_outlined, size: 20)),
+        Tab(
+          text: 'Master Plan',
+          icon: Icon(Icons.account_tree_outlined, size: 20),
+        ),
         Tab(text: 'Progress', icon: Icon(Icons.trending_up_outlined, size: 20)),
         Tab(text: 'Tasks', icon: Icon(Icons.task_outlined, size: 20)),
         Tab(text: 'Daily Reports', icon: Icon(Icons.today_outlined, size: 20)),
-        Tab(text: 'Weekly Reports', icon: Icon(Icons.calendar_view_week_outlined, size: 20)),
+        Tab(
+          text: 'Weekly Reports',
+          icon: Icon(Icons.calendar_view_week_outlined, size: 20),
+        ),
         Tab(text: 'Work Reports', icon: Icon(Icons.work_outline, size: 20)),
       ],
       UserRole.user => const [
         Tab(text: 'Overview', icon: Icon(Icons.dashboard_outlined, size: 20)),
         Tab(text: 'Daily Reports', icon: Icon(Icons.today_outlined, size: 20)),
-        Tab(text: 'Weekly Reports', icon: Icon(Icons.calendar_view_week_outlined, size: 20)),
+        Tab(
+          text: 'Weekly Reports',
+          icon: Icon(Icons.calendar_view_week_outlined, size: 20),
+        ),
         Tab(text: 'Work Reports', icon: Icon(Icons.work_outline, size: 20)),
       ],
     };
@@ -387,7 +397,10 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
           _viewDailyReportDetails,
           _loadProjectDailyReports,
         ),
-        ProjectDetailStateWidgets.buildComingSoonView(context, 'Weekly Reports'),
+        ProjectDetailStateWidgets.buildComingSoonView(
+          context,
+          'Weekly Reports',
+        ),
         ProjectDetailStateWidgets.buildComingSoonView(context, 'Work Reports'),
       ],
       UserRole.user => [
@@ -402,7 +415,10 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
           _viewDailyReportDetails,
           _loadProjectDailyReports,
         ),
-        ProjectDetailStateWidgets.buildComingSoonView(context, 'Weekly Reports'),
+        ProjectDetailStateWidgets.buildComingSoonView(
+          context,
+          'Weekly Reports',
+        ),
         ProjectDetailStateWidgets.buildComingSoonView(context, 'Work Reports'),
       ],
     };
@@ -435,10 +451,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
       SnackBar(
         content: Text('Sharing project: ${project.projectName}'),
         behavior: SnackBarBehavior.floating,
-        action: SnackBarAction(
-          label: 'Dismiss',
-          onPressed: () {},
-        ),
+        action: SnackBarAction(label: 'Dismiss', onPressed: () {}),
       ),
     );
   }
@@ -462,7 +475,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
           pageSize: 20,
         ),
       );
-      
+
       Navigator.of(context).push(
         MaterialPageRoute(
           builder: (context) => BlocProvider.value(
@@ -473,27 +486,35 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
       );
     } catch (e) {
       debugPrint('Error navigating to daily reports: $e');
-      ProjectDetailUtils.showFeatureComingSoonSnackBar(context, 'Daily reports navigation');
+      ProjectDetailUtils.showFeatureComingSoonSnackBar(
+        context,
+        'Daily reports navigation',
+      );
     }
   }
 
   /// Navigate to create daily report screen
   void _navigateToCreateDailyReport(Project project) {
     try {
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => BlocProvider.value(
-            value: _dailyReportsCubit,
-            child: const CreateDailyReportScreen(),
-          ),
-        ),
-      ).then((_) {
-        // Refresh daily reports when returning from create screen
-        _loadProjectDailyReports();
-      });
+      Navigator.of(context)
+          .push(
+            MaterialPageRoute(
+              builder: (context) => BlocProvider.value(
+                value: _dailyReportsCubit,
+                child: const CreateDailyReportScreen(),
+              ),
+            ),
+          )
+          .then((_) {
+            // Refresh daily reports when returning from create screen
+            _loadProjectDailyReports();
+          });
     } catch (e) {
       debugPrint('Error navigating to create daily report: $e');
-      ProjectDetailUtils.showFeatureComingSoonSnackBar(context, 'Create daily report');
+      ProjectDetailUtils.showFeatureComingSoonSnackBar(
+        context,
+        'Create daily report',
+      );
     }
   }
 
