@@ -100,12 +100,10 @@ class CalendarAgendaView extends StatelessWidget {
               ),
             ),
             // Events for this date
-            ...dayEvents.map(
-              (event) => CalendarEventListWidget(
-                events: [event],
-                onEventTap: onEventTap,
-                showDate: false, // Don't show date since we have headers
-              ),
+            CalendarEventListWidget(
+              events: dayEvents,
+              onEventTap: onEventTap,
+              showDate: false, // Don't show date since we have headers
             ),
           ],
         );
