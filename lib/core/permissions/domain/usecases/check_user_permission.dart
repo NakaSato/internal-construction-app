@@ -1,12 +1,12 @@
 import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
-import '../../../error/failures.dart';
+import '../../../errors/failures.dart';
 import '../../../usecases/usecase.dart';
-import '../entities/permission.dart';
 import '../repositories/permission_repository.dart';
 
 /// Use case for checking if a user has a specific permission
-class CheckUserPermissionUseCase implements UseCase<bool, CheckUserPermissionParams> {
+class CheckUserPermissionUseCase
+    implements UseCase<bool, CheckUserPermissionParams> {
   const CheckUserPermissionUseCase(this.repository);
 
   final PermissionRepository repository;

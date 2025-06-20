@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../authentication/application/auth_bloc.dart';
-import '../../../authentication/application/auth_state.dart';
+import '../../../../features/authentication/application/auth_bloc.dart';
+import '../../../../features/authentication/application/auth_state.dart';
 import '../../domain/services/permission_service.dart';
-import '../../../core/di/injection_container.dart';
+import '../../../di/injection.dart';
 
 /// Widget that conditionally renders content based on user permissions
 class PermissionBuilder extends StatelessWidget {
@@ -31,7 +31,7 @@ class PermissionBuilder extends StatelessWidget {
         }
 
         return FutureBuilder<bool>(
-          future: sl<PermissionService>().hasPermission(
+          future: getIt<PermissionService>().hasPermission(
             authState.user.id,
             resource,
             action,
@@ -42,7 +42,7 @@ class PermissionBuilder extends StatelessWidget {
             }
 
             final hasPermission = snapshot.data ?? false;
-            
+
             if (hasPermission) {
               return builder(context, true);
             } else {
@@ -120,10 +120,7 @@ class PermissionButton extends StatelessWidget {
         );
 
         if (tooltip != null && !hasPermission) {
-          return Tooltip(
-            message: tooltip!,
-            child: button,
-          );
+          return Tooltip(message: tooltip!, child: button);
         }
 
         return button;
@@ -197,11 +194,7 @@ class PermissionAppBarAction extends StatelessWidget {
     return PermissionWidget(
       resource: resource,
       action: action,
-      child: IconButton(
-        icon: icon,
-        onPressed: onPressed,
-        tooltip: tooltip,
-      ),
+      child: IconButton(icon: icon, onPressed: onPressed, tooltip: tooltip),
     );
   }
 }
@@ -272,23 +265,19 @@ class PermissionTab extends StatelessWidget {
         }
 
         return FutureBuilder<bool>(
-          future: sl<PermissionService>().hasPermission(
+          future: getIt<PermissionService>().hasPermission(
             authState.user.id,
             resource,
             action,
           ),
           builder: (context, snapshot) {
             final hasPermission = snapshot.data ?? false;
-            
+
             if (!hasPermission) {
               return const SizedBox.shrink();
             }
 
-            return Tab(
-              text: text,
-              icon: icon,
-              child: child,
-            );
+            return Tab(text: text, icon: icon, child: child);
           },
         );
       },

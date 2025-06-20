@@ -167,7 +167,11 @@ class _CalendarManagementViewState extends State<CalendarManagementView>
                 );
               },
             ),
-            const Expanded(child: _EventsList()),
+            Expanded(
+              child: _EventsList(
+                onEventTap: (event) => _showEventDetails(context, event),
+              ),
+            ),
           ],
         );
       },
@@ -190,7 +194,11 @@ class _CalendarManagementViewState extends State<CalendarManagementView>
             ),
 
             // Events for selected date within this week
-            const Expanded(child: _EventsList()),
+            Expanded(
+              child: _EventsList(
+                onEventTap: (event) => _showEventDetails(context, event),
+              ),
+            ),
           ],
         );
       },
@@ -938,7 +946,9 @@ class _CalendarManagementViewState extends State<CalendarManagementView>
 }
 
 class _EventsList extends StatelessWidget {
-  const _EventsList();
+  const _EventsList({required this.onEventTap});
+
+  final void Function(CalendarEvent) onEventTap;
 
   @override
   Widget build(BuildContext context) {
@@ -951,7 +961,7 @@ class _EventsList extends StatelessWidget {
         } else if (state is CalendarEventsLoaded) {
           return CalendarEventListWidget(
             events: state.events,
-            onEventTap: (event) => _showEventDetails(context, event),
+            onEventTap: onEventTap,
           );
         } else if (state is CalendarSearchResultsLoaded) {
           return Column(
@@ -966,7 +976,7 @@ class _EventsList extends StatelessWidget {
               Expanded(
                 child: CalendarEventListWidget(
                   events: state.results,
-                  onEventTap: (event) => _showEventDetails(context, event),
+                  onEventTap: onEventTap,
                 ),
               ),
             ],
@@ -1039,16 +1049,6 @@ class _EventsList extends StatelessWidget {
 
         return const Center(child: Text('Unknown state'));
       },
-    );
-  }
-
-  void _showEventDetails(BuildContext context, dynamic event) {
-    showDialog(
-      context: context,
-      builder: (dialogContext) => BlocProvider.value(
-        value: context.read<CalendarManagementBloc>(),
-        child: CalendarEventDialog(event: event),
-      ),
     );
   }
 }

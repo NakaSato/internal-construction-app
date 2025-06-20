@@ -3,13 +3,11 @@ import 'package:flutter/material.dart';
 import '../../domain/entities/calendar_event.dart';
 
 /// Widget for displaying a list of calendar events
+///
+/// This widget provides a clean, Material Design 3 compliant list
+/// of calendar events with optional customization for display options.
 class CalendarEventListWidget extends StatelessWidget {
-  final List<CalendarEvent> events;
-  final Function(CalendarEvent)? onEventTap;
-  final bool showDate;
-  final bool showProject;
-  final bool showPriority;
-
+  /// Creates a [CalendarEventListWidget]
   const CalendarEventListWidget({
     super.key,
     required this.events,
@@ -18,6 +16,34 @@ class CalendarEventListWidget extends StatelessWidget {
     this.showProject = true,
     this.showPriority = true,
   });
+
+  /// List of calendar events to display
+  final List<CalendarEvent> events;
+
+  /// Callback when an event is tapped
+  final void Function(CalendarEvent)? onEventTap;
+
+  /// Whether to show event dates
+  final bool showDate;
+
+  /// Whether to show project information
+  final bool showProject;
+
+  /// Whether to show priority badges
+  final bool showPriority;
+
+  // Spacing constants following Material Design 3 4dp grid system
+  static const double _cardMarginHorizontal = 16.0;
+  static const double _cardMarginVertical = 8.0;
+  static const double _cardPadding = 16.0;
+  static const double _emptyStateIconSize = 64.0;
+  static const double _eventTypeIconSize = 20.0;
+  static const double _smallIconSize = 16.0;
+  static const double _colorIndicatorSize = 12.0;
+  static const double _spaceSmall = 4.0;
+  static const double _spaceMedium = 8.0;
+  static const double _spaceLarge = 12.0;
+  static const double _spaceXLarge = 16.0;
 
   @override
   Widget build(BuildContext context) {
@@ -43,10 +69,10 @@ class CalendarEventListWidget extends StatelessWidget {
         children: [
           Icon(
             Icons.event_available,
-            size: 64,
+            size: _emptyStateIconSize,
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: _spaceXLarge),
           Text(
             'No Events',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -54,7 +80,7 @@ class CalendarEventListWidget extends StatelessWidget {
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: _spaceMedium),
           Text(
             'No calendar events found',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -68,20 +94,23 @@ class CalendarEventListWidget extends StatelessWidget {
 
   Widget _buildEventCard(BuildContext context, CalendarEvent event) {
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: const EdgeInsets.symmetric(
+        horizontal: _cardMarginHorizontal,
+        vertical: _cardMarginVertical,
+      ),
       elevation: 2,
       child: InkWell(
         onTap: () => onEventTap?.call(event),
         borderRadius: BorderRadius.circular(8),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(_cardPadding),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
                   _buildEventTypeIcon(event.eventType),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: _spaceLarge),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -96,7 +125,7 @@ class CalendarEventListWidget extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                         if (showDate) ...[
-                          const SizedBox(height: 4),
+                          const SizedBox(height: _spaceSmall),
                           Text(
                             _formatEventDateTime(event),
                             style: Theme.of(context).textTheme.bodyMedium
@@ -113,9 +142,9 @@ class CalendarEventListWidget extends StatelessWidget {
                   if (showPriority) _buildPriorityBadge(event.priority),
                   if (event.color != null)
                     Container(
-                      width: 12,
-                      height: 12,
-                      margin: const EdgeInsets.only(left: 8),
+                      width: _colorIndicatorSize,
+                      height: _colorIndicatorSize,
+                      margin: const EdgeInsets.only(left: _spaceMedium),
                       decoration: BoxDecoration(
                         color: _parseColor(event.color!),
                         shape: BoxShape.circle,
@@ -125,7 +154,7 @@ class CalendarEventListWidget extends StatelessWidget {
               ),
               if (event.description != null &&
                   event.description!.isNotEmpty) ...[
-                const SizedBox(height: 8),
+                const SizedBox(height: _spaceMedium),
                 Text(
                   event.description!,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -135,10 +164,10 @@ class CalendarEventListWidget extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
-              const SizedBox(height: 8),
+              const SizedBox(height: _spaceMedium),
               Wrap(
-                spacing: 8,
-                runSpacing: 4,
+                spacing: _spaceMedium,
+                runSpacing: _spaceSmall,
                 children: [
                   _buildStatusChip(event.status),
                   if (event.location != null && event.location!.isNotEmpty)
@@ -148,15 +177,15 @@ class CalendarEventListWidget extends StatelessWidget {
               if (showProject &&
                   event.projectName != null &&
                   event.projectName!.isNotEmpty) ...[
-                const SizedBox(height: 8),
+                const SizedBox(height: _spaceMedium),
                 Row(
                   children: [
                     Icon(
                       Icons.work,
-                      size: 16,
+                      size: _smallIconSize,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: _spaceSmall),
                     Text(
                       'Project: ${event.projectName!}',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -168,15 +197,15 @@ class CalendarEventListWidget extends StatelessWidget {
               ],
               if (event.assignedToUserName != null &&
                   event.assignedToUserName!.isNotEmpty) ...[
-                const SizedBox(height: 4),
+                const SizedBox(height: _spaceSmall),
                 Row(
                   children: [
                     Icon(
                       Icons.person,
-                      size: 16,
+                      size: _smallIconSize,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: _spaceSmall),
                     Text(
                       'Assigned: ${event.assignedToUserName!}',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -195,14 +224,14 @@ class CalendarEventListWidget extends StatelessWidget {
 
   Widget _buildEventTypeIcon(CalendarEventType type) {
     return Container(
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.all(_spaceMedium),
       decoration: BoxDecoration(
         color: _parseColor(type.defaultColor).withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Icon(
         _getEventTypeIcon(type),
-        size: 20,
+        size: _eventTypeIconSize,
         color: _parseColor(type.defaultColor),
       ),
     );
@@ -216,14 +245,17 @@ class CalendarEventListWidget extends StatelessWidget {
       ),
       backgroundColor: _parseColor(status.color).withValues(alpha: 0.1),
       side: BorderSide(color: _parseColor(status.color)),
-      padding: const EdgeInsets.symmetric(horizontal: 4),
+      padding: const EdgeInsets.symmetric(horizontal: _spaceSmall),
       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
     );
   }
 
   Widget _buildPriorityBadge(CalendarEventPriority priority) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(
+        horizontal: _spaceMedium,
+        vertical: _spaceSmall,
+      ),
       decoration: BoxDecoration(
         color: priority.color.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(12),
@@ -241,7 +273,10 @@ class CalendarEventListWidget extends StatelessWidget {
 
   Widget _buildLocationChip(BuildContext context, String location) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(
+        horizontal: _spaceMedium,
+        vertical: _spaceSmall,
+      ),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(12),
@@ -257,7 +292,7 @@ class CalendarEventListWidget extends StatelessWidget {
             size: 12,
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: _spaceSmall),
           Flexible(
             child: Text(
               location,

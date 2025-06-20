@@ -1,7 +1,7 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 /// Environment configuration for different build environments
-enum Environment { development, staging, production }
+enum Environment { development, production }
 
 class EnvironmentConfig {
   static const Environment _currentEnvironment = Environment.development;
@@ -10,7 +10,6 @@ class EnvironmentConfig {
 
   static bool get isDevelopment =>
       _currentEnvironment == Environment.development;
-  static bool get isStaging => _currentEnvironment == Environment.staging;
   static bool get isProduction => _currentEnvironment == Environment.production;
 
   // API Configuration - Now reads from .env file
@@ -27,11 +26,6 @@ class EnvironmentConfig {
         return const String.fromEnvironment(
           'DEV_API_URL',
           defaultValue: 'http://localhost:5002',
-        );
-      case Environment.staging:
-        return const String.fromEnvironment(
-          'STAGING_API_URL',
-          defaultValue: 'https://staging-api.example.com',
         );
       case Environment.production:
         return const String.fromEnvironment(

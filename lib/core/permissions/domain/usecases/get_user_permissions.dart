@@ -1,21 +1,26 @@
 import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
-import '../../../error/failures.dart';
+import '../../../errors/failures.dart';
 import '../../../usecases/usecase.dart';
 import '../entities/permission.dart';
 import '../repositories/permission_repository.dart';
 
 /// Use case for getting user's complete permission context
-class GetUserPermissionsUseCase implements UseCase<UserPermissionContext, GetUserPermissionsParams> {
+class GetUserPermissionsUseCase
+    implements UseCase<UserPermissionContext, GetUserPermissionsParams> {
   const GetUserPermissionsUseCase(this.repository);
 
   final PermissionRepository repository;
 
   @override
-  Future<Either<Failure, UserPermissionContext>> call(GetUserPermissionsParams params) async {
+  Future<Either<Failure, UserPermissionContext>> call(
+    GetUserPermissionsParams params,
+  ) async {
     // Try to get from cache first if requested
     if (params.useCache) {
-      final cachedResult = await repository.getCachedUserPermissions(params.userId);
+      final cachedResult = await repository.getCachedUserPermissions(
+        params.userId,
+      );
       if (cachedResult.isRight()) {
         final cached = cachedResult.getOrElse(() => null);
         if (cached != null) {
@@ -26,13 +31,15 @@ class GetUserPermissionsUseCase implements UseCase<UserPermissionContext, GetUse
 
     // Get from remote source
     final result = await repository.getUserPermissions(params.userId);
-    
+
     // Cache the result if successful
     if (result.isRight() && params.cacheResult) {
-      final permissions = result.getOrElse(() => throw Exception('Unexpected null'));
+      final permissions = result.getOrElse(
+        () => throw Exception('Unexpected null'),
+      );
       await repository.cacheUserPermissions(permissions);
     }
-    
+
     return result;
   }
 }

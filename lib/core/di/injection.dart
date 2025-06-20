@@ -3,6 +3,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:injectable/injectable.dart';
 import 'injection.config.dart';
+import '../api/api_config.dart';
 import '../../features/authorization/config/authorization_di.dart';
 import '../../features/calendar_management/config/mock_calendar_management_di.dart';
 import '../../features/daily_reports/config/daily_reports_di.dart';
@@ -22,6 +23,9 @@ void configureDependencies() => getIt.init();
 Future<void> initializeDependencies() async {
   // Load environment variables from .env file
   await dotenv.load(fileName: ".env");
+
+  // Initialize API environment configuration
+  ApiConfig.initializeEnvironment();
 
   configureDependencies();
 
@@ -47,5 +51,7 @@ abstract class ExternalDependenciesModule {
   FlutterSecureStorage get secureStorage => const FlutterSecureStorage();
 
   @lazySingleton
-  String get baseUrl => 'http://localhost:5002'; // API base URL for services
+  String get baseUrl =>
+      dotenv.env['API_BASE_URL'] ??
+      'https://solar-projects-api.azurewebsites.net';
 }
