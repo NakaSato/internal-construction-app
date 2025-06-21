@@ -25,6 +25,13 @@ class AuthorizationConfig {
   static const String reportGenerate = 'report:generate';
   static const String reportExport = 'report:export';
 
+  // Project permissions
+  static const String projectRead = 'projects:read';
+  static const String projectCreate = 'projects:create';
+  static const String projectUpdate = 'projects:update';
+  static const String projectDelete = 'projects:delete';
+  static const String projectManage = 'projects:manage';
+
   // Role constants
   static const String adminRole = 'admin';
   static const String managerRole = 'manager';
@@ -139,6 +146,43 @@ class AuthorizationConfig {
         action: 'export',
         description: 'Export reports to external formats',
       ),
+
+      // Project permissions
+      const Permission(
+        id: 'perm_project_read',
+        name: projectRead,
+        resource: 'projects',
+        action: 'read',
+        description: 'View project information',
+      ),
+      const Permission(
+        id: 'perm_project_create',
+        name: projectCreate,
+        resource: 'projects',
+        action: 'create',
+        description: 'Create new projects',
+      ),
+      const Permission(
+        id: 'perm_project_update',
+        name: projectUpdate,
+        resource: 'projects',
+        action: 'update',
+        description: 'Update existing projects',
+      ),
+      const Permission(
+        id: 'perm_project_delete',
+        name: projectDelete,
+        resource: 'projects',
+        action: 'delete',
+        description: 'Delete projects (Admin only)',
+      ),
+      const Permission(
+        id: 'perm_project_manage',
+        name: projectManage,
+        resource: 'projects',
+        action: 'manage',
+        description: 'Full project management capabilities',
+      ),
     ];
   }
 
@@ -174,6 +218,10 @@ class AuthorizationConfig {
           permissionMap[reportView]!,
           permissionMap[reportGenerate]!,
           permissionMap[reportExport]!,
+          permissionMap[projectRead]!,
+          permissionMap[projectCreate]!,
+          permissionMap[projectUpdate]!,
+          permissionMap[projectManage]!,
         ],
       ),
 
@@ -187,6 +235,7 @@ class AuthorizationConfig {
           permissionMap[workCalendarRead]!,
           permissionMap[workCalendarWrite]!,
           permissionMap[reportView]!,
+          permissionMap[projectRead]!,
         ],
       ),
 

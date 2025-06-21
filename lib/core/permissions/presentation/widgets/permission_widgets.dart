@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../features/authentication/application/auth_bloc.dart';
 import '../../../../features/authentication/application/auth_state.dart';
-import '../../domain/services/permission_service.dart';
+import '../../../../features/authorization/domain/services/authorization_service.dart';
 import '../../../di/injection.dart';
 
 /// Widget that conditionally renders content based on user permissions
@@ -31,8 +31,8 @@ class PermissionBuilder extends StatelessWidget {
         }
 
         return FutureBuilder<bool>(
-          future: getIt<PermissionService>().hasPermission(
-            authState.user.id,
+          future: getIt<AuthorizationService>().hasPermission(
+            authState.user,
             resource,
             action,
           ),
@@ -265,8 +265,8 @@ class PermissionTab extends StatelessWidget {
         }
 
         return FutureBuilder<bool>(
-          future: getIt<PermissionService>().hasPermission(
-            authState.user.id,
+          future: getIt<AuthorizationService>().hasPermission(
+            authState.user,
             resource,
             action,
           ),
