@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import '../../features/authentication/domain/entities/user.dart';
 
 // MARK: - Constants
@@ -53,6 +54,8 @@ class AppHeader extends StatefulWidget implements PreferredSizeWidget {
   final String? subtitle;
   final bool showGradient;
   final bool showOnlineStatus;
+  final bool showUserRole; // Show user's role badge in header
+  final String userStatus; // User status: 'online', 'away', 'busy', 'offline'
   final String? workspaceTitle;
   final VoidCallback? onNotificationTap;
   final String? heroContext; // Add unique context identifier
@@ -73,6 +76,8 @@ class AppHeader extends StatefulWidget implements PreferredSizeWidget {
     this.subtitle,
     this.showGradient = true,
     this.showOnlineStatus = true,
+    this.showUserRole = true,
+    this.userStatus = 'online',
     this.workspaceTitle,
     this.onNotificationTap,
     this.heroContext, // Add unique context identifier
@@ -160,7 +165,7 @@ class _AppHeaderState extends State<AppHeader>
         mainAxisSize: MainAxisSize.min,
         children: [
           _buildProfileAvatar(context),
-          SizedBox(width: _AppHeaderConstants.userInfoSpacing),
+          const SizedBox(width: _AppHeaderConstants.userInfoSpacing),
           Expanded(child: _buildUserInfo(context)),
         ],
       ),
@@ -258,7 +263,7 @@ class _AppHeaderState extends State<AppHeader>
           ),
         ),
         if (widget.user.isEmailVerified) ...[
-          SizedBox(width: _AppHeaderConstants.verifiedIconSpacing),
+          const SizedBox(width: _AppHeaderConstants.verifiedIconSpacing),
           Icon(
             Icons.verified_rounded,
             size: _AppHeaderConstants.verifiedIconSize,
@@ -276,10 +281,10 @@ class _AppHeaderState extends State<AppHeader>
       return _buildRegularTitle(context);
     } else if (widget.subtitle != null) {
       return _buildSubtitle(context);
-    } else if (widget.showOnlineStatus) {
-      return _buildOnlineStatus(context);
+    } else {
+      // Show role name with online status
+      return _buildRoleAndStatus(context);
     }
-    return const SizedBox.shrink();
   }
 
   Widget _buildWorkspaceTitle(BuildContext context) {
@@ -327,33 +332,105 @@ class _AppHeaderState extends State<AppHeader>
     );
   }
 
-  Widget _buildOnlineStatus(BuildContext context) {
+  Widget _buildRoleAndStatus(BuildContext context) {
+    // If neither role nor status should be shown, return empty
+    if (!widget.showUserRole && !widget.showOnlineStatus) {
+      return const SizedBox.shrink();
+    }
+
     return Row(
       children: [
-        Container(
-          width: _AppHeaderConstants.onlineIndicatorSize,
-          height: _AppHeaderConstants.onlineIndicatorSize,
-          decoration: BoxDecoration(
-            color: Colors.green.shade400,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.green.shade400.withValues(alpha: 0.3),
-                blurRadius: 3,
-                spreadRadius: 1,
+        // Role badge (if enabled)
+        if (widget.showUserRole) ...[
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: _getRoleColor(
+                widget.user.roleName,
+              ).withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: _getRoleColor(widget.user.roleName).withValues(
+                  alpha: _isElevatedRole(widget.user.roleName) ? 0.5 : 0.3,
+                ),
+                width: _isElevatedRole(widget.user.roleName) ? 1.5 : 1,
               ),
-            ],
+              boxShadow: [
+                BoxShadow(
+                  color: _getRoleColor(widget.user.roleName).withValues(
+                    alpha: _isElevatedRole(widget.user.roleName) ? 0.15 : 0.1,
+                  ),
+                  blurRadius: _isElevatedRole(widget.user.roleName) ? 3 : 2,
+                  offset: Offset(
+                    0,
+                    _isElevatedRole(widget.user.roleName) ? 1.5 : 1,
+                  ),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 4,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: _getRoleColor(widget.user.roleName),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  _formatRoleName(widget.user.roleName),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: _getRoleColor(widget.user.roleName),
+                    fontWeight: FontWeight.w700,
+                    fontSize: 11,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        SizedBox(width: _AppHeaderConstants.onlineIndicatorSpacing),
-        Text(
-          'Online',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Colors.green.shade600,
-            fontWeight: FontWeight.w600,
-            fontSize: 11,
+          if (widget.showOnlineStatus) const SizedBox(width: 8),
+        ],
+        // Online indicator (if enabled)
+        if (widget.showOnlineStatus) ...[
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            width: _AppHeaderConstants.onlineIndicatorSize,
+            height: _AppHeaderConstants.onlineIndicatorSize,
+            decoration: BoxDecoration(
+              color: _getStatusColor(widget.userStatus),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: _getStatusColor(
+                    widget.userStatus,
+                  ).withValues(alpha: 0.3),
+                  blurRadius: 3,
+                  spreadRadius: 1,
+                ),
+              ],
+            ),
           ),
-        ),
+          const SizedBox(width: _AppHeaderConstants.onlineIndicatorSpacing),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            child: Text(
+              _getStatusText(widget.userStatus),
+              key: ValueKey(widget.userStatus),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: _getStatusColor(
+                  widget.userStatus,
+                ).withValues(alpha: 0.8),
+                fontWeight: FontWeight.w600,
+                fontSize: 11,
+              ),
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -378,7 +455,7 @@ class _AppHeaderState extends State<AppHeader>
 
   Widget _buildSearchIcon(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.only(
+      padding: const EdgeInsets.only(
         right: _AppHeaderConstants.searchIconRightSpacing,
       ),
       child: Material(
@@ -396,7 +473,7 @@ class _AppHeaderState extends State<AppHeader>
             _AppHeaderConstants.iconBorderRadius,
           ),
           child: Container(
-            padding: EdgeInsets.all(_AppHeaderConstants.iconPadding),
+            padding: const EdgeInsets.all(_AppHeaderConstants.iconPadding),
             decoration: _buildIconDecoration(context),
             child: Icon(
               Icons.search_rounded,
@@ -413,7 +490,7 @@ class _AppHeaderState extends State<AppHeader>
 
   Widget _buildNotificationIcon(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.only(
+      padding: const EdgeInsets.only(
         right: _AppHeaderConstants.notificationIconRightSpacing,
       ),
       child: TweenAnimationBuilder<double>(
@@ -456,7 +533,7 @@ class _AppHeaderState extends State<AppHeader>
           _AppHeaderConstants.iconBorderRadius,
         ),
         child: Container(
-          padding: EdgeInsets.all(_AppHeaderConstants.iconPadding),
+          padding: const EdgeInsets.all(_AppHeaderConstants.iconPadding),
           decoration: _buildIconDecoration(context),
           child: Icon(
             widget.showNotificationBadge && widget.notificationCount > 0
@@ -511,7 +588,7 @@ class _AppHeaderState extends State<AppHeader>
     return widget.actions!
         .map(
           (action) => Padding(
-            padding: EdgeInsets.only(
+            padding: const EdgeInsets.only(
               left: _AppHeaderConstants.customActionLeftSpacing,
               right: _AppHeaderConstants.customActionRightSpacing,
             ),
@@ -644,7 +721,87 @@ class _AppHeaderState extends State<AppHeader>
     );
   }
 
-  // MARK: - Utility Methods
+  /// Get status color based on user status
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'online':
+        return Colors.green.shade400;
+      case 'away':
+        return Colors.amber.shade400;
+      case 'busy':
+      case 'dnd':
+      case 'do not disturb':
+        return Colors.red.shade400;
+      case 'offline':
+        return Colors.grey.shade400;
+      default:
+        return Colors.green.shade400;
+    }
+  }
+
+  /// Get status text based on user status
+  String _getStatusText(String status) {
+    switch (status.toLowerCase()) {
+      case 'online':
+        return 'Online';
+      case 'away':
+        return 'Away';
+      case 'busy':
+      case 'dnd':
+      case 'do not disturb':
+        return 'Busy';
+      case 'offline':
+        return 'Offline';
+      default:
+        return 'Online';
+    }
+  }
+
+  // MARK: - Role Management Helpers
+
+  /// Get role priority level (higher number = higher authority)
+  int _getRolePriority(String roleName) {
+    switch (roleName.toLowerCase()) {
+      case 'admin':
+      case 'administrator':
+        return 10; // Highest authority
+      case 'manager':
+      case 'project_manager':
+        return 8; // Management level
+      case 'site_supervisor':
+      case 'supervisor':
+        return 7; // Supervision level
+      case 'engineer':
+        return 6; // Engineering level
+      case 'developer':
+      case 'dev':
+        return 5; // Development level
+      case 'analyst':
+      case 'qa':
+      case 'quality_assurance':
+        return 4; // Specialist level
+      case 'technician':
+      case 'tech':
+        return 3; // Technical level
+      case 'user':
+      case 'member':
+        return 2; // Standard user
+      case 'contractor':
+      case 'client':
+      case 'customer':
+        return 1; // External users
+      case 'viewer':
+      case 'guest':
+        return 0; // Read-only access
+      default:
+        return 1; // Default level
+    }
+  }
+
+  /// Check if role should show elevated styling
+  bool _isElevatedRole(String roleName) {
+    return _getRolePriority(roleName) >= 7; // Manager level and above
+  } // MARK: - Utility Methods
 
   String _getInitials(User user) {
     if (user.name.isNotEmpty) {
@@ -676,6 +833,107 @@ class _AppHeaderState extends State<AppHeader>
           .join(' ');
     }
     return 'User';
+  }
+
+  String _formatRoleName(String roleName) {
+    // Convert role names to display format
+    switch (roleName.toLowerCase()) {
+      case 'admin':
+      case 'administrator':
+        return 'ADMIN';
+      case 'manager':
+      case 'project_manager':
+        return 'MANAGER';
+      case 'user':
+      case 'member':
+        return 'USER';
+      case 'viewer':
+      case 'guest':
+        return 'VIEWER';
+      case 'site_supervisor':
+      case 'supervisor':
+        return 'SUPERVISOR';
+      case 'technician':
+      case 'tech':
+        return 'TECH';
+      case 'engineer':
+        return 'ENGINEER';
+      case 'contractor':
+        return 'CONTRACTOR';
+      case 'client':
+      case 'customer':
+        return 'CLIENT';
+      case 'analyst':
+        return 'ANALYST';
+      case 'developer':
+      case 'dev':
+        return 'DEV';
+      case 'qa':
+      case 'quality_assurance':
+        return 'QA';
+      case 'finance':
+      case 'accounting':
+        return 'FINANCE';
+      case 'hr':
+      case 'human_resources':
+        return 'HR';
+      case 'sales':
+        return 'SALES';
+      case 'support':
+        return 'SUPPORT';
+      default:
+        return roleName.toUpperCase().replaceAll('_', ' ');
+    }
+  }
+
+  Color _getRoleColor(String roleName) {
+    // Assign colors based on role hierarchy and type
+    switch (roleName.toLowerCase()) {
+      case 'admin':
+      case 'administrator':
+        return Colors.red.shade600; // Highest authority
+      case 'manager':
+      case 'project_manager':
+        return Colors.purple.shade600; // Management roles
+      case 'site_supervisor':
+      case 'supervisor':
+        return Colors.orange.shade600; // Supervision roles
+      case 'engineer':
+        return Colors.indigo.shade600; // Engineering roles
+      case 'developer':
+      case 'dev':
+        return Colors.teal.shade600; // Development roles
+      case 'analyst':
+        return Colors.cyan.shade600; // Analysis roles
+      case 'qa':
+      case 'quality_assurance':
+        return Colors.lime.shade700; // Quality assurance
+      case 'user':
+      case 'member':
+      case 'technician':
+      case 'tech':
+        return Colors.blue.shade600; // Operational roles
+      case 'contractor':
+        return Colors.amber.shade700; // External contractors
+      case 'client':
+      case 'customer':
+        return Colors.green.shade600; // Client roles
+      case 'finance':
+      case 'accounting':
+        return Colors.green.shade700; // Finance roles
+      case 'hr':
+      case 'human_resources':
+        return Colors.pink.shade600; // HR roles
+      case 'sales':
+        return Colors.deepOrange.shade600; // Sales roles
+      case 'support':
+        return Colors.lightBlue.shade600; // Support roles
+      case 'viewer':
+      case 'guest':
+        return Colors.grey.shade600; // Read-only roles
+      default:
+        return Colors.indigo.shade600; // Default for unknown roles
+    }
   }
 
   // MARK: - Snackbar Helpers

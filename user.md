@@ -46,5 +46,8 @@ Role	Username	Password	Email	Database Status
    Email: test_viewer@example.com
    Permissions: View-only access to projects and reports
 
-{"userId":"1734cf14-23dc-4567-93b8-ec6f8a808f30","username":"testuser001","email":"testuser001@example.com","fullName":"Test User 001",
+{"userId":"1734cf14-23dc-4567-93b8-ec6f8a808f30",
+"username":"testuser001",
+password : Password123!
+"email":"testuser001@example.com","fullName":"Test User 001",
 "roleName":"Admin","isActive":true}

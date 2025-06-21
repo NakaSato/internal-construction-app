@@ -7,6 +7,7 @@ import '../../../features/project_management/application/project_bloc.dart';
 import '../../../features/project_management/application/project_state.dart';
 import '../../../features/project_management/application/project_event.dart';
 import '../../../features/project_management/presentation/widgets/project_card.dart';
+import '../../permissions/presentation/widgets/permission_widgets.dart';
 
 /// Project list section with loading, empty, and error states
 class ProjectListSection extends StatelessWidget {
@@ -17,6 +18,10 @@ class ProjectListSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Header section with title and create button
+        _buildHeader(context),
+        const SizedBox(height: 16),
+
         // Content section
         BlocProvider(
           create: (context) =>
@@ -40,6 +45,51 @@ class ProjectListSection extends StatelessWidget {
               return const SizedBox.shrink();
             },
           ),
+        ),
+      ],
+    );
+  }
+
+  /// Build header with title and create button
+  Widget _buildHeader(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          'Projects',
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
+        ),
+        // Permission-aware Create Project button
+        PermissionBuilder(
+          resource: 'projects',
+          action: 'create',
+          fallback: const SizedBox.shrink(),
+          loading: const SizedBox.shrink(),
+          builder: (context, hasPermission) {
+            if (!hasPermission) {
+              return const SizedBox.shrink();
+            }
+
+            return FilledButton.icon(
+              onPressed: () {
+                context.push('/projects/create');
+              },
+              icon: const Icon(Icons.add, size: 18),
+              label: const Text('Create Project'),
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                textStyle: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+              ),
+            );
+          },
         ),
       ],
     );
@@ -115,26 +165,13 @@ class _EmptyState extends StatelessWidget {
           ),
           const SizedBox(height: 2),
           Text(
-            'Create your first project to get started',
+            'Projects will appear here once they are created',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
             textAlign: TextAlign.center,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 8),
-          FilledButton.icon(
-            onPressed: () {
-              // Navigate to create project
-              context.push('/projects/create');
-            },
-            icon: const Icon(Icons.add, size: 14),
-            label: const Text('Create Project'),
-            style: FilledButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              textStyle: Theme.of(context).textTheme.bodySmall,
-            ),
           ),
         ],
       ),
