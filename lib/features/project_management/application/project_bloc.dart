@@ -1,285 +1,378 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:injectable/injectable.dart';
+import 'package:equatable/equatable.dart';
 
-import '../domain/entities/project.dart';
+import '../domain/entities/project_api_models.dart';
 import '../domain/repositories/project_repository.dart';
-import '../data/repositories/api_project_repository.dart';
-import 'project_event.dart';
-import 'project_state.dart';
 
-/// A [Bloc] that manages project-related state and operations.
-///
-/// This bloc handles all project management operations including:
-/// - Loading projects (all, by status, with pagination)
-/// - Searching projects
-/// - Creating, updating, and deleting projects
-/// - Refreshing project data
-///
-/// The bloc follows Clean Architecture principles by depending on abstractions
-/// ([ProjectRepository]) rather than concrete implementations.
-@injectable
-class ProjectBloc extends Bloc<ProjectEvent, ProjectState> {
-  /// Creates a [ProjectBloc] with the given [ProjectRepository].
-  ///
-  /// The repository is injected using the 'api' named qualifier, which
-  /// provides the API-based implementation with fallback to mock data.
-  ProjectBloc(@Named('api') this._projectRepository)
-    : super(const ProjectInitial()) {
-    on<ProjectLoadRequested>(_onProjectLoadRequested);
-    on<ProjectLoadByStatusRequested>(_onProjectLoadByStatusRequested);
-    on<ProjectSearchRequested>(_onProjectSearchRequested);
-    on<ProjectCreateRequested>(_onProjectCreateRequested);
-    on<ProjectUpdateRequested>(_onProjectUpdateRequested);
-    on<ProjectDeleteRequested>(_onProjectDeleteRequested);
-    on<ProjectRefreshRequested>(_onProjectRefreshRequested);
-    on<ProjectLoadWithPaginationRequested>(
-      _onProjectLoadWithPaginationRequested,
-    );
-    on<ProjectLoadMoreRequested>(_onProjectLoadMoreRequested);
+/// Events for Enhanced Project BLoC
+abstract class EnhancedProjectEvent extends Equatable {
+  const EnhancedProjectEvent();
+
+  @override
+  List<Object?> get props => [];
+}
+
+class LoadProjectsRequested extends EnhancedProjectEvent {
+  const LoadProjectsRequested({this.query, this.userRole});
+
+  final ProjectsQuery? query;
+  final String? userRole;
+
+  @override
+  List<Object?> get props => [query, userRole];
+}
+
+class SearchProjectsRequested extends EnhancedProjectEvent {
+  const SearchProjectsRequested({
+    required this.searchTerm,
+    this.filters,
+    this.userRole,
+  });
+
+  final String searchTerm;
+  final ProjectsQuery? filters;
+  final String? userRole;
+
+  @override
+  List<Object?> get props => [searchTerm, filters, userRole];
+}
+
+class LoadProjectDetailsRequested extends EnhancedProjectEvent {
+  const LoadProjectDetailsRequested({required this.projectId, this.userRole});
+
+  final String projectId;
+  final String? userRole;
+
+  @override
+  List<Object?> get props => [projectId, userRole];
+}
+
+class CreateProjectRequested extends EnhancedProjectEvent {
+  const CreateProjectRequested({required this.projectData, this.userRole});
+
+  final Map<String, dynamic> projectData;
+  final String? userRole;
+
+  @override
+  List<Object?> get props => [projectData, userRole];
+}
+
+class UpdateProjectRequested extends EnhancedProjectEvent {
+  const UpdateProjectRequested({
+    required this.projectId,
+    required this.projectData,
+    this.userRole,
+  });
+
+  final String projectId;
+  final Map<String, dynamic> projectData;
+  final String? userRole;
+
+  @override
+  List<Object?> get props => [projectId, projectData, userRole];
+}
+
+class DeleteProjectRequested extends EnhancedProjectEvent {
+  const DeleteProjectRequested({required this.projectId, this.userRole});
+
+  final String projectId;
+  final String? userRole;
+
+  @override
+  List<Object?> get props => [projectId, userRole];
+}
+
+class LoadProjectStatisticsRequested extends EnhancedProjectEvent {
+  const LoadProjectStatisticsRequested({
+    this.userRole,
+    this.startDate,
+    this.endDate,
+  });
+
+  final String? userRole;
+  final DateTime? startDate;
+  final DateTime? endDate;
+
+  @override
+  List<Object?> get props => [userRole, startDate, endDate];
+}
+
+class LoadProjectsByManagerRequested extends EnhancedProjectEvent {
+  const LoadProjectsByManagerRequested({
+    required this.managerId,
+    this.userRole,
+  });
+
+  final String managerId;
+  final String? userRole;
+
+  @override
+  List<Object?> get props => [managerId, userRole];
+}
+
+/// States for Enhanced Project BLoC
+abstract class EnhancedProjectState extends Equatable {
+  const EnhancedProjectState();
+
+  @override
+  List<Object?> get props => [];
+}
+
+class EnhancedProjectInitial extends EnhancedProjectState {
+  const EnhancedProjectInitial();
+}
+
+class EnhancedProjectLoading extends EnhancedProjectState {
+  const EnhancedProjectLoading();
+}
+
+class EnhancedProjectsLoaded extends EnhancedProjectState {
+  const EnhancedProjectsLoaded({required this.projectsResponse});
+
+  final ProjectsResponse projectsResponse;
+
+  @override
+  List<Object?> get props => [projectsResponse];
+}
+
+class EnhancedProjectDetailsLoaded extends EnhancedProjectState {
+  const EnhancedProjectDetailsLoaded({required this.project});
+
+  final EnhancedProject project;
+
+  @override
+  List<Object?> get props => [project];
+}
+
+class EnhancedProjectOperationSuccess extends EnhancedProjectState {
+  const EnhancedProjectOperationSuccess({required this.message, this.project});
+
+  final String message;
+  final EnhancedProject? project;
+
+  @override
+  List<Object?> get props => [message, project];
+}
+
+class EnhancedProjectStatisticsLoaded extends EnhancedProjectState {
+  const EnhancedProjectStatisticsLoaded({required this.statistics});
+
+  final Map<String, dynamic> statistics;
+
+  @override
+  List<Object?> get props => [statistics];
+}
+
+class EnhancedProjectError extends EnhancedProjectState {
+  const EnhancedProjectError({required this.message, this.details});
+
+  final String message;
+  final String? details;
+
+  @override
+  List<Object?> get props => [message, details];
+}
+
+/// Enhanced Project BLoC that uses the enhanced project management API
+class EnhancedProjectBloc
+    extends Bloc<EnhancedProjectEvent, EnhancedProjectState> {
+  EnhancedProjectBloc({required EnhancedProjectRepository repository})
+    : _repository = repository,
+      super(const EnhancedProjectInitial()) {
+    on<LoadProjectsRequested>(_onLoadProjectsRequested);
+    on<SearchProjectsRequested>(_onSearchProjectsRequested);
+    on<LoadProjectDetailsRequested>(_onLoadProjectDetailsRequested);
+    on<CreateProjectRequested>(_onCreateProjectRequested);
+    on<UpdateProjectRequested>(_onUpdateProjectRequested);
+    on<DeleteProjectRequested>(_onDeleteProjectRequested);
+    on<LoadProjectStatisticsRequested>(_onLoadProjectStatisticsRequested);
+    on<LoadProjectsByManagerRequested>(_onLoadProjectsByManagerRequested);
   }
 
-  final ProjectRepository _projectRepository;
+  final EnhancedProjectRepository _repository;
 
-  Future<void> _onProjectLoadRequested(
-    ProjectLoadRequested event,
-    Emitter<ProjectState> emit,
+  Future<void> _onLoadProjectsRequested(
+    LoadProjectsRequested event,
+    Emitter<EnhancedProjectState> emit,
   ) async {
-    emit(const ProjectLoading());
+    emit(const EnhancedProjectLoading());
 
     try {
-      final projects = await _projectRepository.getAllProjects();
-      emit(ProjectLoaded(projects: projects));
-    } catch (e) {
-      emit(ProjectError(message: e.toString()));
-    }
-  }
-
-  Future<void> _onProjectLoadByStatusRequested(
-    ProjectLoadByStatusRequested event,
-    Emitter<ProjectState> emit,
-  ) async {
-    emit(const ProjectLoading());
-
-    try {
-      final projects = await _projectRepository.getProjectsByStatus(
-        event.status,
+      final projectsResponse = await _repository.getAllProjects(
+        event.query ?? const ProjectsQuery(),
       );
-      emit(ProjectLoaded(projects: projects));
+
+      emit(EnhancedProjectsLoaded(projectsResponse: projectsResponse));
     } catch (e) {
-      emit(ProjectError(message: e.toString()));
-    }
-  }
-
-  Future<void> _onProjectSearchRequested(
-    ProjectSearchRequested event,
-    Emitter<ProjectState> emit,
-  ) async {
-    if (event.query.trim().isEmpty) {
-      add(const ProjectLoadRequested());
-      return;
-    }
-
-    emit(const ProjectLoading());
-
-    try {
-      final projects = await _projectRepository.searchProjects(event.query);
-      emit(ProjectLoaded(projects: projects));
-    } catch (e) {
-      emit(ProjectError(message: e.toString()));
-    }
-  }
-
-  Future<void> _onProjectCreateRequested(
-    ProjectCreateRequested event,
-    Emitter<ProjectState> emit,
-  ) async {
-    try {
-      await _projectRepository.createProject(event.project);
-      final projects = await _projectRepository.getAllProjects();
       emit(
-        ProjectOperationSuccess(
+        EnhancedProjectError(
+          message: 'Failed to load projects',
+          details: e.toString(),
+        ),
+      );
+    }
+  }
+
+  Future<void> _onSearchProjectsRequested(
+    SearchProjectsRequested event,
+    Emitter<EnhancedProjectState> emit,
+  ) async {
+    emit(const EnhancedProjectLoading());
+
+    try {
+      final projectsResponse = await _repository.searchProjects(
+        event.searchTerm,
+        event.filters ?? const ProjectsQuery(),
+      );
+
+      emit(EnhancedProjectsLoaded(projectsResponse: projectsResponse));
+    } catch (e) {
+      emit(
+        EnhancedProjectError(
+          message: 'Failed to search projects',
+          details: e.toString(),
+        ),
+      );
+    }
+  }
+
+  Future<void> _onLoadProjectDetailsRequested(
+    LoadProjectDetailsRequested event,
+    Emitter<EnhancedProjectState> emit,
+  ) async {
+    emit(const EnhancedProjectLoading());
+
+    try {
+      final project = await _repository.getProjectById(event.projectId);
+
+      emit(EnhancedProjectDetailsLoaded(project: project));
+    } catch (e) {
+      emit(
+        EnhancedProjectError(
+          message: 'Failed to load project details',
+          details: e.toString(),
+        ),
+      );
+    }
+  }
+
+  Future<void> _onCreateProjectRequested(
+    CreateProjectRequested event,
+    Emitter<EnhancedProjectState> emit,
+  ) async {
+    emit(const EnhancedProjectLoading());
+
+    try {
+      final project = await _repository.createProject(event.projectData);
+
+      emit(
+        EnhancedProjectOperationSuccess(
           message: 'Project created successfully',
-          projects: projects,
+          project: project,
         ),
       );
     } catch (e) {
-      final currentProjects = switch (state) {
-        ProjectLoaded loadedState => loadedState.projects,
-        _ => <Project>[],
-      };
       emit(
-        ProjectError(
-          message: 'Failed to create project: ${e.toString()}',
-          projects: currentProjects,
+        EnhancedProjectError(
+          message: 'Failed to create project',
+          details: e.toString(),
         ),
       );
     }
   }
 
-  Future<void> _onProjectUpdateRequested(
-    ProjectUpdateRequested event,
-    Emitter<ProjectState> emit,
+  Future<void> _onUpdateProjectRequested(
+    UpdateProjectRequested event,
+    Emitter<EnhancedProjectState> emit,
   ) async {
+    emit(const EnhancedProjectLoading());
+
     try {
-      await _projectRepository.updateProject(event.project);
-      final projects = await _projectRepository.getAllProjects();
+      final project = await _repository.updateProject(
+        event.projectId,
+        event.projectData,
+      );
+
       emit(
-        ProjectOperationSuccess(
+        EnhancedProjectOperationSuccess(
           message: 'Project updated successfully',
-          projects: projects,
+          project: project,
         ),
       );
     } catch (e) {
-      final currentProjects = switch (state) {
-        ProjectLoaded loadedState => loadedState.projects,
-        _ => <Project>[],
-      };
       emit(
-        ProjectError(
-          message: 'Failed to update project: ${e.toString()}',
-          projects: currentProjects,
+        EnhancedProjectError(
+          message: 'Failed to update project',
+          details: e.toString(),
         ),
       );
     }
   }
 
-  Future<void> _onProjectDeleteRequested(
-    ProjectDeleteRequested event,
-    Emitter<ProjectState> emit,
+  Future<void> _onDeleteProjectRequested(
+    DeleteProjectRequested event,
+    Emitter<EnhancedProjectState> emit,
   ) async {
+    emit(const EnhancedProjectLoading());
+
     try {
-      await _projectRepository.deleteProject(event.projectId);
-      final projects = await _projectRepository.getAllProjects();
+      await _repository.deleteProject(event.projectId);
+
       emit(
-        ProjectOperationSuccess(
+        const EnhancedProjectOperationSuccess(
           message: 'Project deleted successfully',
-          projects: projects,
         ),
       );
     } catch (e) {
-      final currentProjects = switch (state) {
-        ProjectLoaded loadedState => loadedState.projects,
-        _ => <Project>[],
-      };
       emit(
-        ProjectError(
-          message: 'Failed to delete project: ${e.toString()}',
-          projects: currentProjects,
+        EnhancedProjectError(
+          message: 'Failed to delete project',
+          details: e.toString(),
         ),
       );
     }
   }
 
-  Future<void> _onProjectRefreshRequested(
-    ProjectRefreshRequested event,
-    Emitter<ProjectState> emit,
+  Future<void> _onLoadProjectStatisticsRequested(
+    LoadProjectStatisticsRequested event,
+    Emitter<EnhancedProjectState> emit,
   ) async {
-    final currentState = state;
-    if (currentState is ProjectLoaded) {
-      emit(currentState.copyWith(isRefreshing: true));
-    }
+    emit(const EnhancedProjectLoading());
 
     try {
-      final projects = await _projectRepository.getAllProjects();
-      emit(ProjectLoaded(projects: projects, isRefreshing: false));
+      final statistics = await _repository.getProjectStatistics();
+
+      emit(EnhancedProjectStatisticsLoaded(statistics: statistics));
     } catch (e) {
-      final currentProjects = currentState is ProjectLoaded
-          ? currentState.projects
-          : <Project>[];
-      emit(ProjectError(message: e.toString(), projects: currentProjects));
+      emit(
+        EnhancedProjectError(
+          message: 'Failed to load project statistics',
+          details: e.toString(),
+        ),
+      );
     }
   }
 
-  Future<void> _onProjectLoadWithPaginationRequested(
-    ProjectLoadWithPaginationRequested event,
-    Emitter<ProjectState> emit,
+  Future<void> _onLoadProjectsByManagerRequested(
+    LoadProjectsByManagerRequested event,
+    Emitter<EnhancedProjectState> emit,
   ) async {
-    // If refreshing, show loading state; otherwise maintain current state if exists
-    if (event.refresh || state is! ProjectLoadedWithPagination) {
-      emit(const ProjectLoading());
-    } else if (state is ProjectLoadedWithPagination) {
-      final currentState = state as ProjectLoadedWithPagination;
-      emit(currentState.copyWith(isRefreshing: true));
-    }
+    emit(const EnhancedProjectLoading());
 
     try {
-      // Check if repository supports pagination
-      if (_projectRepository is ApiProjectRepository) {
-        final projectData = await _projectRepository.getProjectsWithPagination(
-          pageNumber: event.pageNumber,
-          pageSize: event.pageSize,
-          managerId: event.managerId,
-        );
+      final projectsResponse = await _repository.getProjectsByManager(
+        event.managerId,
+        const ProjectsQuery(),
+      );
 
-        final projects = projectData.items
-            .map((dto) => dto.toEntity())
-            .toList();
-
-        emit(
-          ProjectLoadedWithPagination(
-            projects: projects,
-            currentPage: projectData.pageNumber,
-            totalPages: projectData.totalPages,
-            totalCount: projectData.totalCount,
-            hasReachedMax: projectData.pageNumber >= projectData.totalPages,
-            isRefreshing: false,
-          ),
-        );
-      } else {
-        // Fallback to regular loading for non-API repositories
-        final projects = await _projectRepository.getAllProjects();
-        emit(ProjectLoaded(projects: projects));
-      }
+      emit(EnhancedProjectsLoaded(projectsResponse: projectsResponse));
     } catch (e) {
-      final currentProjects = switch (state) {
-        ProjectLoadedWithPagination paginatedState => paginatedState.projects,
-        _ => <Project>[],
-      };
-      emit(ProjectError(message: e.toString(), projects: currentProjects));
-    }
-  }
-
-  Future<void> _onProjectLoadMoreRequested(
-    ProjectLoadMoreRequested event,
-    Emitter<ProjectState> emit,
-  ) async {
-    final currentState = state;
-    if (currentState is! ProjectLoadedWithPagination ||
-        currentState.hasReachedMax ||
-        currentState.isLoadingMore) {
-      return;
-    }
-
-    emit(currentState.copyWith(isLoadingMore: true));
-
-    try {
-      if (_projectRepository is ApiProjectRepository) {
-        final nextPage = currentState.currentPage + 1;
-
-        final projectData = await _projectRepository.getProjectsWithPagination(
-          pageNumber: nextPage,
-          pageSize: 10, // Default page size
-        );
-
-        final newProjects = projectData.items
-            .map((dto) => dto.toEntity())
-            .toList();
-        final allProjects = [...currentState.projects, ...newProjects];
-
-        emit(
-          ProjectLoadedWithPagination(
-            projects: allProjects,
-            currentPage: projectData.pageNumber,
-            totalPages: projectData.totalPages,
-            totalCount: projectData.totalCount,
-            hasReachedMax: projectData.pageNumber >= projectData.totalPages,
-            isLoadingMore: false,
-          ),
-        );
-      }
-    } catch (e) {
-      emit(currentState.copyWith(isLoadingMore: false));
-      // Could emit a separate error state or show snackbar
+      emit(
+        EnhancedProjectError(
+          message: 'Failed to load projects by manager',
+          details: e.toString(),
+        ),
+      );
     }
   }
 }

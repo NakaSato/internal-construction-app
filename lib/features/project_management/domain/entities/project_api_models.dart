@@ -69,25 +69,28 @@ class EquipmentDetails extends Equatable {
   }
 
   /// Get total inverter count
-  int get totalInverters => inverter125kw + inverter80kw + inverter60kw + inverter40kw;
+  int get totalInverters =>
+      inverter125kw + inverter80kw + inverter60kw + inverter40kw;
 
   /// Get total inverter capacity in kW
-  double get totalCapacity => 
-      (inverter125kw * 125) + 
-      (inverter80kw * 80) + 
-      (inverter60kw * 60) + 
+  double get totalCapacity =>
+      (inverter125kw * 125) +
+      (inverter80kw * 80) +
+      (inverter60kw * 60) +
       (inverter40kw * 40);
 
   @override
-  List<Object?> get props => [inverter125kw, inverter80kw, inverter60kw, inverter40kw];
+  List<Object?> get props => [
+    inverter125kw,
+    inverter80kw,
+    inverter60kw,
+    inverter40kw,
+  ];
 }
 
 /// Location coordinates for projects
 class LocationCoordinates extends Equatable {
-  const LocationCoordinates({
-    required this.latitude,
-    required this.longitude,
-  });
+  const LocationCoordinates({required this.latitude, required this.longitude});
 
   final double latitude;
   final double longitude;
@@ -100,10 +103,7 @@ class LocationCoordinates extends Equatable {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'latitude': latitude,
-      'longitude': longitude,
-    };
+    return {'latitude': latitude, 'longitude': longitude};
   }
 
   @override
@@ -171,13 +171,15 @@ class EnhancedProject extends Equatable {
       status: json['status'] as String,
       startDate: DateTime.parse(json['startDate'] as String),
       estimatedEndDate: DateTime.parse(json['estimatedEndDate'] as String),
-      actualEndDate: json['actualEndDate'] != null 
-          ? DateTime.parse(json['actualEndDate'] as String) 
+      actualEndDate: json['actualEndDate'] != null
+          ? DateTime.parse(json['actualEndDate'] as String)
           : null,
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
       projectManager: json['projectManager'] != null
-          ? ProjectManager.fromJson(json['projectManager'] as Map<String, dynamic>)
+          ? ProjectManager.fromJson(
+              json['projectManager'] as Map<String, dynamic>,
+            )
           : null,
       taskCount: json['taskCount'] as int? ?? 0,
       completedTaskCount: json['completedTaskCount'] as int? ?? 0,
@@ -187,13 +189,17 @@ class EnhancedProject extends Equatable {
       totalCapacityKw: (json['totalCapacityKw'] as num?)?.toDouble(),
       pvModuleCount: json['pvModuleCount'] as int?,
       equipmentDetails: json['equipmentDetails'] != null
-          ? EquipmentDetails.fromJson(json['equipmentDetails'] as Map<String, dynamic>)
+          ? EquipmentDetails.fromJson(
+              json['equipmentDetails'] as Map<String, dynamic>,
+            )
           : null,
       ftsValue: (json['ftsValue'] as num?)?.toDouble(),
       revenueValue: (json['revenueValue'] as num?)?.toDouble(),
       pqmValue: (json['pqmValue'] as num?)?.toDouble(),
       locationCoordinates: json['locationCoordinates'] != null
-          ? LocationCoordinates.fromJson(json['locationCoordinates'] as Map<String, dynamic>)
+          ? LocationCoordinates.fromJson(
+              json['locationCoordinates'] as Map<String, dynamic>,
+            )
           : null,
     );
   }
@@ -236,7 +242,8 @@ class EnhancedProject extends Equatable {
   bool get isActive => status.toLowerCase() == 'active';
 
   /// Check if project is completed
-  bool get isCompleted => status.toLowerCase() == 'completed' || actualEndDate != null;
+  bool get isCompleted =>
+      status.toLowerCase() == 'completed' || actualEndDate != null;
 
   /// Get days remaining until estimated end date
   int get daysRemaining {

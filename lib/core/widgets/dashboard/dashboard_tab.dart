@@ -4,7 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../app_header.dart';
 import '../../../features/authentication/application/auth_state.dart';
 import '../../../features/project_management/application/project_bloc.dart';
-import '../../../features/project_management/application/project_event.dart';
 
 import 'project_list_section.dart';
 import 'dashboard_search_section.dart';
@@ -66,8 +65,8 @@ class DashboardTab extends StatelessWidget {
   Future<void> _refreshDashboard(BuildContext context) async {
     try {
       // Refresh projects
-      final projectBloc = context.read<ProjectBloc>();
-      projectBloc.add(const ProjectLoadRequested());
+      final projectBloc = context.read<EnhancedProjectBloc>();
+      projectBloc.add(const LoadProjectsRequested());
 
       // Wait a moment to show refresh indicator
       await Future.delayed(DashboardConstants.refreshDelay);

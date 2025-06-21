@@ -4,8 +4,6 @@ import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../features/project_management/application/project_bloc.dart';
-import '../../../features/project_management/application/project_state.dart';
-import '../../../features/project_management/application/project_event.dart';
 import '../../../features/project_management/presentation/widgets/project_card.dart';
 import '../../permissions/presentation/widgets/permission_widgets.dart';
 
@@ -25,20 +23,21 @@ class ProjectListSection extends StatelessWidget {
         // Content section
         BlocProvider(
           create: (context) =>
-              GetIt.instance<ProjectBloc>()..add(const ProjectLoadRequested()),
-          child: BlocBuilder<ProjectBloc, ProjectState>(
+              GetIt.instance<EnhancedProjectBloc>()
+                ..add(const LoadProjectsRequested()),
+          child: BlocBuilder<EnhancedProjectBloc, EnhancedProjectState>(
             builder: (context, state) {
-              if (state is ProjectLoading) {
+              if (state is EnhancedProjectLoading) {
                 return const _LoadingState();
-              } else if (state is ProjectLoaded) {
-                final allProjects = state.projects;
+              } else if (state is EnhancedProjectsLoaded) {
+                final allProjects = state.projectsResponse.items;
 
                 if (allProjects.isEmpty) {
                   return const _EmptyState();
                 }
 
                 return _ProjectList(projects: allProjects);
-              } else if (state is ProjectError) {
+              } else if (state is EnhancedProjectError) {
                 return _ErrorState(message: state.message);
               }
 
@@ -265,8 +264,8 @@ class _ErrorState extends StatelessWidget {
             const SizedBox(height: 12),
             OutlinedButton.icon(
               onPressed: () {
-                context.read<ProjectBloc>().add(
-                  const ProjectRefreshRequested(),
+                context.read<EnhancedProjectBloc>().add(
+                  const LoadProjectsRequested(),
                 );
               },
               icon: const Icon(Icons.refresh, size: 16),
@@ -327,8 +326,8 @@ class _ErrorState extends StatelessWidget {
               height: 22,
               child: OutlinedButton(
                 onPressed: () {
-                  context.read<ProjectBloc>().add(
-                    const ProjectRefreshRequested(),
+                  context.read<EnhancedProjectBloc>().add(
+                    const LoadProjectsRequested(),
                   );
                 },
                 style: OutlinedButton.styleFrom(
@@ -371,8 +370,8 @@ class _ErrorState extends StatelessWidget {
                     height: 18,
                     child: OutlinedButton(
                       onPressed: () {
-                        context.read<ProjectBloc>().add(
-                          const ProjectRefreshRequested(),
+                        context.read<EnhancedProjectBloc>().add(
+                          const LoadProjectsRequested(),
                         );
                       },
                       style: OutlinedButton.styleFrom(
@@ -416,8 +415,8 @@ class _ErrorState extends StatelessWidget {
                     height: 20,
                     child: OutlinedButton(
                       onPressed: () {
-                        context.read<ProjectBloc>().add(
-                          const ProjectRefreshRequested(),
+                        context.read<EnhancedProjectBloc>().add(
+                          const LoadProjectsRequested(),
                         );
                       },
                       style: OutlinedButton.styleFrom(
@@ -448,7 +447,7 @@ class _ProjectList extends StatelessWidget {
   Widget build(BuildContext context) {
     return RefreshIndicator(
       onRefresh: () async {
-        context.read<ProjectBloc>().add(const ProjectRefreshRequested());
+        context.read<EnhancedProjectBloc>().add(const LoadProjectsRequested());
         // Wait a bit for the refresh to complete
         await Future.delayed(const Duration(milliseconds: 250));
       },

@@ -41,7 +41,9 @@ class ConstructionApp extends StatelessWidget {
         ),
 
         // Project management state management
-        BlocProvider<ProjectBloc>(create: (context) => getIt<ProjectBloc>()),
+        BlocProvider<EnhancedProjectBloc>(
+          create: (context) => getIt<EnhancedProjectBloc>(),
+        ),
 
         // Daily reports state management
         BlocProvider<DailyReportsCubit>(

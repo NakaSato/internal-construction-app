@@ -8,7 +8,7 @@ class ApiConfig {
   static const Duration connectTimeout = Duration(seconds: 30);
   static const Duration receiveTimeout = Duration(seconds: 30);
   static const Duration sendTimeout = Duration(seconds: 30);
-  
+
   // API endpoints
   static const String authPath = '/auth';
   static const String projectsPath = '/projects';
@@ -23,16 +23,18 @@ class ApiClient {
   String? _authToken;
 
   ApiClient({String? baseUrl, String? authToken}) {
-    _dio = Dio(BaseOptions(
-      baseUrl: baseUrl ?? '${ApiConfig.baseUrl}/${ApiConfig.apiVersion}',
-      connectTimeout: ApiConfig.connectTimeout,
-      receiveTimeout: ApiConfig.receiveTimeout,
-      sendTimeout: ApiConfig.sendTimeout,
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-    ));
+    _dio = Dio(
+      BaseOptions(
+        baseUrl: baseUrl ?? '${ApiConfig.baseUrl}/${ApiConfig.apiVersion}',
+        connectTimeout: ApiConfig.connectTimeout,
+        receiveTimeout: ApiConfig.receiveTimeout,
+        sendTimeout: ApiConfig.sendTimeout,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      ),
+    );
 
     if (authToken != null) {
       setAuthToken(authToken);
@@ -46,46 +48,52 @@ class ApiClient {
   /// Set up request/response interceptors for logging and error handling
   void _setupInterceptors() {
     // Request interceptor for authentication
-    _dio.interceptors.add(InterceptorsWrapper(
-      onRequest: (options, handler) {
-        if (_authToken != null) {
-          options.headers['Authorization'] = 'Bearer $_authToken';
-        }
-        
-        if (kDebugMode) {
-          print('🚀 API Request: ${options.method} ${options.path}');
-          if (options.queryParameters.isNotEmpty) {
-            print('📋 Query Parameters: ${options.queryParameters}');
+    _dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) {
+          if (_authToken != null) {
+            options.headers['Authorization'] = 'Bearer $_authToken';
           }
-          if (options.data != null) {
-            print('📦 Request Data: ${options.data}');
+
+          if (kDebugMode) {
+            print('🚀 API Request: ${options.method} ${options.path}');
+            if (options.queryParameters.isNotEmpty) {
+              print('📋 Query Parameters: ${options.queryParameters}');
+            }
+            if (options.data != null) {
+              print('📦 Request Data: ${options.data}');
+            }
           }
-        }
-        
-        handler.next(options);
-      },
-      
-      onResponse: (response, handler) {
-        if (kDebugMode) {
-          print('✅ API Response: ${response.statusCode} ${response.requestOptions.path}');
-          if (response.data != null) {
-            print('📄 Response Data: ${response.data}');
+
+          handler.next(options);
+        },
+
+        onResponse: (response, handler) {
+          if (kDebugMode) {
+            print(
+              '✅ API Response: ${response.statusCode} ${response.requestOptions.path}',
+            );
+            if (response.data != null) {
+              print('📄 Response Data: ${response.data}');
+            }
           }
-        }
-        handler.next(response);
-      },
-      
-      onError: (error, handler) {
-        if (kDebugMode) {
-          print('❌ API Error: ${error.response?.statusCode} ${error.requestOptions.path}');
-          print('🔍 Error Message: ${error.message}');
-          if (error.response?.data != null) {
-            print('📄 Error Data: ${error.response?.data}');
+          handler.next(response);
+        },
+
+        onError: (error, handler) {
+          if (kDebugMode) {
+            print(
+              '❌ API Error: ${error.response?.statusCode} ${error.requestOptions.path}',
+            );
+            print('🔍 Error Message: ${error.message}');
+            if (error.response?.data != null) {
+              print('📄 Error Data: ${error.response?.data}');
+            }
           }
-        }
-        handler.next(error);
-      },
-    ));
+          handler.next(error);
+        },
+      ),
+    );
 
     // Retry interceptor for failed requests
     _dio.interceptors.add(RetryInterceptor());
@@ -231,12 +239,12 @@ class ApiClient {
           statusCode: 408,
           type: ApiExceptionType.timeout,
         );
-      
+
       case DioExceptionType.badResponse:
         final statusCode = e.response?.statusCode ?? 0;
-        final message = _extractErrorMessage(e.response?.data) ?? 
-            'Server error occurred';
-        
+        final message =
+            _extractErrorMessage(e.response?.data) ?? 'Server error occurred';
+
         switch (statusCode) {
           case 400:
             return ApiException(
@@ -281,14 +289,14 @@ class ApiClient {
               type: ApiExceptionType.unknown,
             );
         }
-      
+
       case DioExceptionType.cancel:
         return ApiException(
           message: 'Request was cancelled',
           statusCode: 0,
           type: ApiExceptionType.cancelled,
         );
-      
+
       case DioExceptionType.unknown:
       case DioExceptionType.connectionError:
       case DioExceptionType.badCertificate:
@@ -303,16 +311,17 @@ class ApiClient {
   /// Extract error message from response data
   String? _extractErrorMessage(dynamic data) {
     if (data == null) return null;
-    
+
     if (data is Map<String, dynamic>) {
       // Try common error message fields
-      final message = data['message'] ?? 
-          data['error'] ?? 
-          data['detail'] ?? 
+      final message =
+          data['message'] ??
+          data['error'] ??
+          data['detail'] ??
           data['description'];
-      
+
       if (message is String) return message;
-      
+
       // Handle validation errors
       if (data['errors'] is Map) {
         final errors = data['errors'] as Map;
@@ -325,7 +334,7 @@ class ApiClient {
         }
       }
     }
-    
+
     return null;
   }
 
@@ -347,12 +356,12 @@ class RetryInterceptor extends Interceptor {
     }
 
     final retryCount = err.requestOptions.extra['retryCount'] ?? 0;
-    
+
     if (_shouldRetry(err) && retryCount < maxRetries) {
       err.requestOptions.extra['retryCount'] = retryCount + 1;
-      
+
       await Future.delayed(retryDelay * (retryCount + 1));
-      
+
       try {
         final dio = Dio();
         dio.options = err.requestOptions.copyWith() as BaseOptions;
@@ -362,7 +371,7 @@ class RetryInterceptor extends Interceptor {
         return handler.next(err);
       }
     }
-    
+
     return handler.next(err);
   }
 
@@ -370,8 +379,7 @@ class RetryInterceptor extends Interceptor {
     return err.type == DioExceptionType.connectionTimeout ||
         err.type == DioExceptionType.sendTimeout ||
         err.type == DioExceptionType.receiveTimeout ||
-        (err.response?.statusCode != null && 
-         err.response!.statusCode! >= 500);
+        (err.response?.statusCode != null && err.response!.statusCode! >= 500);
   }
 }
 
@@ -415,26 +423,16 @@ class ApiResult<T> {
   final ApiException? error;
   final bool isSuccess;
 
-  const ApiResult._({
-    this.data,
-    this.error,
-    required this.isSuccess,
-  });
+  const ApiResult._({this.data, this.error, required this.isSuccess});
 
   /// Create a successful result
   factory ApiResult.success(T data) {
-    return ApiResult._(
-      data: data,
-      isSuccess: true,
-    );
+    return ApiResult._(data: data, isSuccess: true);
   }
 
   /// Create a failed result
   factory ApiResult.failure(ApiException error) {
-    return ApiResult._(
-      error: error,
-      isSuccess: false,
-    );
+    return ApiResult._(error: error, isSuccess: false);
   }
 
   /// Execute a function on success
@@ -443,11 +441,13 @@ class ApiResult<T> {
       try {
         return ApiResult.success(mapper(data!));
       } catch (e) {
-        return ApiResult.failure(ApiException(
-          message: e.toString(),
-          statusCode: 0,
-          type: ApiExceptionType.unknown,
-        ));
+        return ApiResult.failure(
+          ApiException(
+            message: e.toString(),
+            statusCode: 0,
+            type: ApiExceptionType.unknown,
+          ),
+        );
       }
     }
     return ApiResult.failure(error!);

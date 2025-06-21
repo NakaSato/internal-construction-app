@@ -1,45 +1,112 @@
-import 'dart:convert';
 import 'package:dio/dio.dart';
-import '../../../core/network/api_client.dart';
 import '../../domain/entities/project_api_models.dart';
 
 /// Remote data source for Project Management API
 abstract class ProjectRemoteDataSource {
   /// Get all projects with filtering and pagination
-  Future<ProjectsResponse> getAllProjects(ProjectsQuery query);
+  Future<ProjectsResponse> getProjects({
+    ProjectsQuery? query,
+    String? userRole,
+  });
 
   /// Get project by ID
-  Future<EnhancedProject> getProjectById(String id);
+  Future<EnhancedProject> getProjectById(String id, {String? userRole});
+
+  /// Search projects by term
+  Future<ProjectsResponse> searchProjects(
+    String searchTerm, {
+    ProjectsQuery? filters,
+    String? userRole,
+  });
 
   /// Create a new project
-  Future<EnhancedProject> createProject(Map<String, dynamic> projectData);
+  Future<EnhancedProject> createProject(
+    Map<String, dynamic> projectData, {
+    String? userRole,
+  });
 
   /// Update an existing project
-  Future<EnhancedProject> updateProject(String id, Map<String, dynamic> projectData);
+  Future<EnhancedProject> updateProject(
+    String id,
+    Map<String, dynamic> projectData, {
+    String? userRole,
+  });
 
   /// Delete a project
-  Future<void> deleteProject(String id);
+  Future<void> deleteProject(String id, {String? userRole});
 
   /// Get project statistics
-  Future<Map<String, dynamic>> getProjectStatistics();
+  Future<Map<String, dynamic>> getProjectStatistics({
+    String? userRole,
+    DateTime? startDate,
+    DateTime? endDate,
+  });
+
+  /// Get projects by manager
+  Future<List<EnhancedProject>> getProjectsByManager(
+    String managerId, {
+    String? userRole,
+  });
+
+  /// Get projects by status
+  Future<List<EnhancedProject>> getProjectsByStatus(
+    String status, {
+    String? userRole,
+  });
+
+  /// Get projects by date range
+  Future<List<EnhancedProject>> getProjectsByDateRange(
+    DateTime startDate,
+    DateTime endDate, {
+    String? userRole,
+  });
+
+  /// Assign project manager
+  Future<EnhancedProject> assignProjectManager(
+    String projectId,
+    String managerId, {
+    String? userRole,
+  });
+
+  /// Update project status
+  Future<EnhancedProject> updateProjectStatus(
+    String projectId,
+    String status, {
+    String? userRole,
+  });
+
+  /// Clear cache
+  Future<void> clearCache();
+
+  /// Refresh cache
+  Future<void> refreshCache();
 }
 
 /// Implementation of ProjectRemoteDataSource
 class ProjectRemoteDataSourceImpl implements ProjectRemoteDataSource {
-  const ProjectRemoteDataSourceImpl({
-    required this.dio,
-  });
+  ProjectRemoteDataSourceImpl({required this.dio});
 
   final Dio dio;
 
   static const String _baseUrl = '/api/v1/projects';
 
+  // In-memory cache for projects (simple implementation)
+  final Map<String, dynamic> _cache = {};
+
   @override
-  Future<ProjectsResponse> getAllProjects(ProjectsQuery query) async {
+  Future<ProjectsResponse> getProjects({
+    ProjectsQuery? query,
+    String? userRole,
+  }) async {
     try {
+      final Map<String, dynamic> queryParams = query?.toQueryParameters() ?? {};
+      if (userRole != null) {
+        queryParams['user_role'] = userRole;
+      }
+
       final response = await dio.get(
         _baseUrl,
-        queryParameters: query.toQueryParameters(),
+        queryParameters: queryParams,
         options: Options(
           headers: {
             'Content-Type': 'application/json',
@@ -49,7 +116,11 @@ class ProjectRemoteDataSourceImpl implements ProjectRemoteDataSource {
       );
 
       if (response.statusCode == 200) {
-        return ProjectsResponse.fromJson(response.data as Map<String, dynamic>);
+        final result = ProjectsResponse.fromJson(
+          response.data as Map<String, dynamic>,
+        );
+        _cache['projects_${queryParams.hashCode}'] = result;
+        return result;
       } else {
         throw DioException(
           requestOptions: response.requestOptions,
@@ -65,10 +136,16 @@ class ProjectRemoteDataSourceImpl implements ProjectRemoteDataSource {
   }
 
   @override
-  Future<EnhancedProject> getProjectById(String id) async {
+  Future<EnhancedProject> getProjectById(String id, {String? userRole}) async {
     try {
+      final Map<String, dynamic> queryParams = {};
+      if (userRole != null) {
+        queryParams['user_role'] = userRole;
+      }
+
       final response = await dio.get(
         '$_baseUrl/$id',
+        queryParameters: queryParams.isNotEmpty ? queryParams : null,
         options: Options(
           headers: {
             'Content-Type': 'application/json',
@@ -79,7 +156,11 @@ class ProjectRemoteDataSourceImpl implements ProjectRemoteDataSource {
 
       if (response.statusCode == 200) {
         final data = response.data as Map<String, dynamic>;
-        return EnhancedProject.fromJson(data['data'] as Map<String, dynamic>);
+        final result = EnhancedProject.fromJson(
+          data['data'] as Map<String, dynamic>,
+        );
+        _cache['project_$id'] = result;
+        return result;
       } else {
         throw DioException(
           requestOptions: response.requestOptions,
@@ -95,11 +176,22 @@ class ProjectRemoteDataSourceImpl implements ProjectRemoteDataSource {
   }
 
   @override
-  Future<EnhancedProject> createProject(Map<String, dynamic> projectData) async {
+  Future<ProjectsResponse> searchProjects(
+    String searchTerm, {
+    ProjectsQuery? filters,
+    String? userRole,
+  }) async {
     try {
-      final response = await dio.post(
-        _baseUrl,
-        data: jsonEncode(projectData),
+      final Map<String, dynamic> queryParams =
+          filters?.toQueryParameters() ?? {};
+      queryParams['search'] = searchTerm;
+      if (userRole != null) {
+        queryParams['user_role'] = userRole;
+      }
+
+      final response = await dio.get(
+        '$_baseUrl/search',
+        queryParameters: queryParams,
         options: Options(
           headers: {
             'Content-Type': 'application/json',
@@ -108,9 +200,47 @@ class ProjectRemoteDataSourceImpl implements ProjectRemoteDataSource {
         ),
       );
 
+      if (response.statusCode == 200) {
+        return ProjectsResponse.fromJson(response.data as Map<String, dynamic>);
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          message: 'Failed to search projects: ${response.statusCode}',
+        );
+      }
+    } on DioException catch (e) {
+      throw _handleDioException(e);
+    } catch (e) {
+      throw Exception('Unexpected error while searching projects: $e');
+    }
+  }
+
+  @override
+  Future<EnhancedProject> createProject(
+    Map<String, dynamic> projectData, {
+    String? userRole,
+  }) async {
+    try {
+      final response = await dio.post(
+        _baseUrl,
+        data: projectData,
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            if (userRole != null) 'X-User-Role': userRole,
+          },
+        ),
+      );
+
       if (response.statusCode == 201) {
         final data = response.data as Map<String, dynamic>;
-        return EnhancedProject.fromJson(data['data'] as Map<String, dynamic>);
+        final result = EnhancedProject.fromJson(
+          data['data'] as Map<String, dynamic>,
+        );
+        _clearProjectsCache();
+        return result;
       } else {
         throw DioException(
           requestOptions: response.requestOptions,
@@ -128,23 +258,30 @@ class ProjectRemoteDataSourceImpl implements ProjectRemoteDataSource {
   @override
   Future<EnhancedProject> updateProject(
     String id,
-    Map<String, dynamic> projectData,
-  ) async {
+    Map<String, dynamic> projectData, {
+    String? userRole,
+  }) async {
     try {
       final response = await dio.put(
         '$_baseUrl/$id',
-        data: jsonEncode(projectData),
+        data: projectData,
         options: Options(
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
+            if (userRole != null) 'X-User-Role': userRole,
           },
         ),
       );
 
       if (response.statusCode == 200) {
         final data = response.data as Map<String, dynamic>;
-        return EnhancedProject.fromJson(data['data'] as Map<String, dynamic>);
+        final result = EnhancedProject.fromJson(
+          data['data'] as Map<String, dynamic>,
+        );
+        _cache.remove('project_$id');
+        _clearProjectsCache();
+        return result;
       } else {
         throw DioException(
           requestOptions: response.requestOptions,
@@ -160,7 +297,7 @@ class ProjectRemoteDataSourceImpl implements ProjectRemoteDataSource {
   }
 
   @override
-  Future<void> deleteProject(String id) async {
+  Future<void> deleteProject(String id, {String? userRole}) async {
     try {
       final response = await dio.delete(
         '$_baseUrl/$id',
@@ -168,11 +305,15 @@ class ProjectRemoteDataSourceImpl implements ProjectRemoteDataSource {
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
+            if (userRole != null) 'X-User-Role': userRole,
           },
         ),
       );
 
-      if (response.statusCode != 200 && response.statusCode != 204) {
+      if (response.statusCode == 204 || response.statusCode == 200) {
+        _cache.remove('project_$id');
+        _clearProjectsCache();
+      } else {
         throw DioException(
           requestOptions: response.requestOptions,
           response: response,
@@ -187,10 +328,21 @@ class ProjectRemoteDataSourceImpl implements ProjectRemoteDataSource {
   }
 
   @override
-  Future<Map<String, dynamic>> getProjectStatistics() async {
+  Future<Map<String, dynamic>> getProjectStatistics({
+    String? userRole,
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
     try {
+      final Map<String, dynamic> queryParams = {};
+      if (userRole != null) queryParams['user_role'] = userRole;
+      if (startDate != null)
+        queryParams['start_date'] = startDate.toIso8601String();
+      if (endDate != null) queryParams['end_date'] = endDate.toIso8601String();
+
       final response = await dio.get(
         '$_baseUrl/statistics',
+        queryParameters: queryParams.isNotEmpty ? queryParams : null,
         options: Options(
           headers: {
             'Content-Type': 'application/json',
@@ -206,170 +358,288 @@ class ProjectRemoteDataSourceImpl implements ProjectRemoteDataSource {
         throw DioException(
           requestOptions: response.requestOptions,
           response: response,
-          message: 'Failed to get project statistics: ${response.statusCode}',
+          message: 'Failed to get statistics: ${response.statusCode}',
         );
       }
     } on DioException catch (e) {
       throw _handleDioException(e);
     } catch (e) {
-      throw Exception('Unexpected error while fetching project statistics: $e');
+      throw Exception('Unexpected error while fetching statistics: $e');
     }
   }
 
-  /// Handle Dio exceptions and convert to appropriate error messages
-  Exception _handleDioException(DioException e) {
-    switch (e.type) {
-      case DioExceptionType.connectionTimeout:
-        return Exception('Connection timeout - please check your internet connection');
-      case DioExceptionType.sendTimeout:
-        return Exception('Request timeout - please try again');
-      case DioExceptionType.receiveTimeout:
-        return Exception('Server response timeout - please try again');
-      case DioExceptionType.badResponse:
-        return _handleBadResponse(e);
-      case DioExceptionType.cancel:
-        return Exception('Request was cancelled');
-      case DioExceptionType.connectionError:
-        return Exception('Connection error - please check your internet connection');
-      default:
-        return Exception('Network error: ${e.message}');
+  @override
+  Future<List<EnhancedProject>> getProjectsByManager(
+    String managerId, {
+    String? userRole,
+  }) async {
+    try {
+      final Map<String, dynamic> queryParams = {'managerId': managerId};
+      if (userRole != null) queryParams['user_role'] = userRole;
+
+      final response = await dio.get(
+        _baseUrl,
+        queryParameters: queryParams,
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data as Map<String, dynamic>;
+        final projectsData = data['data']['items'] as List;
+        return projectsData
+            .map(
+              (json) => EnhancedProject.fromJson(json as Map<String, dynamic>),
+            )
+            .toList();
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          message: 'Failed to get projects by manager: ${response.statusCode}',
+        );
+      }
+    } on DioException catch (e) {
+      throw _handleDioException(e);
+    } catch (e) {
+      throw Exception(
+        'Unexpected error while fetching projects by manager: $e',
+      );
     }
   }
 
-  /// Handle bad response errors with specific status codes
-  Exception _handleBadResponse(DioException e) {
-    final statusCode = e.response?.statusCode;
-    final data = e.response?.data;
+  @override
+  Future<List<EnhancedProject>> getProjectsByStatus(
+    String status, {
+    String? userRole,
+  }) async {
+    try {
+      final Map<String, dynamic> queryParams = {'status': status};
+      if (userRole != null) queryParams['user_role'] = userRole;
 
-    switch (statusCode) {
-      case 400:
-        final message = _extractErrorMessage(data) ?? 'Bad request - invalid data provided';
-        return Exception(message);
-      case 401:
-        return Exception('Unauthorized - please sign in again');
-      case 403:
-        return Exception('Forbidden - insufficient permissions');
-      case 404:
-        return Exception('Project not found');
-      case 409:
-        final message = _extractErrorMessage(data) ?? 'Conflict - project already exists';
-        return Exception(message);
-      case 422:
-        final message = _extractErrorMessage(data) ?? 'Validation error - please check your input';
-        return Exception(message);
-      case 500:
-        return Exception('Server error - please try again later');
-      case 502:
-        return Exception('Bad gateway - service temporarily unavailable');
-      case 503:
-        return Exception('Service unavailable - please try again later');
-      default:
-        final message = _extractErrorMessage(data) ?? 'Unknown error occurred';
-        return Exception('HTTP $statusCode: $message');
+      final response = await dio.get(
+        _baseUrl,
+        queryParameters: queryParams,
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data as Map<String, dynamic>;
+        final projectsData = data['data']['items'] as List;
+        return projectsData
+            .map(
+              (json) => EnhancedProject.fromJson(json as Map<String, dynamic>),
+            )
+            .toList();
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          message: 'Failed to get projects by status: ${response.statusCode}',
+        );
+      }
+    } on DioException catch (e) {
+      throw _handleDioException(e);
+    } catch (e) {
+      throw Exception('Unexpected error while fetching projects by status: $e');
     }
   }
 
-  /// Extract error message from response data
-  String? _extractErrorMessage(dynamic data) {
-    if (data is Map<String, dynamic>) {
-      // Try common error message fields
-      return data['message'] as String? ??
-          data['error'] as String? ??
-          data['details'] as String? ??
-          (data['errors'] as List?)?.first as String?;
+  @override
+  Future<List<EnhancedProject>> getProjectsByDateRange(
+    DateTime startDate,
+    DateTime endDate, {
+    String? userRole,
+  }) async {
+    try {
+      final Map<String, dynamic> queryParams = {
+        'startDate': startDate.toIso8601String(),
+        'endDate': endDate.toIso8601String(),
+      };
+      if (userRole != null) queryParams['user_role'] = userRole;
+
+      final response = await dio.get(
+        _baseUrl,
+        queryParameters: queryParams,
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data as Map<String, dynamic>;
+        final projectsData = data['data']['items'] as List;
+        return projectsData
+            .map(
+              (json) => EnhancedProject.fromJson(json as Map<String, dynamic>),
+            )
+            .toList();
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          message:
+              'Failed to get projects by date range: ${response.statusCode}',
+        );
+      }
+    } on DioException catch (e) {
+      throw _handleDioException(e);
+    } catch (e) {
+      throw Exception(
+        'Unexpected error while fetching projects by date range: $e',
+      );
     }
-    return null;
-  }
-}
-
-/// Local data source for caching project data
-abstract class ProjectLocalDataSource {
-  /// Cache projects response
-  Future<void> cacheProjects(ProjectsResponse response);
-
-  /// Get cached projects
-  Future<ProjectsResponse?> getCachedProjects();
-
-  /// Cache single project
-  Future<void> cacheProject(EnhancedProject project);
-
-  /// Get cached project by ID
-  Future<EnhancedProject?> getCachedProject(String id);
-
-  /// Clear all cached data
-  Future<void> clearCache();
-
-  /// Check if cache is valid (not expired)
-  Future<bool> isCacheValid();
-}
-
-/// Implementation of ProjectLocalDataSource using shared preferences or local storage
-class ProjectLocalDataSourceImpl implements ProjectLocalDataSource {
-  const ProjectLocalDataSourceImpl();
-
-  // For now, we'll use in-memory storage
-  // In a real implementation, you would use SharedPreferences, Hive, or SQLite
-  static final Map<String, dynamic> _cache = {};
-  static DateTime? _lastCacheTime;
-  static const Duration _cacheValidDuration = Duration(minutes: 5);
-
-  @override
-  Future<void> cacheProjects(ProjectsResponse response) async {
-    _cache['projects'] = response.toJson();
-    _lastCacheTime = DateTime.now();
   }
 
   @override
-  Future<ProjectsResponse?> getCachedProjects() async {
-    if (!await isCacheValid()) return null;
-    
-    final data = _cache['projects'] as Map<String, dynamic>?;
-    if (data == null) return null;
-    
-    return ProjectsResponse.fromJson(data);
+  Future<EnhancedProject> assignProjectManager(
+    String projectId,
+    String managerId, {
+    String? userRole,
+  }) async {
+    try {
+      final response = await dio.patch(
+        '$_baseUrl/$projectId/manager',
+        data: {'managerId': managerId},
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            if (userRole != null) 'X-User-Role': userRole,
+          },
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data as Map<String, dynamic>;
+        final result = EnhancedProject.fromJson(
+          data['data'] as Map<String, dynamic>,
+        );
+        _cache.remove('project_$projectId');
+        _clearProjectsCache();
+        return result;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          message: 'Failed to assign project manager: ${response.statusCode}',
+        );
+      }
+    } on DioException catch (e) {
+      throw _handleDioException(e);
+    } catch (e) {
+      throw Exception('Unexpected error while assigning project manager: $e');
+    }
   }
 
   @override
-  Future<void> cacheProject(EnhancedProject project) async {
-    _cache['project_${project.projectId}'] = project.toJson();
-    _lastCacheTime = DateTime.now();
-  }
+  Future<EnhancedProject> updateProjectStatus(
+    String projectId,
+    String status, {
+    String? userRole,
+  }) async {
+    try {
+      final response = await dio.patch(
+        '$_baseUrl/$projectId/status',
+        data: {'status': status},
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            if (userRole != null) 'X-User-Role': userRole,
+          },
+        ),
+      );
 
-  @override
-  Future<EnhancedProject?> getCachedProject(String id) async {
-    if (!await isCacheValid()) return null;
-    
-    final data = _cache['project_$id'] as Map<String, dynamic>?;
-    if (data == null) return null;
-    
-    return EnhancedProject.fromJson(data);
+      if (response.statusCode == 200) {
+        final data = response.data as Map<String, dynamic>;
+        final result = EnhancedProject.fromJson(
+          data['data'] as Map<String, dynamic>,
+        );
+        _cache.remove('project_$projectId');
+        _clearProjectsCache();
+        return result;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          message: 'Failed to update project status: ${response.statusCode}',
+        );
+      }
+    } on DioException catch (e) {
+      throw _handleDioException(e);
+    } catch (e) {
+      throw Exception('Unexpected error while updating project status: $e');
+    }
   }
 
   @override
   Future<void> clearCache() async {
     _cache.clear();
-    _lastCacheTime = null;
   }
 
   @override
-  Future<bool> isCacheValid() async {
-    if (_lastCacheTime == null) return false;
-    return DateTime.now().difference(_lastCacheTime!) < _cacheValidDuration;
+  Future<void> refreshCache() async {
+    _cache.clear();
+    // Optionally, you could pre-load some common queries here
   }
-}
 
-/// Extension to add toJson method to ProjectsResponse
-extension ProjectsResponseJson on ProjectsResponse {
-  Map<String, dynamic> toJson() {
-    return {
-      'items': items.map((item) => item.toJson()).toList(),
-      'totalCount': totalCount,
-      'pageNumber': pageNumber,
-      'pageSize': pageSize,
-      'totalPages': totalPages,
-      'hasPreviousPage': hasPreviousPage,
-      'hasNextPage': hasNextPage,
-      'metadata': metadata,
-    };
+  // Private helper methods
+  void _clearProjectsCache() {
+    _cache.removeWhere((key, value) => key.startsWith('projects_'));
+  }
+
+  Exception _handleDioException(DioException e) {
+    switch (e.type) {
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.sendTimeout:
+      case DioExceptionType.receiveTimeout:
+        return Exception(
+          'Connection timeout. Please check your internet connection.',
+        );
+
+      case DioExceptionType.badResponse:
+        final statusCode = e.response?.statusCode;
+        final message = e.response?.data?['message'] ?? 'Server error';
+
+        switch (statusCode) {
+          case 400:
+            return Exception('Bad request: $message');
+          case 401:
+            return Exception('Unauthorized: Please log in again');
+          case 403:
+            return Exception(
+              'Forbidden: You don\'t have permission to access this resource',
+            );
+          case 404:
+            return Exception('Resource not found');
+          case 422:
+            return Exception('Validation error: $message');
+          case 500:
+            return Exception('Internal server error. Please try again later');
+          default:
+            return Exception('Server error ($statusCode): $message');
+        }
+
+      case DioExceptionType.cancel:
+        return Exception('Request was cancelled');
+
+      case DioExceptionType.unknown:
+      case DioExceptionType.connectionError:
+      case DioExceptionType.badCertificate:
+        return Exception('Network error. Please check your connection');
+    }
   }
 }

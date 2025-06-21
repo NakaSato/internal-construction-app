@@ -5,8 +5,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../domain/entities/project.dart';
 import '../../application/project_bloc.dart';
-import '../../application/project_event.dart';
-import '../../application/project_state.dart';
 import '../../../authorization/presentation/widgets/authorization_widgets.dart';
 import '../../../authentication/application/auth_bloc.dart';
 import '../../../authentication/application/auth_state.dart';
@@ -27,7 +25,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
   final _addressController = TextEditingController();
   final _clientInfoController = TextEditingController();
 
-  late ProjectBloc _projectBloc;
+  late EnhancedProjectBloc _projectBloc;
   ProjectPriority _selectedPriority = ProjectPriority.medium;
   String _selectedStatus = 'Planning';
   DateTime? _startDate;
@@ -36,7 +34,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
   @override
   void initState() {
     super.initState();
-    _projectBloc = GetIt.instance<ProjectBloc>();
+    _projectBloc = GetIt.instance<EnhancedProjectBloc>();
     _initializeDefaultValues();
   }
 
@@ -199,9 +197,9 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
       ),
       body: BlocProvider.value(
         value: _projectBloc,
-        child: BlocListener<ProjectBloc, ProjectState>(
+        child: BlocListener<EnhancedProjectBloc, EnhancedProjectState>(
           listener: (context, state) {
-            if (state is ProjectOperationSuccess) {
+            if (state is EnhancedProjectOperationSuccess) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(state.message),
@@ -210,7 +208,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
               );
               // Navigate back or to the new project
               context.pop(true);
-            } else if (state is ProjectError) {
+            } else if (state is EnhancedProjectError) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(state.message),
@@ -219,9 +217,9 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
               );
             }
           },
-          child: BlocBuilder<ProjectBloc, ProjectState>(
+          child: BlocBuilder<EnhancedProjectBloc, EnhancedProjectState>(
             builder: (context, state) {
-              final isLoading = state is ProjectLoading;
+              final isLoading = state is EnhancedProjectLoading;
 
               return SingleChildScrollView(
                 padding: const EdgeInsets.all(16.0),
@@ -616,7 +614,19 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
       completedTaskCount: 0,
     );
 
-    _projectBloc.add(ProjectCreateRequested(newProject));
+    // Convert project to Map for the enhanced API
+    final projectData = {
+      'name': newProject.name,
+      'description': newProject.description,
+      'status': newProject.status,
+      'priority': newProject.priority.toString().split('.').last,
+      'address': newProject.address,
+      'clientInfo': newProject.clientInfo,
+      'startDate': newProject.startDate.toIso8601String(),
+      'estimatedEndDate': newProject.estimatedEndDate.toIso8601String(),
+    };
+
+    _projectBloc.add(CreateProjectRequested(projectData: projectData));
   }
 
   Color _getPriorityColor(ProjectPriority priority) {
