@@ -10,6 +10,7 @@ import '../../features/authentication/presentation/screens/register_screen.dart'
 import '../../features/calendar_management/presentation/screens/calendar_management_screen.dart';
 import '../../features/project_management/presentation/screens/image_project_card_list_screen.dart';
 import '../../features/project_management/presentation/screens/project_detail_screen.dart';
+import '../../features/project_management/presentation/screens/create_project_screen.dart';
 import '../widgets/main_app_screen.dart';
 
 /// Application route names
@@ -31,6 +32,11 @@ class AppRoutes {
   static const String calendar = '/calendar';
   static const String calendarDetail = '/calendar/:id';
   static const String calendarManagement = '/calendar-management';
+
+  // Project management routes
+  static const String projects = '/projects';
+  static const String projectDetail = '/projects/:id';
+  static const String createProject = '/projects/create';
 
   // Private constructor to prevent instantiation
   AppRoutes._();
@@ -120,6 +126,11 @@ class AppRouter {
         path: '/projects',
         name: 'projects',
         builder: (context, state) => const ImageProjectCardListScreen(),
+      ),
+      GoRoute(
+        path: '/projects/create',
+        name: 'create-project',
+        builder: (context, state) => const CreateProjectScreen(),
       ),
       GoRoute(
         path: '/projects/:id',

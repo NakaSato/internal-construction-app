@@ -22,6 +22,8 @@ class ProfileScreen extends StatelessWidget {
               heroContext: 'profile', // Add unique context
               showSearchIcon: false, // Hide search icon
               showNotificationIcon: false, // Hide notification icon
+              showUserRole: true, // Explicitly show user role
+              showOnlineStatus: true, // Show online status
               onProfileTap: () {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Edit profile coming soon!')),

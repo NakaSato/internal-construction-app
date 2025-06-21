@@ -6,7 +6,6 @@ import '../../../features/authentication/application/auth_state.dart';
 import '../../../features/project_management/application/project_bloc.dart';
 import '../../../features/project_management/application/project_event.dart';
 
-import 'project_statistics_section.dart';
 import 'project_list_section.dart';
 import 'dashboard_search_section.dart';
 import 'dashboard_constants.dart';
@@ -33,6 +32,8 @@ class DashboardTab extends StatelessWidget {
         heroContext: 'dashboard',
         showNotificationBadge: true,
         notificationCount: 3,
+        showUserRole: true, // Explicitly enable user role display
+        showOnlineStatus: true, // Also show online status
         onProfileTap: onProfileTap,
       ),
       body: RefreshIndicator(
@@ -43,10 +44,6 @@ class DashboardTab extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Statistics Cards Section
-              const ProjectStatisticsSection(),
-              const SizedBox(height: DashboardConstants.largeSpacing),
-
               // Search Bar Section
               DashboardSearchSection(
                 onSearchChanged: (value) {

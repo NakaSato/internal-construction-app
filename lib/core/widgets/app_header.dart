@@ -205,17 +205,17 @@ class _AppHeaderState extends State<AppHeader>
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           border: Border.all(
-            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+            color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
             width: 2,
           ),
         ),
         child: CircleAvatar(
           radius: _AppHeaderConstants.avatarRadius,
           backgroundColor: Theme.of(context).colorScheme.primary,
-          backgroundImage: widget.user.profileImageUrl != null
+          backgroundImage: widget.user.profileImageUrl?.isNotEmpty == true
               ? NetworkImage(widget.user.profileImageUrl!)
               : null,
-          child: widget.user.profileImageUrl == null
+          child: widget.user.profileImageUrl?.isEmpty != false
               ? _buildAvatarInitials(context)
               : null,
         ),
@@ -723,255 +723,230 @@ class _AppHeaderState extends State<AppHeader>
 
   /// Get status color based on user status
   Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'online':
-        return Colors.green.shade400;
-      case 'away':
-        return Colors.amber.shade400;
-      case 'busy':
-      case 'dnd':
-      case 'do not disturb':
-        return Colors.red.shade400;
-      case 'offline':
-        return Colors.grey.shade400;
-      default:
-        return Colors.green.shade400;
-    }
+    const statusColors = {
+      'online': Colors.green,
+      'away': Colors.amber,
+      'busy': Colors.red,
+      'dnd': Colors.red,
+      'do not disturb': Colors.red,
+      'offline': Colors.grey,
+    };
+
+    final colorScheme = statusColors[status.toLowerCase()] ?? Colors.green;
+    return colorScheme.shade400;
   }
 
   /// Get status text based on user status
   String _getStatusText(String status) {
-    switch (status.toLowerCase()) {
-      case 'online':
-        return 'Online';
-      case 'away':
-        return 'Away';
-      case 'busy':
-      case 'dnd':
-      case 'do not disturb':
-        return 'Busy';
-      case 'offline':
-        return 'Offline';
-      default:
-        return 'Online';
-    }
+    const statusTexts = {
+      'online': 'Online',
+      'away': 'Away',
+      'busy': 'Busy',
+      'dnd': 'Busy',
+      'do not disturb': 'Busy',
+      'offline': 'Offline',
+    };
+
+    return statusTexts[status.toLowerCase()] ?? 'Online';
   }
 
   // MARK: - Role Management Helpers
 
   /// Get role priority level (higher number = higher authority)
+  ///
+  /// Priority levels:
+  /// - 10: Admin (highest authority)
+  /// - 8: Project Manager (management level)
+  /// - 2: User (operational level)
+  /// - 0: Viewer (read-only access)
   int _getRolePriority(String roleName) {
     switch (roleName.toLowerCase()) {
       case 'admin':
       case 'administrator':
-        return 10; // Highest authority
+        return 10; // Admin
       case 'manager':
       case 'project_manager':
-        return 8; // Management level
       case 'site_supervisor':
       case 'supervisor':
-        return 7; // Supervision level
-      case 'engineer':
-        return 6; // Engineering level
-      case 'developer':
-      case 'dev':
-        return 5; // Development level
-      case 'analyst':
-      case 'qa':
-      case 'quality_assurance':
-        return 4; // Specialist level
-      case 'technician':
-      case 'tech':
-        return 3; // Technical level
+        return 8; // Project Manager
       case 'user':
-      case 'member':
-        return 2; // Standard user
-      case 'contractor':
-      case 'client':
-      case 'customer':
-        return 1; // External users
+      case 'engineer':
+        return 2; // User
       case 'viewer':
       case 'guest':
-        return 0; // Read-only access
+      case 'client':
+      case 'customer':
+        return 0; // Viewer
       default:
-        return 1; // Default level
+        return 2; // Default to User level
     }
   }
 
-  /// Check if role should show elevated styling
+  /// Check if role should show elevated styling (Admin/Project Manager)
   bool _isElevatedRole(String roleName) {
-    return _getRolePriority(roleName) >= 7; // Manager level and above
+    return _getRolePriority(roleName) >= 8;
   } // MARK: - Utility Methods
 
+  /// Extract initials from user name or email
   String _getInitials(User user) {
     if (user.name.isNotEmpty) {
-      final nameParts = user.name.split(' ');
+      final nameParts = user.name.trim().split(' ');
       if (nameParts.length >= 2) {
         return '${nameParts[0][0]}${nameParts[1][0]}'.toUpperCase();
       }
       return user.name[0].toUpperCase();
     }
-    return user.email[0].toUpperCase();
+    return user.email.isNotEmpty ? user.email[0].toUpperCase() : 'U';
   }
 
+  /// Get display name from user object with fallback to email
   String _getDisplayName(User user) {
     if (user.name.isNotEmpty) {
       return user.name;
     }
+
     // Extract name from email if no name is provided
     final emailParts = user.email.split('@');
-    if (emailParts.isNotEmpty) {
+    if (emailParts.isNotEmpty && emailParts[0].isNotEmpty) {
       return emailParts[0]
-          .replaceAll('.', ' ')
-          .replaceAll('_', ' ')
+          .replaceAll(RegExp(r'[._]'), ' ')
           .split(' ')
-          .map(
-            (word) => word.isNotEmpty
-                ? '${word[0].toUpperCase()}${word.substring(1).toLowerCase()}'
-                : word,
-          )
+          .map(_capitalizeWord)
           .join(' ');
     }
     return 'User';
   }
 
-  String _formatRoleName(String roleName) {
-    // Convert role names to display format
-    switch (roleName.toLowerCase()) {
-      case 'admin':
-      case 'administrator':
-        return 'ADMIN';
-      case 'manager':
-      case 'project_manager':
-        return 'MANAGER';
-      case 'user':
-      case 'member':
-        return 'USER';
-      case 'viewer':
-      case 'guest':
-        return 'VIEWER';
-      case 'site_supervisor':
-      case 'supervisor':
-        return 'SUPERVISOR';
-      case 'technician':
-      case 'tech':
-        return 'TECH';
-      case 'engineer':
-        return 'ENGINEER';
-      case 'contractor':
-        return 'CONTRACTOR';
-      case 'client':
-      case 'customer':
-        return 'CLIENT';
-      case 'analyst':
-        return 'ANALYST';
-      case 'developer':
-      case 'dev':
-        return 'DEV';
-      case 'qa':
-      case 'quality_assurance':
-        return 'QA';
-      case 'finance':
-      case 'accounting':
-        return 'FINANCE';
-      case 'hr':
-      case 'human_resources':
-        return 'HR';
-      case 'sales':
-        return 'SALES';
-      case 'support':
-        return 'SUPPORT';
-      default:
-        return roleName.toUpperCase().replaceAll('_', ' ');
-    }
+  /// Capitalize first letter of a word
+  String _capitalizeWord(String word) {
+    if (word.isEmpty) return word;
+    return '${word[0].toUpperCase()}${word.substring(1).toLowerCase()}';
   }
 
+  /// Format role name to standardized display format
+  String _formatRoleName(String roleName) {
+    const roleMapping = {
+      // Admin roles
+      'admin': 'Admin',
+      'administrator': 'Admin',
+
+      // Project Manager roles
+      'manager': 'Project Manager',
+      'project_manager': 'Project Manager',
+      'site_supervisor': 'Project Manager',
+      'supervisor': 'Project Manager',
+
+      // User roles (operational)
+      'user': 'User',
+      'member': 'User',
+      'technician': 'User',
+      'tech': 'User',
+      'field_technician': 'User',
+      'engineer': 'User',
+      'developer': 'User',
+      'dev': 'User',
+      'contractor': 'User',
+      'analyst': 'User',
+      'qa': 'User',
+      'quality_assurance': 'User',
+      'finance': 'User',
+      'accounting': 'User',
+      'hr': 'User',
+      'human_resources': 'User',
+      'sales': 'User',
+      'support': 'User',
+
+      // Viewer roles (read-only)
+      'viewer': 'Viewer',
+      'guest': 'Viewer',
+      'client': 'Viewer',
+      'customer': 'Viewer',
+    };
+
+    return roleMapping[roleName.toLowerCase()] ?? 'User';
+  }
+
+  /// Get role color based on standardized categories
   Color _getRoleColor(String roleName) {
-    // Assign colors based on role hierarchy and type
-    switch (roleName.toLowerCase()) {
-      case 'admin':
-      case 'administrator':
-        return Colors.red.shade600; // Highest authority
-      case 'manager':
-      case 'project_manager':
-        return Colors.purple.shade600; // Management roles
-      case 'site_supervisor':
-      case 'supervisor':
-        return Colors.orange.shade600; // Supervision roles
-      case 'engineer':
-        return Colors.indigo.shade600; // Engineering roles
-      case 'developer':
-      case 'dev':
-        return Colors.teal.shade600; // Development roles
-      case 'analyst':
-        return Colors.cyan.shade600; // Analysis roles
-      case 'qa':
-      case 'quality_assurance':
-        return Colors.lime.shade700; // Quality assurance
-      case 'user':
-      case 'member':
-      case 'technician':
-      case 'tech':
-        return Colors.blue.shade600; // Operational roles
-      case 'contractor':
-        return Colors.amber.shade700; // External contractors
-      case 'client':
-      case 'customer':
-        return Colors.green.shade600; // Client roles
-      case 'finance':
-      case 'accounting':
-        return Colors.green.shade700; // Finance roles
-      case 'hr':
-      case 'human_resources':
-        return Colors.pink.shade600; // HR roles
-      case 'sales':
-        return Colors.deepOrange.shade600; // Sales roles
-      case 'support':
-        return Colors.lightBlue.shade600; // Support roles
-      case 'viewer':
-      case 'guest':
-        return Colors.grey.shade600; // Read-only roles
-      default:
-        return Colors.indigo.shade600; // Default for unknown roles
-    }
+    const roleColors = {
+      // Admin - Highest authority
+      'admin': Colors.red,
+      'administrator': Colors.red,
+
+      // Project Manager - Management roles
+      'manager': Colors.purple,
+      'project_manager': Colors.purple,
+      'site_supervisor': Colors.purple,
+      'supervisor': Colors.purple,
+
+      // User - Operational roles
+      'user': Colors.blue,
+      'member': Colors.blue,
+      'technician': Colors.blue,
+      'tech': Colors.blue,
+      'field_technician': Colors.blue,
+      'engineer': Colors.blue,
+      'developer': Colors.blue,
+      'dev': Colors.blue,
+      'contractor': Colors.blue,
+      'analyst': Colors.blue,
+      'qa': Colors.blue,
+      'quality_assurance': Colors.blue,
+      'finance': Colors.blue,
+      'accounting': Colors.blue,
+      'hr': Colors.blue,
+      'human_resources': Colors.blue,
+      'sales': Colors.blue,
+      'support': Colors.blue,
+
+      // Viewer - Read-only roles
+      'viewer': Colors.grey,
+      'guest': Colors.grey,
+      'client': Colors.grey,
+      'customer': Colors.grey,
+    };
+
+    final colorScheme = roleColors[roleName.toLowerCase()] ?? Colors.blue;
+    return colorScheme.shade600;
   }
 
   // MARK: - Snackbar Helpers
 
+  /// Show search functionality snackbar
   void _showSearchSnackBar(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(
-              Icons.search_rounded,
-              color: Theme.of(context).colorScheme.onInverseSurface,
-              size: 20,
-            ),
-            const SizedBox(width: 8),
-            const Text('Search functionality coming soon!'),
-          ],
-        ),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        backgroundColor: Theme.of(context).colorScheme.inverseSurface,
-        duration: _AppHeaderConstants.snackBarDuration,
-      ),
+    _showSnackBar(
+      context,
+      icon: Icons.search_rounded,
+      message: 'Search functionality coming soon!',
     );
   }
 
+  /// Show notification functionality snackbar
   void _showNotificationSnackBar(BuildContext context) {
+    _showSnackBar(
+      context,
+      icon: Icons.notifications_active_rounded,
+      message: 'Notifications feature coming soon!',
+    );
+  }
+
+  /// Generic snackbar helper
+  void _showSnackBar(
+    BuildContext context, {
+    required IconData icon,
+    required String message,
+  }) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
           children: [
             Icon(
-              Icons.notifications_active_rounded,
+              icon,
               color: Theme.of(context).colorScheme.onInverseSurface,
               size: 20,
             ),
             const SizedBox(width: 8),
-            const Text('Notifications feature coming soon!'),
+            Text(message),
           ],
         ),
         behavior: SnackBarBehavior.floating,

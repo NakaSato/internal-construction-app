@@ -1,4 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../authentication/application/auth_bloc.dart';
+import '../../../authentication/application/auth_state.dart';
+import '../../../authorization/presentation/widgets/authorization_widgets.dart';
 
 /// Extension for convenience methods on Color objects
 extension ColorExtension on Color {
@@ -211,21 +217,65 @@ class _ImageProjectCardListScreenState
               );
             },
           ),
+          // Create Project button in AppBar
+          BlocBuilder<AuthBloc, AuthState>(
+            builder: (context, authState) {
+              if (authState is! AuthAuthenticated) {
+                return const SizedBox.shrink();
+              }
+
+              final user = authState.user;
+
+              return PermissionBuilder(
+                user: user,
+                resource: 'projects',
+                action: 'create',
+                builder: (context, hasPermission) {
+                  if (!hasPermission) {
+                    return const SizedBox.shrink();
+                  }
+
+                  return IconButton(
+                    icon: const Icon(Icons.add),
+                    onPressed: () => context.go('/projects/create'),
+                    tooltip: 'Create New Project',
+                  );
+                },
+              );
+            },
+          ),
         ],
       ),
       body: RefreshIndicator(
         onRefresh: _loadProjects,
         child: _buildProjectList(),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        heroTag: "image_project_fab",
-        onPressed: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Add project feature coming soon!')),
+      floatingActionButton: BlocBuilder<AuthBloc, AuthState>(
+        builder: (context, authState) {
+          if (authState is! AuthAuthenticated) {
+            return const SizedBox.shrink(); // Hide button if not authenticated
+          }
+
+          final user = authState.user;
+
+          return PermissionBuilder(
+            user: user,
+            resource: 'projects',
+            action: 'create',
+            builder: (context, hasPermission) {
+              if (!hasPermission) {
+                return const SizedBox.shrink(); // Hide button if no permission
+              }
+
+              return FloatingActionButton.extended(
+                heroTag: "image_project_fab",
+                onPressed: () => context.go('/projects/create'),
+                icon: const Icon(Icons.add),
+                label: const Text('New Project'),
+              );
+            },
           );
         },
-        icon: const Icon(Icons.add),
-        label: const Text('New Project'),
       ),
     );
   }
