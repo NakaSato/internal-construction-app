@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../screens/image_project_card_list_screen.dart';
-import '../screens/project_detail_screen.dart';
 
 /// Helper class to manage navigation between different project management views
 /// Provides both engineer-focused and general user interfaces
@@ -39,18 +38,22 @@ class ProjectManagementNavigation {
 
   /// Navigate to engineer-focused project detail
   static void navigateToEngineerDetail(BuildContext context, String projectId) {
+    // TODO: Implement enhanced project detail screen
+    // For now, navigate back to project list
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => ProjectDetailScreen(projectId: projectId),
+        builder: (context) => const ImageProjectCardListScreen(),
       ),
     );
   }
 
   /// Navigate to standard project detail
   static void navigateToStandardDetail(BuildContext context, String projectId) {
+    // TODO: Implement enhanced project detail screen
+    // For now, navigate back to project list
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => ProjectDetailScreen(projectId: projectId),
+        builder: (context) => const ImageProjectCardListScreen(),
       ),
     );
   }

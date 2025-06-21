@@ -9,7 +9,7 @@ import '../../features/authentication/presentation/screens/login_screen.dart';
 import '../../features/authentication/presentation/screens/register_screen.dart';
 import '../../features/calendar_management/presentation/screens/calendar_management_screen.dart';
 import '../../features/project_management/presentation/screens/image_project_card_list_screen.dart';
-import '../../features/project_management/presentation/screens/project_detail_screen.dart';
+import '../../features/project_management/presentation/screens/project_list_screen.dart';
 import '../../features/project_management/presentation/screens/create_project_screen.dart';
 import '../widgets/main_app_screen.dart';
 
