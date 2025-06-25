@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/foundation.dart';
 import '../../features/authentication/domain/entities/user.dart';
 
 // MARK: - Constants

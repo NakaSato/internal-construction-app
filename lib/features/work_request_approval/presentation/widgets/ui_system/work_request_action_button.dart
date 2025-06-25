@@ -154,7 +154,7 @@ class WorkRequestActionButton extends StatelessWidget {
   _ActionButtonSizeConfig _getSizeConfig() {
     switch (size) {
       case WorkRequestActionButtonSize.small:
-        return _ActionButtonSizeConfig(
+        return const _ActionButtonSizeConfig(
           horizontalPadding: 12,
           verticalPadding: 8,
           fontSize: 12,
@@ -166,7 +166,7 @@ class WorkRequestActionButton extends StatelessWidget {
           loadingSize: 14,
         );
       case WorkRequestActionButtonSize.medium:
-        return _ActionButtonSizeConfig(
+        return const _ActionButtonSizeConfig(
           horizontalPadding: 16,
           verticalPadding: 12,
           fontSize: 14,
@@ -178,7 +178,7 @@ class WorkRequestActionButton extends StatelessWidget {
           loadingSize: 16,
         );
       case WorkRequestActionButtonSize.large:
-        return _ActionButtonSizeConfig(
+        return const _ActionButtonSizeConfig(
           horizontalPadding: 20,
           verticalPadding: 16,
           fontSize: 16,

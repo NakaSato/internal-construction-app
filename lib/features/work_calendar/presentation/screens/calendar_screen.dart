@@ -81,7 +81,7 @@ class _CalendarScreenState extends State<CalendarScreen>
         assignedTeam: 'Survey Team',
         estimatedHours: 16.0,
         actualHours: 14.5,
-        materials: ['Measuring tools', 'Safety equipment'],
+        materials: const ['Measuring tools', 'Safety equipment'],
       ),
       ConstructionTask(
         id: 'task_002',
@@ -96,7 +96,11 @@ class _CalendarScreenState extends State<CalendarScreen>
         assignedTeam: 'Installation Team A',
         estimatedHours: 24.0,
         actualHours: 18.0,
-        materials: ['Cleaning supplies', 'Roof sealant', 'Safety harnesses'],
+        materials: const [
+          'Cleaning supplies',
+          'Roof sealant',
+          'Safety harnesses',
+        ],
       ),
       ConstructionTask(
         id: 'task_003',
@@ -110,7 +114,7 @@ class _CalendarScreenState extends State<CalendarScreen>
         priority: TaskPriority.high,
         assignedTeam: 'Installation Team B',
         estimatedHours: 32.0,
-        materials: ['Mounting rails', 'Bolts', 'Flashing', 'Drill bits'],
+        materials: const ['Mounting rails', 'Bolts', 'Flashing', 'Drill bits'],
       ),
       ConstructionTask(
         id: 'task_004',
@@ -124,7 +128,7 @@ class _CalendarScreenState extends State<CalendarScreen>
         priority: TaskPriority.critical,
         assignedTeam: 'Installation Team A & B',
         estimatedHours: 40.0,
-        materials: ['Solar panels', 'Clamps', 'MC4 connectors'],
+        materials: const ['Solar panels', 'Clamps', 'MC4 connectors'],
       ),
       ConstructionTask(
         id: 'task_005',
@@ -138,7 +142,7 @@ class _CalendarScreenState extends State<CalendarScreen>
         priority: TaskPriority.critical,
         assignedTeam: 'Electrical Team',
         estimatedHours: 28.0,
-        materials: ['DC cables', 'AC cables', 'Conduit', 'Wire nuts'],
+        materials: const ['DC cables', 'AC cables', 'Conduit', 'Wire nuts'],
       ),
       ConstructionTask(
         id: 'task_006',
@@ -152,7 +156,7 @@ class _CalendarScreenState extends State<CalendarScreen>
         priority: TaskPriority.high,
         assignedTeam: 'Electrical Team',
         estimatedHours: 12.0,
-        materials: [
+        materials: const [
           'String inverters',
           'Mounting brackets',
           'Disconnect switches',
@@ -170,7 +174,7 @@ class _CalendarScreenState extends State<CalendarScreen>
         priority: TaskPriority.high,
         assignedTeam: 'QA Team',
         estimatedHours: 16.0,
-        materials: ['Testing equipment', 'Multimeter', 'Safety gear'],
+        materials: const ['Testing equipment', 'Multimeter', 'Safety gear'],
       ),
       ConstructionTask(
         id: 'task_008',
@@ -184,7 +188,7 @@ class _CalendarScreenState extends State<CalendarScreen>
         priority: TaskPriority.critical,
         assignedTeam: 'Project Manager',
         estimatedHours: 4.0,
-        materials: ['Documentation', 'Inspection forms'],
+        materials: const ['Documentation', 'Inspection forms'],
       ),
     ];
   }
@@ -664,7 +668,7 @@ class _CalendarScreenState extends State<CalendarScreen>
           ),
           // Sub-tabs for different construction views
           Container(
-            color: Theme.of(context).colorScheme.surfaceVariant,
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
             child: const TabBar(
               tabs: [
                 Tab(icon: Icon(Icons.calendar_view_month), text: 'Calendar'),
@@ -679,7 +683,7 @@ class _CalendarScreenState extends State<CalendarScreen>
                 // Calendar View
                 ConstructionCalendarWidget(
                   tasks: _constructionTasks,
-                  events: [],
+                  events: const [],
                   view: _currentView,
                   controller: _calendarController,
                   onTaskTapped: (task) {

@@ -101,7 +101,7 @@ class _ViewModeSelector extends StatelessWidget {
             icon: Icons.table_rows,
             title: 'Engineer View',
             subtitle: 'Data-dense table with technical focus',
-            features: [
+            features: const [
               'Sortable table with key metrics',
               'Advanced filtering capabilities',
               'Quick access to technical data',
@@ -120,7 +120,7 @@ class _ViewModeSelector extends StatelessWidget {
             icon: Icons.view_module,
             title: 'Standard View',
             subtitle: 'Visual cards with project overview',
-            features: [
+            features: const [
               'Project image cards',
               'Visual progress indicators',
               'Easy browsing experience',

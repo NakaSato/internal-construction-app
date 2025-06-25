@@ -234,7 +234,7 @@ class ApiClient {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
-        return ApiException(
+        return const ApiException(
           message: 'Connection timeout. Please check your internet connection.',
           statusCode: 408,
           type: ApiExceptionType.timeout,
@@ -291,7 +291,7 @@ class ApiClient {
         }
 
       case DioExceptionType.cancel:
-        return ApiException(
+        return const ApiException(
           message: 'Request was cancelled',
           statusCode: 0,
           type: ApiExceptionType.cancelled,
@@ -300,7 +300,7 @@ class ApiClient {
       case DioExceptionType.unknown:
       case DioExceptionType.connectionError:
       case DioExceptionType.badCertificate:
-        return ApiException(
+        return const ApiException(
           message: 'Network error. Please check your connection.',
           statusCode: 0,
           type: ApiExceptionType.network,
@@ -439,7 +439,7 @@ class ApiResult<T> {
   ApiResult<R> map<R>(R Function(T data) mapper) {
     if (isSuccess && data != null) {
       try {
-        return ApiResult.success(mapper(data!));
+        return ApiResult.success(mapper(data as T));
       } catch (e) {
         return ApiResult.failure(
           ApiException(

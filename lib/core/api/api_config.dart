@@ -166,7 +166,7 @@ class ApiConfig {
 
   /// Build full URL for an endpoint
   static String fullUrl(String endpoint) {
-    return '${configuredBaseUrl}$endpoint';
+    return '$configuredBaseUrl$endpoint';
   }
 
   /// Replace path parameters in endpoint URLs

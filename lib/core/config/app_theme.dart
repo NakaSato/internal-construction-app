@@ -565,9 +565,9 @@ class AppTheme {
 
     // === SNACKBAR THEME ===
     snackBarTheme: SnackBarThemeData(
-      backgroundColor: Color(0xFF322F35),
+      backgroundColor: const Color(0xFF322F35),
       contentTextStyle: _textTheme.bodyMedium?.copyWith(
-        color: Color(0xFFF5EFF7),
+        color: const Color(0xFFF5EFF7),
       ),
       actionTextColor: primaryLight,
       shape: RoundedRectangleBorder(
@@ -692,7 +692,7 @@ class AppTheme {
     tabBarTheme: TabBarThemeData(
       labelColor: primaryColor,
       unselectedLabelColor: onSurfaceVariant,
-      indicator: BoxDecoration(
+      indicator: const BoxDecoration(
         border: Border(bottom: BorderSide(color: primaryColor, width: 2)),
       ),
       indicatorSize: TabBarIndicatorSize.label,
@@ -713,11 +713,11 @@ class AppTheme {
     materialTapTargetSize: MaterialTapTargetSize.padded,
 
     // === PAGE TRANSITIONS ===
-    pageTransitionsTheme: PageTransitionsTheme(
+    pageTransitionsTheme: const PageTransitionsTheme(
       builders: {
-        TargetPlatform.android: CupertinoPageTransitionsBuilder(),
-        TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
-        TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+        TargetPlatform.android: const CupertinoPageTransitionsBuilder(),
+        TargetPlatform.iOS: const CupertinoPageTransitionsBuilder(),
+        TargetPlatform.macOS: const CupertinoPageTransitionsBuilder(),
       },
     ),
   );
@@ -809,7 +809,7 @@ class AppTheme {
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         backgroundColor: primaryLight,
-        foregroundColor: Color(0xFF003258),
+        foregroundColor: const Color(0xFF003258),
         elevation: 2,
         shadowColor: primaryLight.withValues(alpha: 0.3),
         shape: RoundedRectangleBorder(
@@ -827,7 +827,7 @@ class AppTheme {
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
         backgroundColor: primaryLight,
-        foregroundColor: Color(0xFF003258),
+        foregroundColor: const Color(0xFF003258),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radiusM),
         ),
@@ -935,7 +935,9 @@ class AppTheme {
         color: primaryLight,
         fontWeight: FontWeight.w600,
       ),
-      errorStyle: _textTheme.bodySmall?.copyWith(color: Color(0xFFFFB4AB)),
+      errorStyle: _textTheme.bodySmall?.copyWith(
+        color: const Color(0xFFFFB4AB),
+      ),
     ),
 
     // === DIALOG THEME ===
@@ -971,7 +973,7 @@ class AppTheme {
     // === CHIP THEME ===
     chipTheme: ChipThemeData(
       backgroundColor: darkSurfaceContainer,
-      selectedColor: Color(0xFF005048),
+      selectedColor: const Color(0xFF005048),
       disabledColor: darkOnSurface.withValues(alpha: 0.12),
       deleteIconColor: darkOnSurfaceVariant,
       labelStyle: _textTheme.labelLarge?.copyWith(color: darkOnSurfaceVariant),
@@ -1011,7 +1013,7 @@ class AppTheme {
         borderRadius: BorderRadius.circular(radiusS),
       ),
       tileColor: Colors.transparent,
-      selectedTileColor: Color(0xFF004881).withValues(alpha: 0.5),
+      selectedTileColor: const Color(0xFF004881).withValues(alpha: 0.5),
       titleTextStyle: _textTheme.titleMedium?.copyWith(color: darkOnSurface),
       subtitleTextStyle: _textTheme.bodyMedium?.copyWith(
         color: darkOnSurfaceVariant,
@@ -1029,7 +1031,7 @@ class AppTheme {
         Set<WidgetState> states,
       ) {
         if (states.contains(WidgetState.selected)) {
-          return Color(0xFF003258);
+          return const Color(0xFF003258);
         }
         return darkSurfaceContainerHighest;
       }),
@@ -1053,7 +1055,7 @@ class AppTheme {
         }
         return Colors.transparent;
       }),
-      checkColor: WidgetStateProperty.all(Color(0xFF003258)),
+      checkColor: WidgetStateProperty.all(const Color(0xFF003258)),
       side: const BorderSide(color: darkOutline, width: 2),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(radiusXS),
@@ -1083,7 +1085,7 @@ class AppTheme {
     tabBarTheme: TabBarThemeData(
       labelColor: primaryLight,
       unselectedLabelColor: darkOnSurfaceVariant,
-      indicator: BoxDecoration(
+      indicator: const BoxDecoration(
         border: Border(bottom: BorderSide(color: primaryLight, width: 2)),
       ),
       indicatorSize: TabBarIndicatorSize.label,
@@ -1110,11 +1112,11 @@ class AppTheme {
     materialTapTargetSize: MaterialTapTargetSize.padded,
 
     // === PAGE TRANSITIONS ===
-    pageTransitionsTheme: PageTransitionsTheme(
+    pageTransitionsTheme: const PageTransitionsTheme(
       builders: {
-        TargetPlatform.android: CupertinoPageTransitionsBuilder(),
-        TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
-        TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+        TargetPlatform.android: const CupertinoPageTransitionsBuilder(),
+        TargetPlatform.iOS: const CupertinoPageTransitionsBuilder(),
+        TargetPlatform.macOS: const CupertinoPageTransitionsBuilder(),
       },
     ),
   );

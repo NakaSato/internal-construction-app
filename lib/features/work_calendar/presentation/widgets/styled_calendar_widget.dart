@@ -133,7 +133,7 @@ class _StyledCalendarWidgetState extends State<StyledCalendarWidget> {
           // Modern header styling with gradient and improved typography
           headerStyle: CalendarHeaderStyle(
             textAlign: TextAlign.center,
-            backgroundColor: colorScheme.surfaceVariant,
+            backgroundColor: colorScheme.surfaceContainerHighest,
             textStyle: Theme.of(context).textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.bold,
               color: colorScheme.onSurfaceVariant,
@@ -143,7 +143,9 @@ class _StyledCalendarWidgetState extends State<StyledCalendarWidget> {
 
           // Enhanced view header styling with subtle gradient and improved typography
           viewHeaderStyle: ViewHeaderStyle(
-            backgroundColor: colorScheme.surfaceVariant.withOpacity(0.7),
+            backgroundColor: colorScheme.surfaceContainerHighest.withOpacity(
+              0.7,
+            ),
             dayTextStyle: Theme.of(context).textTheme.labelMedium?.copyWith(
               color: colorScheme.onSurfaceVariant,
               fontWeight: FontWeight.w600,
@@ -178,9 +180,9 @@ class _StyledCalendarWidgetState extends State<StyledCalendarWidget> {
               todayBackgroundColor: colorScheme.primaryContainer.withOpacity(
                 0.3,
               ),
-              leadingDatesBackgroundColor: colorScheme.surfaceVariant
+              leadingDatesBackgroundColor: colorScheme.surfaceContainerHighest
                   .withOpacity(0.4),
-              trailingDatesBackgroundColor: colorScheme.surfaceVariant
+              trailingDatesBackgroundColor: colorScheme.surfaceContainerHighest
                   .withOpacity(0.4),
               textStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: colorScheme.onSurface,

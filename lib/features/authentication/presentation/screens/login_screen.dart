@@ -211,7 +211,7 @@ class _LoginScreenState extends State<LoginScreen>
   Widget _buildPrefixIcon(IconData iconData) {
     return Container(
       margin: const EdgeInsets.all(12),
-      padding: EdgeInsets.all(_iconContainerSize),
+      padding: const EdgeInsets.all(_iconContainerSize),
       decoration: BoxDecoration(
         color: const Color(
           0xFF4CAF50,
@@ -508,7 +508,7 @@ class _LoginScreenState extends State<LoginScreen>
     return Column(
       children: [
         // Make title responsive with better line breaking
-        Container(
+        SizedBox(
           width: double.infinity,
           child: FittedBox(
             fit: BoxFit.scaleDown,
@@ -822,7 +822,7 @@ class _LoginScreenState extends State<LoginScreen>
                         SizedBox(
                           width: loadingSize,
                           height: loadingSize,
-                          child: CircularProgressIndicator(
+                          child: const CircularProgressIndicator(
                             strokeWidth: 2.5,
                             color: Colors.white,
                             strokeCap: StrokeCap.round,

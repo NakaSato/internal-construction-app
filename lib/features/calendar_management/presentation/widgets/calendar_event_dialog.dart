@@ -371,13 +371,13 @@ class _CalendarEventDialogState extends State<CalendarEventDialog> {
         border: OutlineInputBorder(),
         prefixIcon: Icon(Icons.notifications),
       ),
-      items: [
-        const DropdownMenuItem(value: 0, child: Text('No reminder')),
-        const DropdownMenuItem(value: 5, child: Text('5 minutes')),
-        const DropdownMenuItem(value: 15, child: Text('15 minutes')),
-        const DropdownMenuItem(value: 30, child: Text('30 minutes')),
-        const DropdownMenuItem(value: 60, child: Text('1 hour')),
-        const DropdownMenuItem(value: 1440, child: Text('1 day')),
+      items: const [
+        DropdownMenuItem(value: 0, child: Text('No reminder')),
+        DropdownMenuItem(value: 5, child: Text('5 minutes')),
+        DropdownMenuItem(value: 15, child: Text('15 minutes')),
+        DropdownMenuItem(value: 30, child: Text('30 minutes')),
+        DropdownMenuItem(value: 60, child: Text('1 hour')),
+        DropdownMenuItem(value: 1440, child: Text('1 day')),
       ],
       onChanged: (value) {
         if (value != null) {

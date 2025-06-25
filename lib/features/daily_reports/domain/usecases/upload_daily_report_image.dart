@@ -3,7 +3,6 @@ import 'package:equatable/equatable.dart';
 
 import '../../../../common/models/errors/failures.dart';
 import '../../../../common/models/usecase/usecase.dart';
-import '../entities/daily_report.dart';
 import '../repositories/daily_report_repository.dart';
 
 class UploadDailyReportImage

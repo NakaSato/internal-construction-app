@@ -125,7 +125,7 @@ class WorkRequestPriorityIndicator extends StatelessWidget {
   _PrioritySizeConfig _getSizeConfig() {
     switch (size) {
       case WorkRequestPrioritySize.small:
-        return _PrioritySizeConfig(
+        return const _PrioritySizeConfig(
           horizontalPadding: 6,
           verticalPadding: 3,
           iconSize: 12,
@@ -137,7 +137,7 @@ class WorkRequestPriorityIndicator extends StatelessWidget {
           indicatorHeight: 16,
         );
       case WorkRequestPrioritySize.medium:
-        return _PrioritySizeConfig(
+        return const _PrioritySizeConfig(
           horizontalPadding: 8,
           verticalPadding: 4,
           iconSize: 14,
@@ -149,7 +149,7 @@ class WorkRequestPriorityIndicator extends StatelessWidget {
           indicatorHeight: 20,
         );
       case WorkRequestPrioritySize.large:
-        return _PrioritySizeConfig(
+        return const _PrioritySizeConfig(
           horizontalPadding: 12,
           verticalPadding: 6,
           iconSize: 16,

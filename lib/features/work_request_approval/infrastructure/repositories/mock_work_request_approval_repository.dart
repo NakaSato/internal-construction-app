@@ -150,8 +150,8 @@ class MockWorkRequestApprovalRepository
         pendingCount: 12,
         averageApprovalTime: 2.5,
         approvalRate: 84.4,
-        byStatus: {'Pending': 12, 'Approved': 38, 'Rejected': 7},
-        byPriority: {'Low': 15, 'Medium': 20, 'High': 8, 'Critical': 2},
+        byStatus: const {'Pending': 12, 'Approved': 38, 'Rejected': 7},
+        byPriority: const {'Low': 15, 'Medium': 20, 'High': 8, 'Critical': 2},
         startDate: startDate,
         endDate: endDate,
       );

@@ -537,7 +537,9 @@ class _DailyReportDetailsScreenState extends State<DailyReportDetailsScreen> {
                 // Image would be loaded from network in a real app
                 Container(
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceVariant,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerHighest,
                   ),
                   child: Center(
                     child: Icon(
@@ -578,7 +580,7 @@ class _DailyReportDetailsScreenState extends State<DailyReportDetailsScreen> {
   Widget _buildLocationMap(DailyReport report) {
     // In a real app, we'd use actual coordinates from the report
     // For now, we'll use a placeholder location
-    final defaultLocation = LatLng(37.7749, -122.4194); // San Francisco
+    const defaultLocation = LatLng(37.7749, -122.4194); // San Francisco
 
     return SizedBox(
       height: 200,

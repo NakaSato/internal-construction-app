@@ -2,7 +2,7 @@ import '../../domain/entities/work_request.dart';
 import '../../domain/entities/approval_history.dart';
 
 class MockWorkRequestService {
-  static List<WorkRequest> _mockRequests = [
+  static final List<WorkRequest> _mockRequests = [
     WorkRequest(
       id: 'wr_001',
       title: 'Solar Panel Maintenance',
@@ -84,7 +84,7 @@ class MockWorkRequestService {
     ),
   ];
 
-  static List<ApprovalHistory> _mockHistory = [
+  static final List<ApprovalHistory> _mockHistory = [
     ApprovalHistory(
       id: 'ah_001',
       workRequestId: 'wr_004',

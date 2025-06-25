@@ -563,7 +563,7 @@ class ProjectStatusBar extends StatelessWidget {
         final shouldShowPercentage =
             showPercentage && (availableWidth > 200 || !showLabel);
 
-        return Container(
+        return SizedBox(
           width: effectiveWidth == double.infinity ? null : effectiveWidth,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -678,7 +678,7 @@ class ProjectStatusBar extends StatelessWidget {
 
               // Additional info for non-compact mode
               if (!compact && showLabel && availableWidth > 300) ...[
-                SizedBox(height: 2),
+                const SizedBox(height: 2),
                 Text(
                   _getStatusDescription(projectStatus, progressValue),
                   style: theme.textTheme.bodySmall?.copyWith(

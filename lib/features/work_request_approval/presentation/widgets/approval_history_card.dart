@@ -74,7 +74,9 @@ class ApprovalHistoryCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: colorScheme.surfaceVariant.withOpacity(0.5),
+                      color: colorScheme.surfaceContainerHighest.withOpacity(
+                        0.5,
+                      ),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Row(
@@ -189,7 +191,7 @@ class ApprovalHistoryCard extends StatelessWidget {
         break;
       default:
         icon = Icons.info;
-        backgroundColor = colorScheme.surfaceVariant;
+        backgroundColor = colorScheme.surfaceContainerHighest;
         iconColor = colorScheme.onSurfaceVariant;
         break;
     }

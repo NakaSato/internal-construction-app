@@ -70,7 +70,9 @@ class _ConstructionTimelineViewState extends State<ConstructionTimelineView> {
             onTap: _onTimelineTapped,
             headerStyle: CalendarHeaderStyle(
               textAlign: TextAlign.center,
-              backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
+              backgroundColor: Theme.of(
+                context,
+              ).colorScheme.surfaceContainerHighest,
               textStyle: Theme.of(
                 context,
               ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
@@ -304,7 +306,9 @@ class _ConstructionTimelineViewState extends State<ConstructionTimelineView> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+        color: Theme.of(
+          context,
+        ).colorScheme.surfaceContainerHighest.withOpacity(0.5),
         borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(12),
           bottomRight: Radius.circular(12),

@@ -95,7 +95,7 @@ class WorkRequestStatusChip extends StatelessWidget {
   _SizeConfig _getSizeConfig() {
     switch (size) {
       case WorkRequestStatusChipSize.small:
-        return _SizeConfig(
+        return const _SizeConfig(
           horizontalPadding: 8,
           verticalPadding: 4,
           iconSize: 14,
@@ -105,7 +105,7 @@ class WorkRequestStatusChip extends StatelessWidget {
           spacing: 4,
         );
       case WorkRequestStatusChipSize.medium:
-        return _SizeConfig(
+        return const _SizeConfig(
           horizontalPadding: 12,
           verticalPadding: 6,
           iconSize: 16,
@@ -115,7 +115,7 @@ class WorkRequestStatusChip extends StatelessWidget {
           spacing: 6,
         );
       case WorkRequestStatusChipSize.large:
-        return _SizeConfig(
+        return const _SizeConfig(
           horizontalPadding: 16,
           verticalPadding: 8,
           iconSize: 18,

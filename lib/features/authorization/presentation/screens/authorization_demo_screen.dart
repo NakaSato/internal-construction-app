@@ -239,20 +239,6 @@ class AuthorizationDemoScreen extends StatelessWidget {
               user: user,
               resource: 'calendar',
               action: 'edit',
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.green.shade100,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Row(
-                  children: [
-                    Icon(Icons.edit_calendar, color: Colors.green),
-                    SizedBox(width: 8),
-                    Text('Calendar Write Access'),
-                  ],
-                ),
-              ),
               fallback: Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
@@ -264,6 +250,20 @@ class AuthorizationDemoScreen extends StatelessWidget {
                     Icon(Icons.block, color: Colors.grey),
                     SizedBox(width: 8),
                     Text('No Calendar Write Access'),
+                  ],
+                ),
+              ),
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade100,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.edit_calendar, color: Colors.green),
+                    SizedBox(width: 8),
+                    Text('Calendar Write Access'),
                   ],
                 ),
               ),

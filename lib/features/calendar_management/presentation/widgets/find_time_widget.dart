@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../domain/entities/calendar_event.dart';
 
 /// Find a Time widget for scheduling meetings with multiple attendees
 class FindTimeWidget extends StatefulWidget {

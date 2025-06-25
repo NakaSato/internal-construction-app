@@ -161,7 +161,7 @@ class MockDailyReportRepository implements DailyReportRepository {
       );
 
       if (index == -1) {
-        return Left(NotFoundFailure('Report not found'));
+        return const Left(NotFoundFailure('Report not found'));
       }
 
       // Update the report with the current timestamp
@@ -184,7 +184,7 @@ class MockDailyReportRepository implements DailyReportRepository {
       final reportExists = _dailyReports.any((r) => r.reportId == reportId);
 
       if (!reportExists) {
-        return Left(NotFoundFailure('Report not found'));
+        return const Left(NotFoundFailure('Report not found'));
       }
 
       _dailyReports.removeWhere((r) => r.reportId == reportId);
@@ -206,12 +206,14 @@ class MockDailyReportRepository implements DailyReportRepository {
       final index = _dailyReports.indexWhere((r) => r.reportId == reportId);
 
       if (index == -1) {
-        return Left(NotFoundFailure('Report not found'));
+        return const Left(NotFoundFailure('Report not found'));
       }
 
       // Check if the report is in draft status
       if (_dailyReports[index].status != DailyReportStatus.draft) {
-        return Left(ValidationFailure('Only draft reports can be submitted'));
+        return const Left(
+          ValidationFailure('Only draft reports can be submitted'),
+        );
       }
 
       // Update the report status
@@ -242,12 +244,12 @@ class MockDailyReportRepository implements DailyReportRepository {
       final index = _dailyReports.indexWhere((r) => r.reportId == reportId);
 
       if (index == -1) {
-        return Left(NotFoundFailure('Report not found'));
+        return const Left(NotFoundFailure('Report not found'));
       }
 
       // Check if the report is in submitted status
       if (_dailyReports[index].status != DailyReportStatus.submitted) {
-        return Left(
+        return const Left(
           ValidationFailure('Only submitted reports can be approved'),
         );
       }
@@ -281,18 +283,18 @@ class MockDailyReportRepository implements DailyReportRepository {
       final index = _dailyReports.indexWhere((r) => r.reportId == reportId);
 
       if (index == -1) {
-        return Left(NotFoundFailure('Report not found'));
+        return const Left(NotFoundFailure('Report not found'));
       }
 
       // Check if the report is in submitted status
       if (_dailyReports[index].status != DailyReportStatus.submitted) {
-        return Left(
+        return const Left(
           ValidationFailure('Only submitted reports can be rejected'),
         );
       }
 
       if (reason.isEmpty) {
-        return Left(ValidationFailure('Rejection reason is required'));
+        return const Left(ValidationFailure('Rejection reason is required'));
       }
 
       // Update the report status
@@ -327,7 +329,7 @@ class MockDailyReportRepository implements DailyReportRepository {
       final index = _dailyReports.indexWhere((r) => r.reportId == reportId);
 
       if (index == -1) {
-        return Left(NotFoundFailure('Report not found'));
+        return const Left(NotFoundFailure('Report not found'));
       }
 
       // Update the photos count in the report
@@ -358,7 +360,7 @@ class MockDailyReportRepository implements DailyReportRepository {
       final index = _dailyReports.indexWhere((r) => r.reportId == reportId);
 
       if (index == -1) {
-        return Left(NotFoundFailure('Report not found'));
+        return const Left(NotFoundFailure('Report not found'));
       }
 
       // Make sure the photos count doesn't go below 0

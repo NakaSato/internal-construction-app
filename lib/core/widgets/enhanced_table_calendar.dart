@@ -188,9 +188,8 @@ class _EnhancedTableCalendarState extends State<EnhancedTableCalendar> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       weekendDecoration: BoxDecoration(
-                        color: theme.colorScheme.surfaceVariant.withOpacity(
-                          0.2,
-                        ),
+                        color: theme.colorScheme.surfaceContainerHighest
+                            .withOpacity(0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       holidayDecoration: BoxDecoration(
@@ -221,9 +220,8 @@ class _EnhancedTableCalendarState extends State<EnhancedTableCalendar> {
                     widget.daysOfWeekStyle ??
                     DaysOfWeekStyle(
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.surfaceVariant.withOpacity(
-                          0.3,
-                        ),
+                        color: theme.colorScheme.surfaceContainerHighest
+                            .withOpacity(0.3),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       weekdayStyle: TextStyle(
@@ -259,7 +257,7 @@ class _EnhancedTableCalendarState extends State<EnhancedTableCalendar> {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+        color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: theme.colorScheme.outlineVariant.withOpacity(0.5),

@@ -118,7 +118,7 @@ class ApiAuthorizationRepository implements AuthorizationRepository {
       }
 
       return false;
-    } on DioException catch (e) {
+    } on DioException {
       // If API is not available, check locally
       final role = await getRoleByName(roleName);
       return role?.hasPermission(resource, action) ?? false;

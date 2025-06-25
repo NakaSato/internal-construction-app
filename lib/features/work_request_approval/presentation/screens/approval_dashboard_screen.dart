@@ -21,8 +21,8 @@ class _ApprovalDashboardScreenState extends State<ApprovalDashboardScreen> {
     pendingCount: 12,
     averageApprovalTime: 2.5,
     approvalRate: 84.4,
-    byStatus: {'Pending': 12, 'Approved': 38, 'Rejected': 7},
-    byPriority: {'Low': 15, 'Medium': 20, 'High': 8, 'Critical': 2},
+    byStatus: const {'Pending': 12, 'Approved': 38, 'Rejected': 7},
+    byPriority: const {'Low': 15, 'Medium': 20, 'High': 8, 'Critical': 2},
     startDate: DateTime.now().subtract(const Duration(days: 30)),
     endDate: DateTime.now(),
   );
@@ -232,7 +232,8 @@ class _ApprovalDashboardScreenState extends State<ApprovalDashboardScreen> {
                     const SizedBox(height: 4),
                     LinearProgressIndicator(
                       value: entry.value / total,
-                      backgroundColor: theme.colorScheme.surfaceVariant,
+                      backgroundColor:
+                          theme.colorScheme.surfaceContainerHighest,
                       valueColor: AlwaysStoppedAnimation<Color>(
                         _getStatusColor(entry.key),
                       ),
@@ -240,7 +241,7 @@ class _ApprovalDashboardScreenState extends State<ApprovalDashboardScreen> {
                   ],
                 ),
               );
-            }).toList(),
+            }),
           ],
         ),
       ),
@@ -281,7 +282,8 @@ class _ApprovalDashboardScreenState extends State<ApprovalDashboardScreen> {
                     const SizedBox(height: 4),
                     LinearProgressIndicator(
                       value: entry.value / total,
-                      backgroundColor: theme.colorScheme.surfaceVariant,
+                      backgroundColor:
+                          theme.colorScheme.surfaceContainerHighest,
                       valueColor: AlwaysStoppedAnimation<Color>(
                         _getPriorityColor(entry.key),
                       ),
@@ -289,7 +291,7 @@ class _ApprovalDashboardScreenState extends State<ApprovalDashboardScreen> {
                   ],
                 ),
               );
-            }).toList(),
+            }),
           ],
         ),
       ),

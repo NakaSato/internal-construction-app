@@ -65,10 +65,10 @@ class _ConstructionCalendarWidgetState
           todayBackgroundColor: Theme.of(context).colorScheme.primaryContainer,
           leadingDatesBackgroundColor: Theme.of(
             context,
-          ).colorScheme.surfaceVariant,
+          ).colorScheme.surfaceContainerHighest,
           trailingDatesBackgroundColor: Theme.of(
             context,
-          ).colorScheme.surfaceVariant,
+          ).colorScheme.surfaceContainerHighest,
           textStyle: Theme.of(context).textTheme.bodyMedium,
           todayTextStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
             color: Theme.of(context).colorScheme.onPrimaryContainer,

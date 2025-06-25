@@ -125,7 +125,7 @@ class EnhancedProjectCard extends StatelessWidget {
                         const SizedBox(height: 2),
                         LinearProgressIndicator(
                           value: project.completedTaskCount / project.taskCount,
-                          backgroundColor: colorScheme.surfaceVariant,
+                          backgroundColor: colorScheme.surfaceContainerHighest,
                           valueColor: AlwaysStoppedAnimation<Color>(
                             colorScheme.primary,
                           ),

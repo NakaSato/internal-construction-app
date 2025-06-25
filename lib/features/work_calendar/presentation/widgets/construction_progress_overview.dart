@@ -140,7 +140,9 @@ class ConstructionProgressOverview extends StatelessWidget {
             child: LinearProgressIndicator(
               value: metrics.overallProgress,
               minHeight: 12,
-              backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
+              backgroundColor: Theme.of(
+                context,
+              ).colorScheme.surfaceContainerHighest,
               valueColor: AlwaysStoppedAnimation<Color>(
                 _getProgressColor(context, metrics.overallProgress),
               ),

@@ -46,7 +46,7 @@ class _DashboardSearchSectionState extends State<DashboardSearchSection> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Container(
+    return SizedBox(
       width: double.infinity,
       child: TextField(
         controller: _searchController,

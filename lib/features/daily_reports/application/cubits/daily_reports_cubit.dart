@@ -381,7 +381,7 @@ class DailyReportsCubit extends Cubit<DailyReportsState> {
 
       // For now, simulate a weather API call
       await Future.delayed(const Duration(seconds: 1));
-      final mockWeatherData = 'Sunny, 75°F, Light winds from SW, Humidity 45%';
+      const mockWeatherData = 'Sunny, 75°F, Light winds from SW, Humidity 45%';
 
       emit(WeatherDataState(weatherData: mockWeatherData, isLoading: false));
     } catch (e) {

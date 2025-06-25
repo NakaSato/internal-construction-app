@@ -94,7 +94,7 @@ class ProjectCard extends StatelessWidget {
   }
 
   Widget _buildGlassmorphicHeader(BuildContext context) {
-    return Container(
+    return SizedBox(
       height: 200,
       width: double.infinity,
       child: Stack(
@@ -208,7 +208,7 @@ class ProjectCard extends StatelessWidget {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(
+                              const Icon(
                                 Icons.warning,
                                 size: 14,
                                 color: Colors.white,
@@ -536,7 +536,7 @@ class ProjectCard extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: Theme.of(context).colorScheme.primary,
                           ),
-                          child: Icon(
+                          child: const Icon(
                             Icons.solar_power,
                             color: Colors.white,
                             size: 28,
@@ -592,7 +592,7 @@ class ProjectCard extends StatelessWidget {
                 ),
 
                 // Progress indicator
-                Container(
+                SizedBox(
                   width: 40,
                   height: 40,
                   child: CircularProgressIndicator(

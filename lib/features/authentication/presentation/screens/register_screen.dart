@@ -214,7 +214,7 @@ class _RegisterScreenState extends State<RegisterScreen>
   Widget _buildPrefixIcon(IconData iconData) {
     return Container(
       margin: const EdgeInsets.all(12),
-      padding: EdgeInsets.all(_iconContainerSize),
+      padding: const EdgeInsets.all(_iconContainerSize),
       decoration: BoxDecoration(
         color: const Color(
           0xFF4CAF50,
@@ -697,19 +697,19 @@ class _RegisterScreenState extends State<RegisterScreen>
                 ),
               ),
               child: _isLoading
-                  ? Row(
+                  ? const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         SizedBox(
                           width: _loadingIndicatorSize,
                           height: _loadingIndicatorSize,
-                          child: const CircularProgressIndicator(
+                          child: CircularProgressIndicator(
                             strokeWidth: 2.5,
                             color: Colors.white,
                           ),
                         ),
-                        const SizedBox(width: 16),
-                        const Text(
+                        SizedBox(width: 16),
+                        Text(
                           'Creating Account...',
                           style: TextStyle(
                             fontSize: 17,
