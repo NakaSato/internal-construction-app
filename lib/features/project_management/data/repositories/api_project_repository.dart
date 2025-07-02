@@ -5,7 +5,7 @@ import '../datasources/project_api_service.dart';
 import '../models/project_response.dart';
 
 /// API implementation of the enhanced project repository
-@Injectable(as: EnhancedProjectRepository)
+@Injectable(as: EnhancedProjectRepository, env: [Environment.prod])
 class ApiProjectRepository implements EnhancedProjectRepository {
   const ApiProjectRepository(this._apiService);
 
@@ -25,7 +25,9 @@ class ApiProjectRepository implements EnhancedProjectRepository {
   }
 
   @override
-  Future<EnhancedProject> createProject(Map<String, dynamic> projectData) async {
+  Future<EnhancedProject> createProject(
+    Map<String, dynamic> projectData,
+  ) async {
     // For now, return a mock implementation
     // This will need to be implemented when the API has a create endpoint
     throw UnimplementedError('Create project API endpoint not yet implemented');
@@ -100,7 +102,7 @@ class ApiProjectRepository implements EnhancedProjectRepository {
     final projects = response.data.items
         .map((item) => EnhancedProject.fromJson(item.toJson()))
         .toList();
-    
+
     return ProjectsResponse(
       items: projects,
       totalCount: response.data.totalCount,
@@ -119,7 +121,7 @@ class ApiProjectRepository implements EnhancedProjectRepository {
       final project = projectData.data.items.first;
       return EnhancedProject.fromJson(project.toJson());
     }
-    
+
     throw ArgumentError('Invalid project data format or no projects found');
   }
 }

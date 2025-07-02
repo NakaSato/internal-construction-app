@@ -54,6 +54,10 @@ import '../network/dio_client.dart' as _i667;
 import 'auth_module.dart' as _i784;
 import 'injection.dart' as _i464;
 
+const String _dev = 'dev';
+const String _test = 'test';
+const String _prod = 'prod';
+
 extension GetItInjectableX on _i174.GetIt {
   // initializes the registration of main-scope dependencies inside of GetIt
   _i174.GetIt init({
@@ -75,22 +79,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i1066.AuthApiService>(
       () => authModule.authApiService(gh<_i361.Dio>()),
     );
-    gh.lazySingleton<_i475.ProjectRepository>(
+    gh.factory<_i475.EnhancedProjectRepository>(
       () => const _i270.MockProjectRepository(),
-      instanceName: 'mock',
-    );
-    gh.factory<_i421.ProjectApiService>(
-      () => _i421.ProjectApiService(gh<_i361.Dio>(), baseUrl: gh<String>()),
-    );
-    gh.factory<_i937.WorkCalendarBloc>(
-      () => _i937.WorkCalendarBloc(gh<_i503.WorkCalendarRepository>()),
-    );
-    gh.factory<_i1036.CalendarApiService>(
-      () => _i1036.CalendarApiService(gh<_i361.Dio>(), baseUrl: gh<String>()),
-    );
-    gh.factory<_i475.ProjectRepository>(
-      () => _i677.ApiProjectRepository(gh<_i421.ProjectApiService>()),
-      instanceName: 'api',
+      registerFor: {_dev, _test},
     );
     gh.lazySingleton<_i742.AuthRepository>(
       () => _i410.ApiAuthRepository(
@@ -98,6 +89,20 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i558.FlutterSecureStorage>(),
       ),
       instanceName: 'api',
+    );
+    gh.factory<_i421.ProjectApiService>(
+      () => _i421.ProjectApiService(gh<_i361.Dio>(), baseUrl: gh<String>()),
+    );
+    gh.factory<_i1036.CalendarApiService>(
+      () => _i1036.CalendarApiService(gh<_i361.Dio>(), baseUrl: gh<String>()),
+    );
+    gh.factory<_i937.WorkCalendarBloc>(
+      () => _i937.WorkCalendarBloc(gh<_i503.WorkCalendarRepository>()),
+    );
+    gh.factory<_i1062.EnhancedProjectBloc>(
+      () => _i1062.EnhancedProjectBloc(
+        repository: gh<_i475.EnhancedProjectRepository>(),
+      ),
     );
     gh.lazySingleton<_i202.AuthRepositoryFactory>(
       () => _i202.AuthRepositoryFactory(
@@ -109,24 +114,24 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i742.AuthRepository>(instanceName: 'api'),
       ),
     );
-    gh.factory<_i1062.ProjectBloc>(
-      () =>
-          _i1062.ProjectBloc(gh<_i475.ProjectRepository>(instanceName: 'api')),
-    );
     gh.lazySingleton<_i646.CalendarManagementRepository>(
       () =>
           _i43.ApiCalendarManagementRepository(gh<_i1036.CalendarApiService>()),
+    );
+    gh.factory<_i475.EnhancedProjectRepository>(
+      () => _i677.ApiProjectRepository(gh<_i421.ProjectApiService>()),
+      registerFor: {_prod},
+    );
+    gh.factory<_i185.CalendarManagementBloc>(
+      () => _i185.CalendarManagementBloc(
+        gh<_i646.CalendarManagementRepository>(),
+      ),
     );
     gh.factory<_i153.AuthCubit>(
       () => _i153.AuthCubit(gh<_i202.AuthRepositoryFactory>()),
     );
     gh.factory<_i574.AuthBloc>(
       () => _i574.AuthBloc(gh<_i202.AuthRepositoryFactory>()),
-    );
-    gh.factory<_i185.CalendarManagementBloc>(
-      () => _i185.CalendarManagementBloc(
-        gh<_i646.CalendarManagementRepository>(),
-      ),
     );
     return this;
   }

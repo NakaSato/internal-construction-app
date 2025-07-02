@@ -588,23 +588,19 @@ class _DailyReportDetailsScreenState extends State<DailyReportDetailsScreen> {
         margin: EdgeInsets.zero,
         clipBehavior: Clip.antiAlias,
         child: FlutterMap(
-          options: MapOptions(center: defaultLocation, zoom: 13),
+          options: const MapOptions(center: defaultLocation, zoom: 13),
           children: [
             TileLayer(
               urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
               userAgentPackageName: 'com.example.app',
             ),
-            MarkerLayer(
+            const MarkerLayer(
               markers: [
                 Marker(
                   width: 30,
                   height: 30,
                   point: defaultLocation,
-                  child: const Icon(
-                    Icons.location_pin,
-                    color: Colors.red,
-                    size: 30,
-                  ),
+                  child: Icon(Icons.location_pin, color: Colors.red, size: 30),
                 ),
               ],
             ),

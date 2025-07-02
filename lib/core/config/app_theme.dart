@@ -715,9 +715,9 @@ class AppTheme {
     // === PAGE TRANSITIONS ===
     pageTransitionsTheme: const PageTransitionsTheme(
       builders: {
-        TargetPlatform.android: const CupertinoPageTransitionsBuilder(),
-        TargetPlatform.iOS: const CupertinoPageTransitionsBuilder(),
-        TargetPlatform.macOS: const CupertinoPageTransitionsBuilder(),
+        TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+        TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+        TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
       },
     ),
   );
@@ -1114,9 +1114,9 @@ class AppTheme {
     // === PAGE TRANSITIONS ===
     pageTransitionsTheme: const PageTransitionsTheme(
       builders: {
-        TargetPlatform.android: const CupertinoPageTransitionsBuilder(),
-        TargetPlatform.iOS: const CupertinoPageTransitionsBuilder(),
-        TargetPlatform.macOS: const CupertinoPageTransitionsBuilder(),
+        TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+        TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+        TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
       },
     ),
   );

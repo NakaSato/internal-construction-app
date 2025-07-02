@@ -3,15 +3,50 @@ import '../../domain/entities/project_api_models.dart';
 import '../../domain/repositories/project_repository.dart';
 
 /// Mock implementation of the enhanced project repository for testing and development
-@Injectable(as: EnhancedProjectRepository)
+@Injectable(
+  as: EnhancedProjectRepository,
+  env: [Environment.dev, Environment.test],
+)
 class MockProjectRepository implements EnhancedProjectRepository {
   const MockProjectRepository();
+
+  @override
+  Future<ProjectsResponse> getProjectsNearLocation(
+    double latitude,
+    double longitude,
+    double radiusKm,
+    ProjectsQuery query,
+  ) async {
+    await Future.delayed(const Duration(milliseconds: 400));
+
+    // For mock: return all projects within a fake radius (just return all for now)
+    final filteredProjects = _mockProjects.where((project) {
+      // If locationCoordinates is present, do a simple distance check (mocked)
+      if (project.locationCoordinates != null) {
+        // In a real implementation, calculate distance using Haversine formula
+        // Here, just return all for demonstration
+        return true;
+      }
+      return false;
+    }).toList();
+
+    return ProjectsResponse(
+      items: filteredProjects,
+      totalCount: filteredProjects.length,
+      pageNumber: query.pageNumber,
+      pageSize: query.pageSize,
+      totalPages: (filteredProjects.length / query.pageSize).ceil(),
+      hasPreviousPage: query.pageNumber > 1,
+      hasNextPage:
+          query.pageNumber < (filteredProjects.length / query.pageSize).ceil(),
+    );
+  }
 
   @override
   Future<ProjectsResponse> getAllProjects(ProjectsQuery query) async {
     // Simulate network delay
     await Future.delayed(const Duration(milliseconds: 500));
-    
+
     return ProjectsResponse(
       items: _mockProjects,
       totalCount: _mockProjects.length,
@@ -19,14 +54,15 @@ class MockProjectRepository implements EnhancedProjectRepository {
       pageSize: query.pageSize,
       totalPages: (_mockProjects.length / query.pageSize).ceil(),
       hasPreviousPage: query.pageNumber > 1,
-      hasNextPage: query.pageNumber < (_mockProjects.length / query.pageSize).ceil(),
+      hasNextPage:
+          query.pageNumber < (_mockProjects.length / query.pageSize).ceil(),
     );
   }
 
   @override
   Future<EnhancedProject> getProjectById(String id) async {
     await Future.delayed(const Duration(milliseconds: 300));
-    
+
     try {
       return _mockProjects.firstWhere((project) => project.projectId == id);
     } catch (e) {
@@ -35,9 +71,11 @@ class MockProjectRepository implements EnhancedProjectRepository {
   }
 
   @override
-  Future<EnhancedProject> createProject(Map<String, dynamic> projectData) async {
+  Future<EnhancedProject> createProject(
+    Map<String, dynamic> projectData,
+  ) async {
     await Future.delayed(const Duration(milliseconds: 800));
-    
+
     final newProject = EnhancedProject.fromJson({
       'projectId': DateTime.now().millisecondsSinceEpoch.toString(),
       'projectName': projectData['projectName'] ?? 'New Project',
@@ -45,7 +83,9 @@ class MockProjectRepository implements EnhancedProjectRepository {
       'clientInfo': projectData['clientInfo'] ?? 'Test Client',
       'status': 'Planning',
       'startDate': DateTime.now().toIso8601String(),
-      'estimatedEndDate': DateTime.now().add(const Duration(days: 90)).toIso8601String(),
+      'estimatedEndDate': DateTime.now()
+          .add(const Duration(days: 90))
+          .toIso8601String(),
       'createdAt': DateTime.now().toIso8601String(),
       'updatedAt': DateTime.now().toIso8601String(),
       'taskCount': 0,
@@ -56,7 +96,7 @@ class MockProjectRepository implements EnhancedProjectRepository {
       'ftsValue': projectData['ftsValue'] ?? 0.0,
       'pqmValue': projectData['pqmValue'] ?? 0.0,
     });
-    
+
     _mockProjects.add(newProject);
     return newProject;
   }
@@ -67,10 +107,12 @@ class MockProjectRepository implements EnhancedProjectRepository {
     Map<String, dynamic> projectData,
   ) async {
     await Future.delayed(const Duration(milliseconds: 600));
-    
-    final index = _mockProjects.indexWhere((project) => project.projectId == id);
+
+    final index = _mockProjects.indexWhere(
+      (project) => project.projectId == id,
+    );
     if (index == -1) throw Exception('Project not found');
-    
+
     // For simplicity, create a new project with updated data
     final currentProject = _mockProjects[index];
     final updatedProject = EnhancedProject.fromJson({
@@ -85,14 +127,19 @@ class MockProjectRepository implements EnhancedProjectRepository {
       'createdAt': currentProject.createdAt.toIso8601String(),
       'updatedAt': DateTime.now().toIso8601String(),
       'taskCount': projectData['taskCount'] ?? currentProject.taskCount,
-      'completedTaskCount': projectData['completedTaskCount'] ?? currentProject.completedTaskCount,
-      'totalCapacityKw': projectData['totalCapacityKw'] ?? currentProject.totalCapacityKw,
-      'pvModuleCount': projectData['pvModuleCount'] ?? currentProject.pvModuleCount,
-      'revenueValue': projectData['revenueValue'] ?? currentProject.revenueValue,
+      'completedTaskCount':
+          projectData['completedTaskCount'] ??
+          currentProject.completedTaskCount,
+      'totalCapacityKw':
+          projectData['totalCapacityKw'] ?? currentProject.totalCapacityKw,
+      'pvModuleCount':
+          projectData['pvModuleCount'] ?? currentProject.pvModuleCount,
+      'revenueValue':
+          projectData['revenueValue'] ?? currentProject.revenueValue,
       'ftsValue': projectData['ftsValue'] ?? currentProject.ftsValue,
       'pqmValue': projectData['pqmValue'] ?? currentProject.pqmValue,
     });
-    
+
     _mockProjects[index] = updatedProject;
     return updatedProject;
   }
@@ -100,10 +147,12 @@ class MockProjectRepository implements EnhancedProjectRepository {
   @override
   Future<void> deleteProject(String id) async {
     await Future.delayed(const Duration(milliseconds: 400));
-    
-    final index = _mockProjects.indexWhere((project) => project.projectId == id);
+
+    final index = _mockProjects.indexWhere(
+      (project) => project.projectId == id,
+    );
     if (index == -1) throw Exception('Project not found');
-    
+
     _mockProjects.removeAt(index);
   }
 
@@ -113,11 +162,17 @@ class MockProjectRepository implements EnhancedProjectRepository {
     ProjectsQuery query,
   ) async {
     await Future.delayed(const Duration(milliseconds: 400));
-    
+
     final filteredProjects = _mockProjects
-        .where((project) => project.projectManager?.managerId == managerId)
+        .where(
+          (project) =>
+              project.projectManager != null &&
+              (project.projectManager!.userId == managerId ||
+                  project.projectManager!.username == managerId ||
+                  project.projectManager!.email == managerId),
+        )
         .toList();
-    
+
     return ProjectsResponse(
       items: filteredProjects,
       totalCount: filteredProjects.length,
@@ -125,7 +180,8 @@ class MockProjectRepository implements EnhancedProjectRepository {
       pageSize: query.pageSize,
       totalPages: (filteredProjects.length / query.pageSize).ceil(),
       hasPreviousPage: query.pageNumber > 1,
-      hasNextPage: query.pageNumber < (filteredProjects.length / query.pageSize).ceil(),
+      hasNextPage:
+          query.pageNumber < (filteredProjects.length / query.pageSize).ceil(),
     );
   }
 
@@ -135,11 +191,13 @@ class MockProjectRepository implements EnhancedProjectRepository {
     ProjectsQuery query,
   ) async {
     await Future.delayed(const Duration(milliseconds: 400));
-    
+
     final filteredProjects = _mockProjects
-        .where((project) => project.status.toLowerCase() == status.toLowerCase())
+        .where(
+          (project) => project.status.toLowerCase() == status.toLowerCase(),
+        )
         .toList();
-    
+
     return ProjectsResponse(
       items: filteredProjects,
       totalCount: filteredProjects.length,
@@ -147,7 +205,8 @@ class MockProjectRepository implements EnhancedProjectRepository {
       pageSize: query.pageSize,
       totalPages: (filteredProjects.length / query.pageSize).ceil(),
       hasPreviousPage: query.pageNumber > 1,
-      hasNextPage: query.pageNumber < (filteredProjects.length / query.pageSize).ceil(),
+      hasNextPage:
+          query.pageNumber < (filteredProjects.length / query.pageSize).ceil(),
     );
   }
 
@@ -157,15 +216,17 @@ class MockProjectRepository implements EnhancedProjectRepository {
     ProjectsQuery query,
   ) async {
     await Future.delayed(const Duration(milliseconds: 400));
-    
+
     final lowerQuery = searchQuery.toLowerCase();
     final filteredProjects = _mockProjects
-        .where((project) =>
-            project.projectName.toLowerCase().contains(lowerQuery) ||
-            project.address.toLowerCase().contains(lowerQuery) ||
-            project.clientInfo.toLowerCase().contains(lowerQuery))
+        .where(
+          (project) =>
+              project.projectName.toLowerCase().contains(lowerQuery) ||
+              project.address.toLowerCase().contains(lowerQuery) ||
+              project.clientInfo.toLowerCase().contains(lowerQuery),
+        )
         .toList();
-    
+
     return ProjectsResponse(
       items: filteredProjects,
       totalCount: filteredProjects.length,
@@ -173,29 +234,48 @@ class MockProjectRepository implements EnhancedProjectRepository {
       pageSize: query.pageSize,
       totalPages: (filteredProjects.length / query.pageSize).ceil(),
       hasPreviousPage: query.pageNumber > 1,
-      hasNextPage: query.pageNumber < (filteredProjects.length / query.pageSize).ceil(),
+      hasNextPage:
+          query.pageNumber < (filteredProjects.length / query.pageSize).ceil(),
     );
   }
 
   @override
   Future<Map<String, dynamic>> getProjectStatistics() async {
     await Future.delayed(const Duration(milliseconds: 300));
-    
+
     final total = _mockProjects.length;
     final active = _mockProjects.where((p) => p.status == 'Active').length;
-    final completed = _mockProjects.where((p) => p.status == 'Completed').length;
+    final completed = _mockProjects
+        .where((p) => p.status == 'Completed')
+        .length;
     final planning = _mockProjects.where((p) => p.status == 'Planning').length;
-    
+
     return {
       'total': total,
       'active': active,
       'completed': completed,
       'planning': planning,
-      'totalRevenue': _mockProjects.fold(0.0, (sum, p) => sum + (p.revenueValue ?? 0.0)),
-      'totalCapacity': _mockProjects.fold(0.0, (sum, p) => sum + (p.totalCapacityKw ?? 0.0)),
-      'averageProgress': total > 0 
-          ? _mockProjects.fold(0.0, (sum, p) => sum + (p.completedTaskCount / (p.taskCount > 0 ? p.taskCount : 1))) / total 
+      'totalRevenue': _mockProjects.fold(
+        0.0,
+        (sum, p) => sum + (p.revenueValue ?? 0.0),
+      ),
+      'totalCapacity': _mockProjects.fold(
+        0.0,
+        (sum, p) => sum + (p.totalCapacityKw ?? 0.0),
+      ),
+      'averageProgress': total > 0
+          ? _mockProjects.fold(
+                  0.0,
+                  (sum, p) =>
+                      sum +
+                      (p.completedTaskCount /
+                          (p.taskCount > 0 ? p.taskCount : 1)),
+                ) /
+                total
           : 0.0,
+    };
+  }
+
   // Mock data - in a real app this would come from an API
   static final List<EnhancedProject> _mockProjects = [
     EnhancedProject.fromJson({
@@ -220,10 +300,7 @@ class MockProjectRepository implements EnhancedProjectRepository {
         'managerName': 'Sarah Johnson',
         'managerEmail': 'sarah.johnson@company.com',
       },
-      'locationCoordinates': {
-        'latitude': 39.7817,
-        'longitude': -89.6501,
-      },
+      'locationCoordinates': {'latitude': 39.7817, 'longitude': -89.6501},
     }),
     EnhancedProject.fromJson({
       'projectId': 'proj-002',
@@ -247,10 +324,7 @@ class MockProjectRepository implements EnhancedProjectRepository {
         'managerName': 'Mike Chen',
         'managerEmail': 'mike.chen@company.com',
       },
-      'locationCoordinates': {
-        'latitude': 37.7749,
-        'longitude': -122.4194,
-      },
+      'locationCoordinates': {'latitude': 37.7749, 'longitude': -122.4194},
     }),
   ];
 }

@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:injectable/injectable.dart';
 
 import '../domain/entities/project_api_models.dart';
 import '../domain/repositories/project_repository.dart';
@@ -174,6 +175,7 @@ class EnhancedProjectError extends EnhancedProjectState {
 }
 
 /// Enhanced Project BLoC that uses the enhanced project management API
+@injectable
 class EnhancedProjectBloc
     extends Bloc<EnhancedProjectEvent, EnhancedProjectState> {
   EnhancedProjectBloc({required EnhancedProjectRepository repository})
