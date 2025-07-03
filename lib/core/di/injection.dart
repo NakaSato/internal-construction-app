@@ -4,11 +4,14 @@ import 'package:get_it/get_it.dart';
 import 'package:injectable/injectable.dart';
 import 'injection.config.dart';
 import '../api/api_config.dart';
+import '../config/environment_config.dart' as app_env;
+import '../../features/project_management/domain/repositories/project_repository.dart';
 import '../../features/authorization/config/authorization_di.dart';
 import '../../features/calendar_management/config/mock_calendar_management_di.dart';
 import '../../features/daily_reports/config/daily_reports_di.dart';
+import '../../features/notifications/config/notifications_di.dart';
 import '../../features/work_calendar/config/mock_work_calendar_di.dart';
-import 'dependency_injection.dart' as enhanced_di;
+import 'api_services_registration.dart';
 
 final GetIt getIt = GetIt.instance;
 
@@ -17,7 +20,20 @@ final GetIt getIt = GetIt.instance;
   preferRelativeImports: true,
   asExtension: true,
 )
-void configureDependencies() => getIt.init();
+void configureDependencies() =>
+    getIt.init(environment: _getInjectableEnvironment());
+
+/// Maps app environment to Injectable environment constants
+String _getInjectableEnvironment() {
+  final appEnv = app_env.EnvironmentConfig.currentEnvironment;
+  final injectableEnv = switch (appEnv) {
+    app_env.Environment.development => Environment.dev,
+    app_env.Environment.production => Environment.prod,
+  };
+
+  print('🔧 DI Environment mapping: $appEnv -> $injectableEnv');
+  return injectableEnv;
+}
 
 /// Initialize all dependencies for the application
 Future<void> initializeDependencies() async {
@@ -27,7 +43,11 @@ Future<void> initializeDependencies() async {
   // Initialize API environment configuration
   ApiConfig.initializeEnvironment();
 
+  // Configure the Injectable system
   configureDependencies();
+
+  // Log which repository implementation is being used
+  _logRepositorySelection();
 
   // Configure authorization dependencies
   configureAuthorizationDependencies();
@@ -38,11 +58,38 @@ Future<void> initializeDependencies() async {
   // Configure work calendar dependencies with mock implementations
   configureWorkCalendarDependencies();
 
-  // Configure project management dependencies (enhanced system)
-  await enhanced_di.setupDependencies();
+  // Note: Project management dependencies are handled by Injectable system
+  // which automatically uses MockProjectRepository for dev/test and
+  // ApiProjectRepository for production environments
+  // await enhanced_di.setupDependencies(); // Disabled to avoid conflicts
 
   // Configure daily reports dependencies
   configureDailyReportsDependencies();
+
+  // Configure notifications dependencies
+  configureNotificationsDependencies(getIt);
+
+  // Register API services
+  ApiServicesRegistration.registerApiServices(getIt);
+}
+
+/// Log which repository implementation is being used for debugging
+void _logRepositorySelection() {
+  try {
+    final repo = getIt<EnhancedProjectRepository>();
+    final repoType = repo.runtimeType.toString();
+    print('📦 Injected repository: $repoType');
+
+    if (repoType.contains('Mock')) {
+      print('🔨 Using MOCK repository for development/testing');
+    } else if (repoType.contains('Api')) {
+      print('🌐 Using API repository for production');
+    } else {
+      print('⚠️ Unknown repository type: $repoType');
+    }
+  } catch (e) {
+    print('❌ Failed to resolve EnhancedProjectRepository: $e');
+  }
 }
 
 @module

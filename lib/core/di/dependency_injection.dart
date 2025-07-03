@@ -8,13 +8,7 @@ import '../../features/project_management/application/project_bloc.dart';
 final getIt = GetIt.instance;
 
 Future<void> setupDependencies() async {
-  // Core services
-  getIt.registerLazySingleton<Dio>(() => Dio());
-
-  // Register base URL for features
-  getIt.registerLazySingleton<String>(() => 'https://api.example.com');
-
-  // Configure enhanced project management dependencies
+  // Configure enhanced project management dependencies (without Dio registration)
   await _configureEnhancedProjectManagementDependencies();
 
   // TODO: Configure other feature dependencies when DI files are created
@@ -23,18 +17,41 @@ Future<void> setupDependencies() async {
 
 /// Configure enhanced project management dependencies
 Future<void> _configureEnhancedProjectManagementDependencies() async {
-  // Enhanced Project Management Data Sources
-  getIt.registerLazySingleton<ProjectRemoteDataSource>(
-    () => ProjectRemoteDataSourceImpl(dio: getIt<Dio>()),
-  );
+  // Check if Dio is available (it should be registered by Injectable system)
+  if (!getIt.isRegistered<Dio>()) {
+    throw Exception(
+      'Dio should be registered by Injectable system before calling this function',
+    );
+  }
 
-  // Enhanced Project Management Repositories
-  getIt.registerLazySingleton<EnhancedProjectRepository>(
-    () => EnhancedProjectRepositoryImpl(getIt<ProjectRemoteDataSource>()),
-  );
+  // Don't override Injectable registrations - the Injectable system
+  // already handles EnhancedProjectRepository registration based on environment:
+  // - Dev/Test: MockProjectRepository
+  // - Prod: ApiProjectRepository
+  //
+  // If for some reason Injectable doesn't register it, fall back to manual registration
+  if (!getIt.isRegistered<EnhancedProjectRepository>()) {
+    print(
+      'Warning: EnhancedProjectRepository not registered by Injectable system, falling back to manual registration',
+    );
 
-  // Enhanced Project Management BLoCs
-  getIt.registerFactory<EnhancedProjectBloc>(
-    () => EnhancedProjectBloc(repository: getIt<EnhancedProjectRepository>()),
-  );
+    // Enhanced Project Management Data Sources
+    if (!getIt.isRegistered<ProjectRemoteDataSource>()) {
+      getIt.registerLazySingleton<ProjectRemoteDataSource>(
+        () => ProjectRemoteDataSourceImpl(dio: getIt<Dio>()),
+      );
+    }
+
+    // Enhanced Project Management Repositories - Use mock for development
+    getIt.registerLazySingleton<EnhancedProjectRepository>(
+      () => EnhancedProjectRepositoryImpl(getIt<ProjectRemoteDataSource>()),
+    );
+  }
+
+  // Enhanced Project Management BLoCs - Only register if not already registered
+  if (!getIt.isRegistered<EnhancedProjectBloc>()) {
+    getIt.registerFactory<EnhancedProjectBloc>(
+      () => EnhancedProjectBloc(repository: getIt<EnhancedProjectRepository>()),
+    );
+  }
 }

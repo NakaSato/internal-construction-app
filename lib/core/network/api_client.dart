@@ -3,18 +3,39 @@ import 'package:flutter/foundation.dart';
 
 /// Configuration class for API client settings
 class ApiConfig {
-  static const String baseUrl = 'https://api.flutterarchitecture.com';
-  static const String apiVersion = 'v1';
+  static const String baseUrl = 'http://localhost:5001';
+  static const String apiVersion = 'api/v1';
   static const Duration connectTimeout = Duration(seconds: 30);
   static const Duration receiveTimeout = Duration(seconds: 30);
   static const Duration sendTimeout = Duration(seconds: 30);
 
-  // API endpoints
-  static const String authPath = '/auth';
-  static const String projectsPath = '/projects';
+  // Authentication endpoints
+  static const String authPath = '/Auth';
+  static const String loginPath = '/Auth/login';
+  static const String registerPath = '/Auth/register';
+  static const String refreshPath = '/Auth/refresh';
+  static const String logoutPath = '/Auth/logout';
+
+  // Core feature endpoints
+  static const String projectsPath = '/Projects';
   static const String usersPath = '/users';
-  static const String reportsPath = '/reports';
-  static const String calendarPath = '/calendar';
+  static const String tasksPath = '/tasks';
+  static const String calendarPath = '/Calendar';
+  static const String dailyReportsPath = '/daily-reports';
+  static const String weeklyReportsPath = '/weekly-reports';
+  static const String weeklyRequestsPath = '/weekly-requests';
+  static const String workRequestsPath = '/work-requests';
+  static const String resourcesPath = '/resources';
+  static const String masterPlansPath = '/master-plans';
+  static const String phasesPath = '/phases';
+  static const String imagesPath = '/images';
+  static const String documentsPath = '/documents';
+  static const String notificationsPath = '/notifications';
+  static const String dashboardPath = '/dashboard';
+
+  // Health and debug endpoints
+  static const String healthPath = '/Health';
+  static const String debugPath = '/api/Debug';
 }
 
 /// Enhanced API client with authentication, error handling, and logging

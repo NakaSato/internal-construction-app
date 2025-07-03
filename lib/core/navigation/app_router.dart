@@ -8,6 +8,7 @@ import '../../features/authentication/presentation/screens/forgot_password_scree
 import '../../features/authentication/presentation/screens/login_screen.dart';
 import '../../features/authentication/presentation/screens/register_screen.dart';
 import '../../features/calendar_management/presentation/screens/calendar_management_screen.dart';
+import '../../features/notifications/presentation/screens/notifications_screen.dart';
 import '../../features/project_management/presentation/screens/image_project_card_list_screen.dart';
 import '../../features/project_management/presentation/screens/create_project_screen.dart';
 import '../../features/project_management/presentation/screens/project_detail_screen.dart';
@@ -37,6 +38,9 @@ class AppRoutes {
   static const String projects = '/projects';
   static const String projectDetail = '/projects/:id';
   static const String createProject = '/projects/create';
+
+  // Notification routes
+  static const String notifications = '/notifications';
 
   // Private constructor to prevent instantiation
   AppRoutes._();
@@ -139,6 +143,11 @@ class AppRouter {
           final projectId = state.pathParameters['id']!;
           return ProjectDetailScreen(projectId: projectId);
         },
+      ),
+      GoRoute(
+        path: AppRoutes.notifications,
+        name: 'notifications',
+        builder: (context, state) => const NotificationsScreen(),
       ),
     ],
 

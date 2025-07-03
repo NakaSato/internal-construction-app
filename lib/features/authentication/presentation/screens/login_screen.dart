@@ -274,101 +274,77 @@ class _LoginScreenState extends State<LoginScreen>
                   child: LayoutBuilder(
                     builder: (context, constraints) {
                       final isSmallScreen = _isSmallScreen(context);
-                      final isMediumScreen = _isMediumScreen(context);
                       final screenHeight = constraints.maxHeight;
                       final keyboardHeight = MediaQuery.of(
                         context,
                       ).viewInsets.bottom;
 
-                      // Calculate dynamic spacing based on screen size and keyboard
-                      double topSpacing;
-                      if (keyboardHeight > 0) {
-                        // Keyboard is open - minimal top spacing
-                        topSpacing = isSmallScreen ? 10 : 20;
-                      } else {
-                        // Keyboard is closed - responsive top spacing
-                        if (isSmallScreen) {
-                          topSpacing =
-                              screenHeight * 0.08; // 8% for small screens
-                        } else if (isMediumScreen) {
-                          topSpacing =
-                              screenHeight * 0.15; // 15% for medium screens
-                        } else {
-                          topSpacing =
-                              screenHeight * 0.25; // 25% for large screens
-                        }
-                      }
-
                       return SingleChildScrollView(
                         physics: const BouncingScrollPhysics(),
                         child: ConstrainedBox(
                           constraints: BoxConstraints(
-                            minHeight: screenHeight - keyboardHeight,
+                            minHeight:
+                                screenHeight -
+                                keyboardHeight -
+                                20, // Reduced minHeight by 20px
                             maxWidth: double.infinity,
                           ),
                           child: IntrinsicHeight(
                             child: Column(
                               children: [
-                                // Dynamic top spacer
-                                SizedBox(height: topSpacing),
-
+                                // Flexible top spacer
+                                const Flexible(flex: 1, child: SizedBox()),
                                 // Main content area
-                                Expanded(
+                                Flexible(
+                                  flex: 8,
                                   child: Padding(
                                     padding: EdgeInsets.symmetric(
                                       horizontal: isSmallScreen ? 8.0 : 12.0,
                                     ),
-                                    child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        // Flexible spacer at top
-                                        const Flexible(
-                                          flex: 1,
-                                          child: SizedBox(),
-                                        ),
-
-                                        // Sign out option for already authenticated users
-                                        if (state is AuthAuthenticated) ...[
-                                          _buildSignOutHeader(
-                                            context,
-                                            state.user,
-                                          ),
-                                          SizedBox(
-                                            height: isSmallScreen ? 12 : 20,
-                                          ),
-                                        ],
-
-                                        // Main login form
-                                        AnimatedBuilder(
-                                          animation: _animationController,
-                                          builder: (context, child) {
-                                            return FadeTransition(
-                                              opacity: _fadeAnimation,
-                                              child: SlideTransition(
-                                                position: _slideAnimation,
-                                                child: _buildLoginForm(context),
+                                    child: Center(
+                                      child: SingleChildScrollView(
+                                        child: Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            // Sign out option for already authenticated users
+                                            if (state is AuthAuthenticated) ...[
+                                              _buildSignOutHeader(
+                                                context,
+                                                state.user,
                                               ),
-                                            );
-                                          },
-                                        ),
+                                              SizedBox(
+                                                height: isSmallScreen
+                                                    ? 8
+                                                    : 12, // Reduced spacing
+                                              ),
+                                            ],
 
-                                        // Flexible spacer at bottom
-                                        const Flexible(
-                                          flex: 1,
-                                          child: SizedBox(),
+                                            // Main login form
+                                            AnimatedBuilder(
+                                              animation: _animationController,
+                                              builder: (context, child) {
+                                                return FadeTransition(
+                                                  opacity: _fadeAnimation,
+                                                  child: SlideTransition(
+                                                    position: _slideAnimation,
+                                                    child: _buildLoginForm(
+                                                      context,
+                                                    ),
+                                                  ),
+                                                );
+                                              },
+                                            ),
+                                          ],
                                         ),
-                                      ],
+                                      ),
                                     ),
                                   ),
                                 ),
 
-                                // Bottom padding (smaller when keyboard is open)
-                                SizedBox(
-                                  height: keyboardHeight > 0
-                                      ? 10
-                                      : (isSmallScreen ? 16 : 24),
-                                ),
+                                // Flexible bottom spacer
+                                const Flexible(flex: 1, child: SizedBox()),
                               ],
                             ),
                           ),

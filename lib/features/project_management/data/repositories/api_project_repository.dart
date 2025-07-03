@@ -1,3 +1,5 @@
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
 import '../../domain/entities/project_api_models.dart';
 import '../../domain/repositories/project_repository.dart';
@@ -5,7 +7,10 @@ import '../datasources/project_api_service.dart';
 import '../models/project_response.dart';
 
 /// API implementation of the enhanced project repository
-@Injectable(as: EnhancedProjectRepository, env: [Environment.prod])
+@Injectable(
+  as: EnhancedProjectRepository,
+  env: [Environment.dev, Environment.prod],
+)
 class ApiProjectRepository implements EnhancedProjectRepository {
   const ApiProjectRepository(this._apiService);
 
@@ -13,9 +18,37 @@ class ApiProjectRepository implements EnhancedProjectRepository {
 
   @override
   Future<ProjectsResponse> getAllProjects(ProjectsQuery query) async {
-    // Convert ProjectsQuery to API response format
-    final response = await _apiService.getProjects(query.toQueryParameters());
-    return _convertToProjectsResponse(response);
+    if (kDebugMode) {
+      debugPrint('🚀 ApiProjectRepository.getAllProjects called');
+      debugPrint('📝 Query parameters: ${query.toQueryParameters()}');
+    }
+
+    try {
+      // Convert ProjectsQuery to API response format
+      final response = await _apiService.getProjects(query.toQueryParameters());
+
+      if (kDebugMode) {
+        debugPrint('✅ API call successful');
+        debugPrint('📊 Response: ${response.toString()}');
+      }
+
+      return _convertToProjectsResponse(response);
+    } on DioException catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ DioException in getAllProjects:');
+        debugPrint('  Status Code: ${e.response?.statusCode}');
+        debugPrint('  Request URL: ${e.requestOptions.uri}');
+        debugPrint('  Request Headers: ${e.requestOptions.headers}');
+        debugPrint('  Error Message: ${e.message}');
+        debugPrint('  Response Data: ${e.response?.data}');
+      }
+      rethrow;
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ General exception in getAllProjects: $e');
+      }
+      rethrow;
+    }
   }
 
   @override

@@ -1,12 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
 import '../../domain/entities/project_api_models.dart';
 import '../../domain/repositories/project_repository.dart';
 
-/// Mock implementation of the enhanced project repository for testing and development
-@Injectable(
-  as: EnhancedProjectRepository,
-  env: [Environment.dev, Environment.test],
-)
+/// Mock implementation of the enhanced project repository for testing only
+@Injectable(as: EnhancedProjectRepository, env: [Environment.test])
 class MockProjectRepository implements EnhancedProjectRepository {
   const MockProjectRepository();
 
@@ -44,19 +42,44 @@ class MockProjectRepository implements EnhancedProjectRepository {
 
   @override
   Future<ProjectsResponse> getAllProjects(ProjectsQuery query) async {
-    // Simulate network delay
-    await Future.delayed(const Duration(milliseconds: 500));
+    if (kDebugMode) {
+      debugPrint('🎭 MockProjectRepository.getAllProjects called');
+      debugPrint('📝 Query: ${query.toString()}');
+    }
 
-    return ProjectsResponse(
-      items: _mockProjects,
-      totalCount: _mockProjects.length,
-      pageNumber: query.pageNumber,
-      pageSize: query.pageSize,
-      totalPages: (_mockProjects.length / query.pageSize).ceil(),
-      hasPreviousPage: query.pageNumber > 1,
-      hasNextPage:
-          query.pageNumber < (_mockProjects.length / query.pageSize).ceil(),
-    );
+    try {
+      // Simulate network delay
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      if (kDebugMode) {
+        debugPrint('📊 Mock projects count: ${_mockProjects.length}');
+      }
+
+      final result = ProjectsResponse(
+        items: _mockProjects,
+        totalCount: _mockProjects.length,
+        pageNumber: query.pageNumber,
+        pageSize: query.pageSize,
+        totalPages: (_mockProjects.length / query.pageSize).ceil(),
+        hasPreviousPage: query.pageNumber > 1,
+        hasNextPage:
+            query.pageNumber < (_mockProjects.length / query.pageSize).ceil(),
+      );
+
+      if (kDebugMode) {
+        debugPrint(
+          '✅ MockProjectRepository returning ${result.items.length} projects',
+        );
+      }
+
+      return result;
+    } catch (e, stackTrace) {
+      if (kDebugMode) {
+        debugPrint('❌ MockProjectRepository error: $e');
+        debugPrint('🔍 Stack trace: $stackTrace');
+      }
+      rethrow;
+    }
   }
 
   @override
@@ -296,9 +319,10 @@ class MockProjectRepository implements EnhancedProjectRepository {
       'ftsValue': 18750.0,
       'pqmValue': 85.0,
       'projectManager': {
-        'managerId': 'manager-1',
-        'managerName': 'Sarah Johnson',
-        'managerEmail': 'sarah.johnson@company.com',
+        'userId': 'manager-1',
+        'username': 'sarah.johnson',
+        'fullName': 'Sarah Johnson',
+        'email': 'sarah.johnson@company.com',
       },
       'locationCoordinates': {'latitude': 39.7817, 'longitude': -89.6501},
     }),
@@ -320,9 +344,10 @@ class MockProjectRepository implements EnhancedProjectRepository {
       'ftsValue': 37500.0,
       'pqmValue': 25.0,
       'projectManager': {
-        'managerId': 'manager-2',
-        'managerName': 'Mike Chen',
-        'managerEmail': 'mike.chen@company.com',
+        'userId': 'manager-2',
+        'username': 'mike.chen',
+        'fullName': 'Mike Chen',
+        'email': 'mike.chen@company.com',
       },
       'locationCoordinates': {'latitude': 37.7749, 'longitude': -122.4194},
     }),

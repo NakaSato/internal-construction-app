@@ -4,7 +4,8 @@ import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../features/project_management/application/project_bloc.dart';
-import '../../../features/project_management/presentation/widgets/project_card.dart';
+import '../../../features/project_management/domain/entities/project_api_models.dart';
+import '../../../features/project_management/presentation/widgets/enhanced_project_card.dart';
 import '../../permissions/presentation/widgets/permission_widgets.dart';
 
 /// Project list section with loading, empty, and error states
@@ -439,7 +440,7 @@ class _ErrorState extends StatelessWidget {
 
 /// Project list widget
 class _ProjectList extends StatelessWidget {
-  final List<dynamic> projects;
+  final List<EnhancedProject> projects;
 
   const _ProjectList({required this.projects});
 
@@ -461,11 +462,10 @@ class _ProjectList extends StatelessWidget {
           return AnimatedContainer(
             duration: Duration(milliseconds: 200 + (index * 50)),
             curve: Curves.easeOutCubic,
-            child: ProjectCard(
+            child: EnhancedProjectCard(
               project: project,
-              isCompact: true,
               onTap: () {
-                context.push('/projects/${project.id}');
+                context.push('/projects/${project.projectId}');
               },
             ),
           );
