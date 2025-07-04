@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 /// Enhanced search section for the dashboard
 class DashboardSearchSection extends StatefulWidget {
@@ -9,14 +8,10 @@ class DashboardSearchSection extends StatefulWidget {
   /// Callback for filter button tap
   final VoidCallback? onFilterTap;
 
-  /// Callback for grid view button tap
-  final VoidCallback? onGridViewTap;
-
   const DashboardSearchSection({
     super.key,
     this.onSearchChanged,
     this.onFilterTap,
-    this.onGridViewTap,
   });
 
   @override
@@ -85,22 +80,11 @@ class _DashboardSearchSectionState extends State<DashboardSearchSection> {
   Widget _buildSuffixActions(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        IconButton(
-          onPressed: widget.onGridViewTap ?? _defaultGridViewAction,
-          icon: Icon(Icons.view_module, color: colorScheme.onSurfaceVariant),
-          tooltip: 'Grid View',
-          splashRadius: 20,
-        ),
-        IconButton(
-          onPressed: widget.onFilterTap ?? _defaultFilterAction,
-          icon: Icon(Icons.filter_list, color: colorScheme.onSurfaceVariant),
-          tooltip: 'Filter',
-          splashRadius: 20,
-        ),
-      ],
+    return IconButton(
+      onPressed: widget.onFilterTap ?? _defaultFilterAction,
+      icon: Icon(Icons.filter_list, color: colorScheme.onSurfaceVariant),
+      tooltip: 'Filter',
+      splashRadius: 20,
     );
   }
 
@@ -119,11 +103,6 @@ class _DashboardSearchSectionState extends State<DashboardSearchSection> {
         width: isFocused ? 2 : 1,
       ),
     );
-  }
-
-  /// Default grid view action
-  void _defaultGridViewAction() {
-    context.push('/projects');
   }
 
   /// Default filter action

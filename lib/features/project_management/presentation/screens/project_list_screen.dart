@@ -8,7 +8,7 @@ import '../../../authentication/application/auth_bloc.dart';
 import '../../../authentication/application/auth_state.dart';
 import '../../application/project_bloc.dart';
 import '../../domain/entities/project_api_models.dart';
-import '../widgets/enhanced_project_card.dart';
+import '../widgets/project_card.dart';
 import '../widgets/project_search_bar.dart';
 import '../widgets/project_filter_bottom_sheet.dart';
 
@@ -100,7 +100,7 @@ class _EnhancedProjectListScreenState extends State<EnhancedProjectListScreen> {
     return BlocProvider(
       create: (context) => getIt<EnhancedProjectBloc>(),
       child: Scaffold(
-        backgroundColor: Colors.grey[50],
+        backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
         body: Column(
           children: [
             // App Header
@@ -134,17 +134,43 @@ class _EnhancedProjectListScreenState extends State<EnhancedProjectListScreen> {
             // Search and Filter Bar
             Container(
               padding: const EdgeInsets.all(16),
-              color: Colors.white,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
               child: Column(
                 children: [
                   ProjectSearchBar(
                     controller: _searchController,
                     onChanged: _onSearchChanged,
                     onFilterTap: _showFilterBottomSheet,
-                    hintText: 'Search projects...',
+                    hintText: 'Search projects by name, client, or address...',
+                    onClearSearch: () {
+                      // Reload all projects when search is cleared
+                      context.read<EnhancedProjectBloc>().add(
+                        LoadProjectsRequested(query: _currentQuery),
+                      );
+                    },
+                    showActiveFilters: _currentQuery.hasActiveFilters,
+                    activeFilterCount: _currentQuery.activeFilterCount,
+                    currentQuery: _currentQuery,
+                    onQueryChanged: (newQuery) {
+                      setState(() {
+                        _currentQuery = newQuery;
+                      });
+
+                      // Apply the new query immediately
+                      context.read<EnhancedProjectBloc>().add(
+                        LoadProjectsRequested(query: newQuery),
+                      );
+                    },
                   ),
-                  const SizedBox(height: 8),
-                  _buildActiveFiltersChips(),
                 ],
               ),
             ),
@@ -195,58 +221,6 @@ class _EnhancedProjectListScreenState extends State<EnhancedProjectListScreen> {
     );
   }
 
-  Widget _buildActiveFiltersChips() {
-    final activeFilters = <Widget>[];
-
-    // Status filter
-    if (_currentQuery.status?.isNotEmpty == true) {
-      activeFilters.add(
-        Chip(
-          label: Text('Status: ${_currentQuery.status}'),
-          deleteIcon: const Icon(Icons.close, size: 16),
-          onDeleted: () => _onFilterApplied(_currentQuery.copyWith(status: '')),
-        ),
-      );
-    }
-
-    // Project manager filter
-    if (_currentQuery.managerId?.isNotEmpty == true) {
-      activeFilters.add(
-        Chip(
-          label: const Text('Manager Filter'),
-          deleteIcon: const Icon(Icons.close, size: 16),
-          onDeleted: () =>
-              _onFilterApplied(_currentQuery.copyWith(managerId: '')),
-        ),
-      );
-    }
-
-    // Sort filter
-    if (_currentQuery.sortBy?.isNotEmpty == true) {
-      activeFilters.add(
-        Chip(
-          label: Text('Sort: ${_currentQuery.sortBy}'),
-          deleteIcon: const Icon(Icons.close, size: 16),
-          onDeleted: () => _onFilterApplied(_currentQuery.copyWith(sortBy: '')),
-        ),
-      );
-    }
-
-    if (activeFilters.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    return SizedBox(
-      height: 32,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: activeFilters.length,
-        separatorBuilder: (context, index) => const SizedBox(width: 8),
-        itemBuilder: (context, index) => activeFilters[index],
-      ),
-    );
-  }
-
   Widget _buildProjectList(ProjectsResponse projectsResponse) {
     if (projectsResponse.items.isEmpty) {
       return _buildEmptyState();
@@ -255,7 +229,7 @@ class _EnhancedProjectListScreenState extends State<EnhancedProjectListScreen> {
     return RefreshIndicator(
       onRefresh: () async => _onRefresh(),
       child: ListView.builder(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         itemCount: projectsResponse.items.length + 1, // +1 for pagination info
         itemBuilder: (context, index) {
           if (index == projectsResponse.items.length) {
@@ -263,8 +237,19 @@ class _EnhancedProjectListScreenState extends State<EnhancedProjectListScreen> {
           }
 
           final project = projectsResponse.items[index];
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 24),
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            margin: const EdgeInsets.only(bottom: 32),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.03),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
             child: EnhancedProjectCard(
               project: project,
               onTap: () => context.push('/projects/${project.projectId}'),
@@ -280,8 +265,12 @@ class _EnhancedProjectListScreenState extends State<EnhancedProjectListScreen> {
       padding: const EdgeInsets.all(16),
       margin: const EdgeInsets.only(top: 16),
       decoration: BoxDecoration(
-        color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(8),
+        color: Theme.of(context).colorScheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outlineVariant,
+          width: 1,
+        ),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,

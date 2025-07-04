@@ -356,6 +356,19 @@ class ProjectsQuery extends Equatable {
     this.sortOrder,
     this.filter,
     this.fields,
+    // Enhanced filtering options
+    this.projectName,
+    this.clientInfo,
+    this.address,
+    this.team,
+    this.connectionType,
+    this.minCapacity,
+    this.maxCapacity,
+    this.startDateFrom,
+    this.startDateTo,
+    this.estimatedEndDateFrom,
+    this.estimatedEndDateTo,
+    this.statuses,
   });
 
   final int pageNumber;
@@ -366,6 +379,20 @@ class ProjectsQuery extends Equatable {
   final String? sortOrder;
   final String? filter;
   final String? fields;
+
+  // Enhanced filtering options
+  final String? projectName;
+  final String? clientInfo;
+  final String? address;
+  final String? team;
+  final String? connectionType;
+  final double? minCapacity;
+  final double? maxCapacity;
+  final DateTime? startDateFrom;
+  final DateTime? startDateTo;
+  final DateTime? estimatedEndDateFrom;
+  final DateTime? estimatedEndDateTo;
+  final List<String>? statuses;
 
   Map<String, dynamic> toQueryParameters() {
     final params = <String, dynamic>{
@@ -380,6 +407,44 @@ class ProjectsQuery extends Equatable {
     if (filter != null) params['filter'] = filter;
     if (fields != null) params['fields'] = fields;
 
+    // Enhanced filtering parameters
+    if (projectName != null && projectName!.isNotEmpty) {
+      params['projectName'] = projectName;
+    }
+    if (clientInfo != null && clientInfo!.isNotEmpty) {
+      params['clientInfo'] = clientInfo;
+    }
+    if (address != null && address!.isNotEmpty) {
+      params['address'] = address;
+    }
+    if (team != null && team!.isNotEmpty) {
+      params['team'] = team;
+    }
+    if (connectionType != null && connectionType!.isNotEmpty) {
+      params['connectionType'] = connectionType;
+    }
+    if (minCapacity != null) {
+      params['minCapacity'] = minCapacity.toString();
+    }
+    if (maxCapacity != null) {
+      params['maxCapacity'] = maxCapacity.toString();
+    }
+    if (startDateFrom != null) {
+      params['startDateFrom'] = startDateFrom!.toIso8601String();
+    }
+    if (startDateTo != null) {
+      params['startDateTo'] = startDateTo!.toIso8601String();
+    }
+    if (estimatedEndDateFrom != null) {
+      params['estimatedEndDateFrom'] = estimatedEndDateFrom!.toIso8601String();
+    }
+    if (estimatedEndDateTo != null) {
+      params['estimatedEndDateTo'] = estimatedEndDateTo!.toIso8601String();
+    }
+    if (statuses != null && statuses!.isNotEmpty) {
+      params['statuses'] = statuses!.join(',');
+    }
+
     return params;
   }
 
@@ -392,6 +457,18 @@ class ProjectsQuery extends Equatable {
     String? sortOrder,
     String? filter,
     String? fields,
+    String? projectName,
+    String? clientInfo,
+    String? address,
+    String? team,
+    String? connectionType,
+    double? minCapacity,
+    double? maxCapacity,
+    DateTime? startDateFrom,
+    DateTime? startDateTo,
+    DateTime? estimatedEndDateFrom,
+    DateTime? estimatedEndDateTo,
+    List<String>? statuses,
   }) {
     return ProjectsQuery(
       pageNumber: pageNumber ?? this.pageNumber,
@@ -402,6 +479,18 @@ class ProjectsQuery extends Equatable {
       sortOrder: sortOrder ?? this.sortOrder,
       filter: filter ?? this.filter,
       fields: fields ?? this.fields,
+      projectName: projectName ?? this.projectName,
+      clientInfo: clientInfo ?? this.clientInfo,
+      address: address ?? this.address,
+      team: team ?? this.team,
+      connectionType: connectionType ?? this.connectionType,
+      minCapacity: minCapacity ?? this.minCapacity,
+      maxCapacity: maxCapacity ?? this.maxCapacity,
+      startDateFrom: startDateFrom ?? this.startDateFrom,
+      startDateTo: startDateTo ?? this.startDateTo,
+      estimatedEndDateFrom: estimatedEndDateFrom ?? this.estimatedEndDateFrom,
+      estimatedEndDateTo: estimatedEndDateTo ?? this.estimatedEndDateTo,
+      statuses: statuses ?? this.statuses,
     );
   }
 
@@ -415,5 +504,57 @@ class ProjectsQuery extends Equatable {
     sortOrder,
     filter,
     fields,
+    projectName,
+    clientInfo,
+    address,
+    team,
+    connectionType,
+    minCapacity,
+    maxCapacity,
+    startDateFrom,
+    startDateTo,
+    estimatedEndDateFrom,
+    estimatedEndDateTo,
+    statuses,
   ];
+
+  /// Helper method to check if any filters are active
+  bool get hasActiveFilters {
+    return (projectName?.isNotEmpty == true) ||
+        (clientInfo?.isNotEmpty == true) ||
+        (address?.isNotEmpty == true) ||
+        (team?.isNotEmpty == true) ||
+        (connectionType?.isNotEmpty == true) ||
+        (minCapacity != null) ||
+        (maxCapacity != null) ||
+        (startDateFrom != null) ||
+        (startDateTo != null) ||
+        (estimatedEndDateFrom != null) ||
+        (estimatedEndDateTo != null) ||
+        (statuses?.isNotEmpty == true) ||
+        (status?.isNotEmpty == true) ||
+        (managerId?.isNotEmpty == true);
+  }
+
+  /// Helper method to count active filters
+  int get activeFilterCount {
+    int count = 0;
+    if (projectName?.isNotEmpty == true) count++;
+    if (clientInfo?.isNotEmpty == true) count++;
+    if (address?.isNotEmpty == true) count++;
+    if (team?.isNotEmpty == true) count++;
+    if (connectionType?.isNotEmpty == true) count++;
+    if (minCapacity != null || maxCapacity != null) count++;
+    if (startDateFrom != null || startDateTo != null) count++;
+    if (estimatedEndDateFrom != null || estimatedEndDateTo != null) count++;
+    if (statuses?.isNotEmpty == true) count++;
+    if (status?.isNotEmpty == true) count++;
+    if (managerId?.isNotEmpty == true) count++;
+    return count;
+  }
+
+  /// Helper method to clear all filters
+  ProjectsQuery clearFilters() {
+    return const ProjectsQuery();
+  }
 }

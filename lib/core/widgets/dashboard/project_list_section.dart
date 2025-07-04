@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../features/project_management/application/project_bloc.dart';
 import '../../../features/project_management/domain/entities/project_api_models.dart';
-import '../../../features/project_management/presentation/widgets/enhanced_project_card.dart';
+import '../../../features/project_management/presentation/widgets/project_card.dart';
 import '../../permissions/presentation/widgets/permission_widgets.dart';
 
 /// Project list section with loading, empty, and error states
@@ -23,9 +23,15 @@ class ProjectListSection extends StatelessWidget {
 
         // Content section
         BlocProvider(
-          create: (context) =>
-              GetIt.instance<EnhancedProjectBloc>()
-                ..add(const LoadProjectsRequested()),
+          create: (context) => GetIt.instance<EnhancedProjectBloc>()
+            ..add(
+              const LoadProjectsRequested(
+                query: ProjectsQuery(
+                  pageSize: 1000, // Load up to 1000 projects to show all
+                  pageNumber: 1,
+                ),
+              ),
+            ),
           child: BlocBuilder<EnhancedProjectBloc, EnhancedProjectState>(
             builder: (context, state) {
               if (state is EnhancedProjectLoading) {
@@ -266,7 +272,12 @@ class _ErrorState extends StatelessWidget {
             OutlinedButton.icon(
               onPressed: () {
                 context.read<EnhancedProjectBloc>().add(
-                  const LoadProjectsRequested(),
+                  const LoadProjectsRequested(
+                    query: ProjectsQuery(
+                      pageSize: 1000, // Load up to 1000 projects to show all
+                      pageNumber: 1,
+                    ),
+                  ),
                 );
               },
               icon: const Icon(Icons.refresh, size: 16),
@@ -328,7 +339,12 @@ class _ErrorState extends StatelessWidget {
               child: OutlinedButton(
                 onPressed: () {
                   context.read<EnhancedProjectBloc>().add(
-                    const LoadProjectsRequested(),
+                    const LoadProjectsRequested(
+                      query: ProjectsQuery(
+                        pageSize: 1000, // Load up to 1000 projects to show all
+                        pageNumber: 1,
+                      ),
+                    ),
                   );
                 },
                 style: OutlinedButton.styleFrom(
@@ -372,7 +388,13 @@ class _ErrorState extends StatelessWidget {
                     child: OutlinedButton(
                       onPressed: () {
                         context.read<EnhancedProjectBloc>().add(
-                          const LoadProjectsRequested(),
+                          const LoadProjectsRequested(
+                            query: ProjectsQuery(
+                              pageSize:
+                                  1000, // Load up to 1000 projects to show all
+                              pageNumber: 1,
+                            ),
+                          ),
                         );
                       },
                       style: OutlinedButton.styleFrom(
@@ -417,7 +439,13 @@ class _ErrorState extends StatelessWidget {
                     child: OutlinedButton(
                       onPressed: () {
                         context.read<EnhancedProjectBloc>().add(
-                          const LoadProjectsRequested(),
+                          const LoadProjectsRequested(
+                            query: ProjectsQuery(
+                              pageSize:
+                                  1000, // Load up to 1000 projects to show all
+                              pageNumber: 1,
+                            ),
+                          ),
                         );
                       },
                       style: OutlinedButton.styleFrom(
@@ -448,7 +476,14 @@ class _ProjectList extends StatelessWidget {
   Widget build(BuildContext context) {
     return RefreshIndicator(
       onRefresh: () async {
-        context.read<EnhancedProjectBloc>().add(const LoadProjectsRequested());
+        context.read<EnhancedProjectBloc>().add(
+          const LoadProjectsRequested(
+            query: ProjectsQuery(
+              pageSize: 1000, // Load up to 1000 projects to show all
+              pageNumber: 1,
+            ),
+          ),
+        );
         // Wait a bit for the refresh to complete
         await Future.delayed(const Duration(milliseconds: 250));
       },

@@ -85,9 +85,6 @@ dependencies:
   share_plus: ^7.2.2
 
 dev_dependencies:
-  flutter_test:
-    sdk: flutter
-
   # Linting
   flutter_lints: ^3.0.0
   
@@ -97,10 +94,6 @@ dev_dependencies:
   json_serializable: ^6.7.1
   injectable_generator: ^2.6.2
   retrofit_generator: ^9.1.4
-  
-  # Testing
-  mockito: ^5.4.2
-  bloc_test: ^9.1.7
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

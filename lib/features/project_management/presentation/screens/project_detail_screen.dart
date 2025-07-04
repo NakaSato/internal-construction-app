@@ -10,12 +10,10 @@ import '../../../authentication/application/auth_bloc.dart';
 import '../../../authentication/application/auth_state.dart';
 import '../../../authentication/domain/entities/user.dart';
 import '../../../daily_reports/application/cubits/daily_reports_cubit.dart';
-import '../../../daily_reports/domain/entities/daily_report.dart';
 import '../widgets/project_detail/project_header_widget.dart';
 import 'edit_project_screen.dart';
 import 'project_detail/constants.dart';
 import 'project_detail/state_widgets.dart';
-import 'project_detail/tab_builders.dart';
 
 /// Enhanced project detail screen with role-based access and comprehensive features
 /// Supports different user roles with tailored content and functionality
@@ -104,72 +102,6 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
     }
 
     return tabs;
-  }
-
-  List<Widget> _buildTabViews(Project project) {
-    // Ensure currentUser is available before building tabs
-    if (_currentUser == null) {
-      return List.generate(
-        _tabCount,
-        (index) => const Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    final views = <Widget>[
-      ProjectDetailTabBuilders.buildOverviewTab(
-        context,
-        project,
-        _currentUser!,
-      ),
-      ProjectDetailTabBuilders.buildProgressTab(context, project),
-      ProjectDetailTabBuilders.buildTasksTab(context, project),
-      ProjectDetailTabBuilders.buildDailyReportsTab(
-        context,
-        project,
-        _currentUser!,
-        _currentUserRole,
-        _onNavigateToCreateReport,
-        _onNavigateToDailyReports,
-        _onViewReportDetails,
-        _onLoadProjectReports,
-      ),
-    ];
-
-    // Add admin/manager only views
-    if (_currentUserRole.hasFullAccess) {
-      views.addAll([
-        ProjectDetailStateWidgets.buildComingSoonView(
-          context,
-          'Team Management',
-        ),
-        ProjectDetailStateWidgets.buildComingSoonView(
-          context,
-          'Document Management',
-        ),
-        ProjectDetailStateWidgets.buildComingSoonView(
-          context,
-          'Project Settings',
-        ),
-      ]);
-    }
-
-    return views;
-  }
-
-  void _onNavigateToCreateReport(Project project) {
-    context.push('/projects/${project.projectId}/reports/create');
-  }
-
-  void _onNavigateToDailyReports(Project project) {
-    context.push('/projects/${project.projectId}/reports');
-  }
-
-  void _onViewReportDetails(DailyReport report) {
-    context.push('/reports/${report.reportId}');
-  }
-
-  void _onLoadProjectReports() {
-    _dailyReportsCubit.loadDailyReports();
   }
 
   void _onEditProject(Project project) {
@@ -326,7 +258,10 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
         },
         body: TabBarView(
           controller: _tabController,
-          children: _buildTabViews(project),
+          children: List.generate(
+            _tabCount,
+            (index) => const Center(child: Text('Tab content coming soon')),
+          ),
         ),
       ),
     );
