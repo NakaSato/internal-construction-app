@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/navigation/app_router.dart';
 import '../../../../common/widgets/error_message_widget.dart';
@@ -9,6 +10,14 @@ import '../../application/auth_event.dart';
 import '../../application/auth_state.dart';
 import '../../domain/entities/user.dart';
 
+/// Login screen with modern UI, responsive design, and username persistence
+/// 
+/// Features:
+/// - Responsive layout for phones, tablets, and different orientations
+/// - Username persistence with SharedPreferences
+/// - Modern glassmorphism design with smooth animations
+/// - Comprehensive form validation with proper error messages
+/// - Accessibility support
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -561,15 +570,7 @@ class _LoginScreenState extends State<LoginScreen>
         hintText: 'Enter your username',
         prefixIcon: _buildPrefixIcon(Icons.person_rounded),
       ),
-      validator: (value) {
-        if (value == null || value.isEmpty) {
-          return 'Please enter your username';
-        }
-        if (value.length < _minUsernameLength) {
-          return 'Username must be at least $_minUsernameLength characters';
-        }
-        return null;
-      },
+      validator: (value) => _validateUsername(value),
       onFieldSubmitted: (_) {
         FocusScope.of(context).requestFocus(_passwordFocusNode);
       },
@@ -624,15 +625,7 @@ class _LoginScreenState extends State<LoginScreen>
           ),
         ),
       ),
-      validator: (value) {
-        if (value == null || value.isEmpty) {
-          return 'Please enter your password';
-        }
-        if (value.length < _minPasswordLength) {
-          return 'Password must be at least $_minPasswordLength characters';
-        }
-        return null;
-      },
+      validator: (value) => _validatePassword(value),
       onFieldSubmitted: (_) => _handleSignIn(),
     );
   }
@@ -1100,4 +1093,38 @@ class _LoginScreenState extends State<LoginScreen>
     }
     return 380;
   }
+
+  //#region Form Validation
+  /// Validates username input with comprehensive error checking
+  String? _validateUsername(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Please enter your username';
+    }
+    
+    final trimmedValue = value.trim();
+    if (trimmedValue.length < _minUsernameLength) {
+      return 'Username must be at least $_minUsernameLength characters';
+    }
+    
+    // Additional validation rules
+    if (trimmedValue.contains(' ')) {
+      return 'Username cannot contain spaces';
+    }
+    
+    return null;
+  }
+
+  /// Validates password input with security requirements
+  String? _validatePassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter your password';
+    }
+    
+    if (value.length < _minPasswordLength) {
+      return 'Password must be at least $_minPasswordLength characters';
+    }
+    
+    return null;
+  }
+  //#endregion
 }

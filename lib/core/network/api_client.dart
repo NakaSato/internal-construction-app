@@ -46,7 +46,7 @@ class ApiClient {
   ApiClient({String? baseUrl, String? authToken}) {
     _dio = Dio(
       BaseOptions(
-        baseUrl: baseUrl ?? '${ApiConfig.baseUrl}/${ApiConfig.apiVersion}',
+        baseUrl: baseUrl ?? ApiConfig.baseUrl,
         connectTimeout: ApiConfig.connectTimeout,
         receiveTimeout: ApiConfig.receiveTimeout,
         sendTimeout: ApiConfig.sendTimeout,

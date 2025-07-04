@@ -30,6 +30,9 @@ class ApiProjectRepository implements EnhancedProjectRepository {
       if (kDebugMode) {
         debugPrint('✅ API call successful');
         debugPrint('📊 Response: ${response.toString()}');
+        debugPrint('📊 Response Type: ${response.runtimeType}');
+        debugPrint('📊 Response Data Type: ${response.data.runtimeType}');
+        debugPrint('📊 Response Items Count: ${response.data.items.length}');
       }
 
       return _convertToProjectsResponse(response);
@@ -43,9 +46,10 @@ class ApiProjectRepository implements EnhancedProjectRepository {
         debugPrint('  Response Data: ${e.response?.data}');
       }
       rethrow;
-    } catch (e) {
+    } catch (e, stackTrace) {
       if (kDebugMode) {
         debugPrint('❌ General exception in getAllProjects: $e');
+        debugPrint('🔍 Stack trace: $stackTrace');
       }
       rethrow;
     }
@@ -53,8 +57,34 @@ class ApiProjectRepository implements EnhancedProjectRepository {
 
   @override
   Future<EnhancedProject> getProjectById(String id) async {
-    final response = await _apiService.getProject(id);
-    return _convertToEnhancedProject(response);
+    try {
+      if (kDebugMode) {
+        debugPrint('🔍 Loading project details for ID: $id');
+      }
+
+      final response = await _apiService.getProject(id);
+
+      if (kDebugMode) {
+        debugPrint('✅ Received project detail response: ${response.data}');
+      }
+
+      // Convert the single project response data directly to EnhancedProject
+      return _convertSingleProjectToEnhanced(response.data);
+    } on DioException catch (e, stackTrace) {
+      if (kDebugMode) {
+        debugPrint('❌ DioException in getProjectById for ID $id: ${e.message}');
+        debugPrint('🔍 Response: ${e.response?.data}');
+        debugPrint('🔍 Status code: ${e.response?.statusCode}');
+        debugPrint('🔍 Stack trace: $stackTrace');
+      }
+      rethrow;
+    } catch (e, stackTrace) {
+      if (kDebugMode) {
+        debugPrint('❌ General exception in getProjectById for ID $id: $e');
+        debugPrint('🔍 Stack trace: $stackTrace');
+      }
+      rethrow;
+    }
   }
 
   @override
@@ -131,30 +161,140 @@ class ApiProjectRepository implements EnhancedProjectRepository {
 
   // Helper method to convert API response to domain model
   ProjectsResponse _convertToProjectsResponse(ProjectResponse response) {
-    // Extract project data from the API response
-    final projects = response.data.items
-        .map((item) => EnhancedProject.fromJson(item.toJson()))
-        .toList();
+    try {
+      if (kDebugMode) {
+        debugPrint('🔄 Converting ProjectResponse to ProjectsResponse');
+        debugPrint(
+          '📊 Response data items count: ${response.data.items.length}',
+        );
+      }
 
-    return ProjectsResponse(
-      items: projects,
-      totalCount: response.data.totalCount,
-      pageNumber: response.data.pageNumber,
-      pageSize: response.data.pageSize,
-      totalPages: response.data.totalPages,
-      hasPreviousPage: response.data.pageNumber > 1,
-      hasNextPage: response.data.pageNumber < response.data.totalPages,
-    );
+      // Extract project data from the API response with safety checks
+      final projects = <EnhancedProject>[];
+      for (int i = 0; i < response.data.items.length; i++) {
+        try {
+          final item = response.data.items[i];
+          if (kDebugMode) {
+            debugPrint('🔄 Converting item $i: ${item.runtimeType}');
+          }
+
+          // Convert ProjectDto to EnhancedProject directly without toJson() conversion
+          final project = EnhancedProject(
+            projectId: item.projectId,
+            projectName: item.projectName,
+            address: item.address,
+            clientInfo: item.clientInfo,
+            status: item.status,
+            startDate: item.startDate,
+            estimatedEndDate: item.estimatedEndDate,
+            actualEndDate: item.actualEndDate,
+            createdAt:
+                item.startDate, // Use startDate as fallback for createdAt
+            updatedAt:
+                DateTime.now(), // Use current time as fallback for updatedAt
+            projectManager: item.projectManager != null
+                ? ProjectManager(
+                    userId: item.projectManager!.userId,
+                    username: item.projectManager!.username,
+                    fullName: item.projectManager!.fullName,
+                    email: item.projectManager!.email,
+                  )
+                : null,
+            taskCount: item.taskCount,
+            completedTaskCount: item.completedTaskCount,
+          );
+          projects.add(project);
+
+          if (kDebugMode) {
+            debugPrint('✅ Successfully converted item $i to EnhancedProject');
+          }
+        } catch (e, stackTrace) {
+          if (kDebugMode) {
+            debugPrint('❌ Error converting item $i: $e');
+            debugPrint('🔍 Item data: ${response.data.items[i]}');
+            debugPrint('🔍 Stack trace: $stackTrace');
+          }
+          // Skip this item and continue with others
+          continue;
+        }
+      }
+
+      final result = ProjectsResponse(
+        items: projects,
+        totalCount: response.data.totalCount,
+        pageNumber: response.data.pageNumber,
+        pageSize: response.data.pageSize,
+        totalPages: response.data.totalPages,
+        hasPreviousPage: response.data.pageNumber > 1,
+        hasNextPage: response.data.pageNumber < response.data.totalPages,
+      );
+
+      if (kDebugMode) {
+        debugPrint('✅ Successfully converted ${projects.length} projects');
+      }
+
+      return result;
+    } catch (e, stackTrace) {
+      if (kDebugMode) {
+        debugPrint('❌ Error in _convertToProjectsResponse: $e');
+        debugPrint('🔍 Stack trace: $stackTrace');
+        debugPrint('🔍 Response data: ${response.data}');
+      }
+      rethrow;
+    }
   }
 
   // Helper method to convert single project response to domain model
-  EnhancedProject _convertToEnhancedProject(dynamic projectData) {
-    // If it's a ProjectResponse with data, extract the first project
-    if (projectData is ProjectResponse && projectData.data.items.isNotEmpty) {
-      final project = projectData.data.items.first;
-      return EnhancedProject.fromJson(project.toJson());
+  EnhancedProject _convertSingleProjectToEnhanced(
+    Map<String, dynamic> projectData,
+  ) {
+    if (kDebugMode) {
+      debugPrint('🔄 Converting single project data: ${projectData.keys}');
     }
 
-    throw ArgumentError('Invalid project data format or no projects found');
+    return EnhancedProject(
+      projectId: projectData['projectId']?.toString() ?? '',
+      projectName: projectData['projectName']?.toString() ?? '',
+      address: projectData['address']?.toString() ?? '',
+      clientInfo: projectData['clientInfo']?.toString() ?? '',
+      status: projectData['status']?.toString() ?? 'planning',
+      startDate: projectData['startDate'] != null
+          ? DateTime.tryParse(projectData['startDate'].toString()) ??
+                DateTime.now()
+          : DateTime.now(),
+      estimatedEndDate: projectData['estimatedEndDate'] != null
+          ? DateTime.tryParse(projectData['estimatedEndDate'].toString()) ??
+                DateTime.now()
+          : DateTime.now(),
+      actualEndDate: projectData['actualEndDate'] != null
+          ? DateTime.tryParse(projectData['actualEndDate'].toString())
+          : null,
+      createdAt: projectData['createdAt'] != null
+          ? DateTime.tryParse(projectData['createdAt'].toString()) ??
+                DateTime.now()
+          : DateTime.now(),
+      updatedAt: projectData['updatedAt'] != null
+          ? DateTime.tryParse(projectData['updatedAt'].toString()) ??
+                DateTime.now()
+          : DateTime.now(),
+      projectManager: projectData['projectManager'] != null
+          ? ProjectManager.fromJson(
+              projectData['projectManager'] as Map<String, dynamic>,
+            )
+          : null,
+      taskCount: (projectData['taskCount'] as num?)?.toInt() ?? 0,
+      completedTaskCount:
+          (projectData['completedTaskCount'] as num?)?.toInt() ?? 0,
+      team: projectData['team']?.toString(),
+      connectionType: projectData['connectionType']?.toString(),
+      connectionNotes: projectData['connectionNotes']?.toString(),
+      totalCapacityKw: (projectData['totalCapacityKw'] as num?)?.toDouble(),
+      pvModuleCount: (projectData['pvModuleCount'] as num?)?.toInt(),
+      equipmentDetails: null, // Would need proper parsing for this
+      ftsValue: (projectData['ftsValue'] as num?)?.toDouble(),
+      revenueValue: (projectData['revenueValue'] as num?)?.toDouble(),
+      pqmValue: (projectData['pqmValue'] as num?)?.toDouble(),
+      locationCoordinates: null, // Would need proper parsing for this
+    );
   }
 }

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/di/dependency_injection.dart';
+import '../../../../core/di/injection.dart';
 import '../../../../core/widgets/app_header.dart';
 import '../../../authentication/application/auth_bloc.dart';
 import '../../../authentication/application/auth_state.dart';
@@ -264,7 +264,7 @@ class _EnhancedProjectListScreenState extends State<EnhancedProjectListScreen> {
 
           final project = projectsResponse.items[index];
           return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.only(bottom: 24),
             child: EnhancedProjectCard(
               project: project,
               onTap: () => context.push('/projects/${project.projectId}'),

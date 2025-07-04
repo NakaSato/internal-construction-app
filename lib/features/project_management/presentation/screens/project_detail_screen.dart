@@ -61,20 +61,25 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
     final role = UserRole.fromString(user.roleName);
     final newTabCount = _getTabCountForRole(role);
 
-    if (_tabCount != newTabCount) {
-      setState(() {
-        _currentUserRole = role;
-        _currentUser = user;
-        _tabCount = newTabCount;
-        _tabController.dispose();
-        _tabController = TabController(length: _tabCount, vsync: this);
-      });
-    } else {
-      setState(() {
-        _currentUserRole = role;
-        _currentUser = user;
-      });
-    }
+    // Defer state updates to avoid calling setState during build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      if (_tabCount != newTabCount) {
+        setState(() {
+          _currentUserRole = role;
+          _currentUser = user;
+          _tabCount = newTabCount;
+          _tabController.dispose();
+          _tabController = TabController(length: _tabCount, vsync: this);
+        });
+      } else {
+        setState(() {
+          _currentUserRole = role;
+          _currentUser = user;
+        });
+      }
+    });
   }
 
   int _getTabCountForRole(UserRole role) {
@@ -102,6 +107,14 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
   }
 
   List<Widget> _buildTabViews(Project project) {
+    // Ensure currentUser is available before building tabs
+    if (_currentUser == null) {
+      return List.generate(
+        _tabCount,
+        (index) => const Center(child: CircularProgressIndicator()),
+      );
+    }
+
     final views = <Widget>[
       ProjectDetailTabBuilders.buildOverviewTab(
         context,
@@ -221,8 +234,6 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
               );
             }
 
-            _updateTabsBasedOnRole(authState.user);
-
             return BlocBuilder<EnhancedProjectBloc, EnhancedProjectState>(
               builder: (context, projectState) {
                 if (projectState is EnhancedProjectLoading) {
@@ -240,6 +251,18 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
                 }
 
                 if (projectState is EnhancedProjectDetailsLoaded) {
+                  // Update current user from auth state
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (mounted) {
+                      setState(() {
+                        _currentUser = authState.user;
+                        _currentUserRole = UserRole.fromString(
+                          authState.user.roleName,
+                        );
+                      });
+                    }
+                  });
+
                   return _buildProjectDetailContent(projectState.project);
                 }
 

@@ -2,7 +2,7 @@ import 'package:get_it/get_it.dart';
 
 import '../network/api_client.dart';
 import '../../features/authentication/infrastructure/services/auth_api_service.dart';
-import '../../features/project_management/infrastructure/services/project_api_service.dart';
+import '../../features/project_management/data/datasources/project_api_service.dart';
 import '../../features/task_management/infrastructure/services/task_api_service.dart';
 import '../../features/daily_reports/infrastructure/services/daily_reports_api_service.dart';
 import '../../features/work_calendar/infrastructure/services/calendar_api_service.dart';
@@ -26,7 +26,7 @@ class ApiServicesRegistration {
     // Register project management API service
     if (!getIt.isRegistered<ProjectApiService>()) {
       getIt.registerLazySingleton<ProjectApiService>(
-        () => ProjectApiService(getIt<ApiClient>()),
+        () => ProjectApiService(getIt<ApiClient>().dio),
       );
     }
 

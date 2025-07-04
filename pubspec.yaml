@@ -66,6 +66,7 @@ dependencies:
   
   # Authentication & Security
   flutter_secure_storage: ^9.0.0
+  shared_preferences: ^2.2.3
   
   # Environment Configuration
   flutter_dotenv: ^5.2.1

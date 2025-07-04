@@ -16,10 +16,10 @@ class ProjectManager extends Equatable {
 
   factory ProjectManager.fromJson(Map<String, dynamic> json) {
     return ProjectManager(
-      userId: json['userId'] as String,
-      username: json['username'] as String,
-      fullName: json['fullName'] as String,
-      email: json['email'] as String,
+      userId: json['userId'] as String? ?? '',
+      username: json['username'] as String? ?? '',
+      fullName: json['fullName'] as String? ?? '',
+      email: json['email'] as String? ?? '',
     );
   }
 
@@ -97,8 +97,8 @@ class LocationCoordinates extends Equatable {
 
   factory LocationCoordinates.fromJson(Map<String, dynamic> json) {
     return LocationCoordinates(
-      latitude: (json['latitude'] as num).toDouble(),
-      longitude: (json['longitude'] as num).toDouble(),
+      latitude: (json['latitude'] as num?)?.toDouble() ?? 0.0,
+      longitude: (json['longitude'] as num?)?.toDouble() ?? 0.0,
     );
   }
 
@@ -164,18 +164,26 @@ class EnhancedProject extends Equatable {
 
   factory EnhancedProject.fromJson(Map<String, dynamic> json) {
     return EnhancedProject(
-      projectId: json['projectId'] as String,
-      projectName: json['projectName'] as String,
-      address: json['address'] as String,
-      clientInfo: json['clientInfo'] as String,
-      status: json['status'] as String,
-      startDate: DateTime.parse(json['startDate'] as String),
-      estimatedEndDate: DateTime.parse(json['estimatedEndDate'] as String),
+      projectId: json['projectId'] as String? ?? '',
+      projectName: json['projectName'] as String? ?? 'Unknown Project',
+      address: json['address'] as String? ?? '',
+      clientInfo: json['clientInfo'] as String? ?? '',
+      status: json['status'] as String? ?? 'Unknown',
+      startDate: json['startDate'] != null
+          ? DateTime.parse(json['startDate'] as String)
+          : DateTime.now(),
+      estimatedEndDate: json['estimatedEndDate'] != null
+          ? DateTime.parse(json['estimatedEndDate'] as String)
+          : DateTime.now().add(const Duration(days: 30)),
       actualEndDate: json['actualEndDate'] != null
           ? DateTime.parse(json['actualEndDate'] as String)
           : null,
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      updatedAt: DateTime.parse(json['updatedAt'] as String),
+      createdAt: json['createdAt'] != null
+          ? DateTime.parse(json['createdAt'] as String)
+          : DateTime.now(),
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.parse(json['updatedAt'] as String)
+          : DateTime.now(),
       projectManager: json['projectManager'] != null
           ? ProjectManager.fromJson(
               json['projectManager'] as Map<String, dynamic>,

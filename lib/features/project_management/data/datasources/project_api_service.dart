@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 import 'package:retrofit/retrofit.dart';
 import '../models/project_response.dart';
+import '../models/single_project_response.dart';
 
 part 'project_api_service.g.dart';
 
@@ -18,5 +19,5 @@ abstract class ProjectApiService {
 
   /// Get a single project by ID
   @GET('/api/v1/projects/{id}')
-  Future<ProjectResponse> getProject(@Path('id') String projectId);
+  Future<SingleProjectResponse> getProject(@Path('id') String projectId);
 }

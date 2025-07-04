@@ -5,7 +5,7 @@ import 'package:dio/dio.dart';
 import '../../lib/core/network/api_client.dart';
 import '../../lib/core/network/models/api_response.dart';
 import '../../lib/features/authentication/infrastructure/services/auth_api_service.dart';
-import '../../lib/features/project_management/infrastructure/services/project_api_service.dart';
+import '../../lib/features/project_management/data/datasources/project_api_service.dart';
 import '../../lib/features/task_management/infrastructure/services/task_api_service.dart';
 import '../../lib/features/daily_reports/infrastructure/services/daily_reports_api_service.dart';
 import '../../lib/features/work_calendar/infrastructure/services/calendar_api_service.dart';
@@ -21,9 +21,11 @@ class MockDio extends Mock implements Dio {}
 void main() {
   group('API Services Integration Tests', () {
     late MockApiClient mockApiClient;
+    late MockDio mockDio;
 
     setUp(() {
       mockApiClient = MockApiClient();
+      mockDio = MockDio();
     });
 
     test('AuthApiService can be instantiated', () {
@@ -31,7 +33,7 @@ void main() {
     });
 
     test('ProjectApiService can be instantiated', () {
-      expect(() => ProjectApiService(mockApiClient), isNot(throwsA(anything)));
+      expect(() => ProjectApiService(mockDio), isNot(throwsA(anything)));
     });
 
     test('TaskApiService can be instantiated', () {
@@ -75,7 +77,7 @@ void main() {
 
     test('All API services are properly typed', () {
       final authService = AuthApiService(mockApiClient);
-      final projectService = ProjectApiService(mockApiClient);
+      final projectService = ProjectApiService(mockDio);
       final taskService = TaskApiService(mockApiClient);
       final reportsService = DailyReportsApiService(mockApiClient);
       final calendarService = CalendarApiService(mockApiClient);
