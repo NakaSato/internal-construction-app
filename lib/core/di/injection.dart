@@ -9,7 +9,6 @@ import '../../features/project_management/domain/repositories/project_repository
 import '../../features/authorization/config/authorization_di.dart';
 import '../../features/calendar_management/config/mock_calendar_management_di.dart';
 import '../../features/daily_reports/config/daily_reports_di.dart';
-import '../../features/notifications/config/notifications_di.dart';
 import '../../features/work_calendar/config/mock_work_calendar_di.dart';
 import 'api_services_registration.dart';
 
@@ -65,9 +64,6 @@ Future<void> initializeDependencies() async {
 
   // Configure daily reports dependencies
   configureDailyReportsDependencies();
-
-  // Configure notifications dependencies
-  configureNotificationsDependencies(getIt);
 
   // Register API services
   ApiServicesRegistration.registerApiServices(getIt);
