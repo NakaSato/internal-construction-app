@@ -1,5 +1,5 @@
 import 'package:dartz/dartz.dart';
-import '../../../../core/errors/failures.dart';
+import '../../../../common/models/errors/failures.dart';
 import '../entities/wbs_task.dart';
 import '../entities/wbs_progress.dart';
 import '../entities/wbs_structure.dart';

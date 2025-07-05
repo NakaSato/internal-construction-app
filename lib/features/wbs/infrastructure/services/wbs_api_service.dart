@@ -17,19 +17,13 @@ class WBSApiService {
     bool includeChildren = true,
     bool includeEvidence = false,
   }) async {
-    final queryParams = <String, dynamic>{
-      'include_children': includeChildren,
-      'include_evidence': includeEvidence,
-    };
+    final queryParams = <String, dynamic>{'include_children': includeChildren, 'include_evidence': includeEvidence};
 
     if (level != null) queryParams['level'] = level;
     if (status != null) queryParams['status'] = status;
     if (assignedTo != null) queryParams['assigned_to'] = assignedTo;
 
-    final response = await _dio.get(
-      '${ApiConfig.wbsEndpoint}/projects/$projectId/wbs',
-      queryParameters: queryParams,
-    );
+    final response = await _dio.get('${ApiConfig.wbsEndpoint}/projects/$projectId/wbs', queryParameters: queryParams);
 
     return response.data;
   }
@@ -42,27 +36,15 @@ class WBSApiService {
   }
 
   /// Create a new task in the Work Breakdown Structure
-  Future<Map<String, dynamic>> createWBSTask(
-    String projectId,
-    Map<String, dynamic> taskData,
-  ) async {
-    final response = await _dio.post(
-      '${ApiConfig.wbsEndpoint}/projects/$projectId/wbs/tasks',
-      data: taskData,
-    );
+  Future<Map<String, dynamic>> createWBSTask(String projectId, Map<String, dynamic> taskData) async {
+    final response = await _dio.post('${ApiConfig.wbsEndpoint}/projects/$projectId/wbs/tasks', data: taskData);
 
     return response.data;
   }
 
   /// Update an existing WBS task
-  Future<Map<String, dynamic>> updateWBSTask(
-    String taskId,
-    Map<String, dynamic> updateData,
-  ) async {
-    final response = await _dio.put(
-      '${ApiConfig.wbsEndpoint}/tasks/$taskId',
-      data: updateData,
-    );
+  Future<Map<String, dynamic>> updateWBSTask(String taskId, Map<String, dynamic> updateData) async {
+    final response = await _dio.put('${ApiConfig.wbsEndpoint}/tasks/$taskId', data: updateData);
 
     return response.data;
   }
@@ -79,19 +61,13 @@ class WBSApiService {
     if (completionNotes != null) data['completion_notes'] = completionNotes;
     if (completedBy != null) data['completed_by'] = completedBy;
 
-    final response = await _dio.patch(
-      '${ApiConfig.wbsEndpoint}/tasks/$taskId/status',
-      data: data,
-    );
+    final response = await _dio.patch('${ApiConfig.wbsEndpoint}/tasks/$taskId/status', data: data);
 
     return response.data;
   }
 
   /// Upload evidence files for a WBS task
-  Future<Map<String, dynamic>> uploadEvidence(
-    String taskId, {
-    required FormData formData,
-  }) async {
+  Future<Map<String, dynamic>> uploadEvidence(String taskId, {required FormData formData}) async {
     final response = await _dio.post(
       '${ApiConfig.wbsEndpoint}/tasks/$taskId/evidence',
       data: formData,
@@ -120,18 +96,14 @@ class WBSApiService {
 
   /// Get comprehensive progress information for a project
   Future<Map<String, dynamic>> getProjectProgress(String projectId) async {
-    final response = await _dio.get(
-      '${ApiConfig.wbsEndpoint}/projects/$projectId/progress',
-    );
+    final response = await _dio.get('${ApiConfig.wbsEndpoint}/projects/$projectId/progress');
 
     return response.data;
   }
 
   /// Get dependency information for a specific task
   Future<Map<String, dynamic>> getTaskDependencies(String taskId) async {
-    final response = await _dio.get(
-      '${ApiConfig.wbsEndpoint}/tasks/$taskId/dependencies',
-    );
+    final response = await _dio.get('${ApiConfig.wbsEndpoint}/tasks/$taskId/dependencies');
 
     return response.data;
   }
@@ -142,10 +114,7 @@ class WBSApiService {
   }
 
   /// Bulk update multiple tasks
-  Future<Map<String, dynamic>> bulkUpdateTasks(
-    String projectId,
-    List<Map<String, dynamic>> updates,
-  ) async {
+  Future<Map<String, dynamic>> bulkUpdateTasks(String projectId, List<Map<String, dynamic>> updates) async {
     final response = await _dio.patch(
       '${ApiConfig.wbsEndpoint}/projects/$projectId/wbs/bulk-update',
       data: {'updates': updates},

@@ -126,7 +126,7 @@ class WbsView extends StatelessWidget {
                     wbsStructure: state.wbsStructure,
                     selectedTask: state.selectedTask,
                     onTaskSelected: (task) {
-                      context.read<WbsCubit>().selectTask(task.id);
+                      context.read<WbsCubit>().selectTask(task.wbsId);
                     },
                     onTaskStatusChanged: (taskId, status) {
                       context.read<WbsCubit>().updateTaskStatusOnly(taskId: taskId, status: status);
@@ -143,7 +143,7 @@ class WbsView extends StatelessWidget {
             child: WbsTaskDetailsWidget(
               task: state.selectedTask,
               onTaskUpdated: (task) {
-                context.read<WbsCubit>().updateTask(taskId: task.id, task: task);
+                context.read<WbsCubit>().updateTask(taskId: task.wbsId, task: task);
               },
               onTaskDeleted: (taskId) {
                 context.read<WbsCubit>().deleteTask(taskId);
@@ -165,7 +165,7 @@ class WbsView extends StatelessWidget {
               wbsStructure: state.wbsStructure,
               selectedTask: state.selectedTask,
               onTaskSelected: (task) {
-                context.read<WbsCubit>().selectTask(task.id);
+                context.read<WbsCubit>().selectTask(task.wbsId);
                 _showTaskDetailsBottomSheet(context, task);
               },
               onTaskStatusChanged: (taskId, status) {
@@ -208,7 +208,7 @@ class WbsView extends StatelessWidget {
                 child: WbsTaskDetailsWidget(
                   task: task,
                   onTaskUpdated: (updatedTask) {
-                    context.read<WbsCubit>().updateTask(taskId: updatedTask.id, task: updatedTask);
+                    context.read<WbsCubit>().updateTask(taskId: updatedTask.wbsId, task: updatedTask);
                     Navigator.of(context).pop();
                   },
                   onTaskDeleted: (taskId) {

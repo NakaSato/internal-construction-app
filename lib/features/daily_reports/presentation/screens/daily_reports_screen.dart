@@ -1,7 +1,12 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/services.dart';
 
+import '../../../../core/di/injection.dart';
+import '../../../../core/services/universal_realtime_handler.dart';
+import '../../../authentication/application/auth_bloc.dart';
+import '../../../authentication/application/auth_state.dart';
 import '../../application/cubits/daily_reports_cubit.dart';
 import '../../application/states/daily_reports_state.dart';
 import '../../domain/entities/daily_report.dart';
@@ -28,13 +33,103 @@ class _DailyReportsScreenState extends State<DailyReportsScreen> {
   bool _isSelectionMode = false;
   bool _showAnalytics = true;
 
+  // Real-time updates
+  late final UniversalRealtimeHandler _realtimeHandler;
+  StreamSubscription? _authSubscription;
+
   @override
   void initState() {
     super.initState();
+
+    // Initialize real-time handler
+    _realtimeHandler = getIt<UniversalRealtimeHandler>();
+
     // Add scroll listener for pagination
     _scrollController.addListener(_onScroll);
+
     // Load initial data
     context.read<DailyReportsCubit>().loadDailyReports();
+
+    // Initialize real-time updates based on authentication state
+    _checkAuthAndInitializeRealtime();
+  }
+
+  /// Check authentication state and initialize real-time updates if authenticated
+  Future<void> _checkAuthAndInitializeRealtime() async {
+    final authState = context.read<AuthBloc>().state;
+    if (authState is AuthAuthenticated) {
+      await _initializeRealtimeUpdates();
+    } else {
+      debugPrint('⚠️ Daily Reports: User not authenticated, skipping real-time initialization');
+      // Listen for authentication changes
+      _authSubscription = context.read<AuthBloc>().stream.listen((state) {
+        if (state is AuthAuthenticated && mounted) {
+          _initializeRealtimeUpdates();
+        } else if (state is AuthUnauthenticated && mounted) {
+          _disconnectRealtime();
+        }
+      });
+    }
+  }
+
+  /// Initialize real-time updates for daily reports
+  Future<void> _initializeRealtimeUpdates() async {
+    try {
+      // Initialize the universal real-time handler if not already connected
+      if (!_realtimeHandler.isConnected) {
+        await _realtimeHandler.initialize();
+      }
+
+      // Register handlers for daily report events
+      _realtimeHandler.registerDailyReportHandler((event) {
+        debugPrint('📡 Real-time daily report event: ${event.type.name}');
+
+        if (!mounted) return;
+
+        // Refresh the reports list for any daily report change
+        // This ensures data consistency and handles complex state changes
+        switch (event.type.name) {
+          case 'dailyReportCreated':
+          case 'dailyReportUpdated':
+          case 'dailyReportDeleted':
+          case 'dailyReportSubmitted':
+          case 'dailyReportApproved':
+            _silentRefresh();
+            break;
+          default:
+            debugPrint('⚠️ Unknown daily report event type: ${event.type.name}');
+            _silentRefresh(); // Fallback to refresh
+        }
+      });
+
+      // Register handlers for project events (may affect daily reports)
+      _realtimeHandler.registerProjectHandler((event) {
+        if (!mounted) return;
+        debugPrint('📡 Real-time project event affecting daily reports: ${event.type.name}');
+        // Refresh when projects change as it may affect report data
+        _silentRefresh();
+      });
+
+      debugPrint('✅ Daily Reports: Real-time updates initialized successfully');
+    } catch (e) {
+      debugPrint('❌ Daily Reports: Failed to initialize real-time updates: $e');
+    }
+  }
+
+  /// Disconnect real-time updates when user logs out
+  Future<void> _disconnectRealtime() async {
+    try {
+      debugPrint('🔌 Daily Reports: Disconnecting real-time updates due to logout');
+    } catch (e) {
+      debugPrint('❌ Daily Reports: Error disconnecting real-time updates: $e');
+    }
+  }
+
+  /// Silently refresh the reports list
+  void _silentRefresh() {
+    if (mounted) {
+      context.read<DailyReportsCubit>().loadDailyReports(showLoading: false);
+    }
   }
 
   @override

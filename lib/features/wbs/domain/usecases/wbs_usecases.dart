@@ -1,6 +1,6 @@
 import 'package:dartz/dartz.dart';
 import 'package:injectable/injectable.dart';
-import '../../../../core/errors/failures.dart';
+import '../../../../common/models/errors/failures.dart';
 import '../../../../common/models/usecase/usecase.dart';
 import '../entities/wbs_task.dart';
 import '../entities/wbs_structure.dart';

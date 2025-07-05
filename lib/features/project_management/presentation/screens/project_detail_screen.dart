@@ -26,8 +26,7 @@ class ProjectDetailScreen extends StatefulWidget {
   State<ProjectDetailScreen> createState() => _ProjectDetailScreenState();
 }
 
-class _ProjectDetailScreenState extends State<ProjectDetailScreen>
-    with TickerProviderStateMixin {
+class _ProjectDetailScreenState extends State<ProjectDetailScreen> with TickerProviderStateMixin {
   late final EnhancedProjectBloc _projectBloc;
   late final DailyReportsCubit _dailyReportsCubit;
   late final TabController _tabController;
@@ -44,6 +43,9 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
 
     // Initialize with default tab count, will be updated based on user role
     _tabController = TabController(length: _tabCount, vsync: this);
+
+    // Initialize real-time connection (if not already connected)
+    _projectBloc.add(const InitializeRealTimeConnection());
 
     // Load project data
     _projectBloc.add(LoadProjectDetailsRequested(projectId: widget.projectId));
@@ -94,11 +96,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
 
     // Add admin/manager only tabs
     if (_currentUserRole.hasFullAccess) {
-      tabs.addAll([
-        const Tab(text: 'Team'),
-        const Tab(text: 'Documents'),
-        const Tab(text: 'Settings'),
-      ]);
+      tabs.addAll([const Tab(text: 'Team'), const Tab(text: 'Documents'), const Tab(text: 'Settings')]);
     }
 
     return tabs;
@@ -108,8 +106,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
     if (_currentUser != null) {
       Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (context) =>
-              EditProjectScreen(project: project, user: _currentUser!),
+          builder: (context) => EditProjectScreen(project: project, user: _currentUser!),
         ),
       );
     }
@@ -121,14 +118,9 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Project'),
-        content: Text(
-          'Are you sure you want to delete "${project.projectName}"? This action cannot be undone.',
-        ),
+        content: Text('Are you sure you want to delete "${project.projectName}"? This action cannot be undone.'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
@@ -176,9 +168,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
                   return ProjectDetailStateWidgets.buildErrorView(
                     context,
                     projectState.message,
-                    () => _projectBloc.add(
-                      LoadProjectDetailsRequested(projectId: widget.projectId),
-                    ),
+                    () => _projectBloc.add(LoadProjectDetailsRequested(projectId: widget.projectId)),
                   );
                 }
 
@@ -188,9 +178,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
                     if (mounted) {
                       setState(() {
                         _currentUser = authState.user;
-                        _currentUserRole = UserRole.fromString(
-                          authState.user.roleName,
-                        );
+                        _currentUserRole = UserRole.fromString(authState.user.roleName);
                       });
                     }
                   });
@@ -198,9 +186,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
                   return _buildProjectDetailContent(projectState.project);
                 }
 
-                return ProjectDetailStateWidgets.buildProjectNotFoundView(
-                  context,
-                );
+                return ProjectDetailStateWidgets.buildProjectNotFoundView(context);
               },
             );
           },
@@ -232,12 +218,8 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
           return [
             ProjectHeaderWidget(
               project: project,
-              onEdit: _currentUserRole.hasFullAccess
-                  ? () => _onEditProject(project)
-                  : null,
-              onDelete: _currentUserRole.hasFullAccess
-                  ? () => _onDeleteProject(project)
-                  : null,
+              onEdit: _currentUserRole.hasFullAccess ? () => _onEditProject(project) : null,
+              onDelete: _currentUserRole.hasFullAccess ? () => _onDeleteProject(project) : null,
             ),
             SliverPersistentHeader(
               delegate: _SliverTabBarDelegate(
@@ -246,9 +228,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
                   tabs: _buildTabs(),
                   isScrollable: _tabCount > 4,
                   labelColor: Theme.of(context).colorScheme.primary,
-                  unselectedLabelColor: Theme.of(
-                    context,
-                  ).colorScheme.onSurfaceVariant,
+                  unselectedLabelColor: Theme.of(context).colorScheme.onSurfaceVariant,
                   indicatorColor: Theme.of(context).colorScheme.primary,
                 ),
               ),
@@ -258,10 +238,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen>
         },
         body: TabBarView(
           controller: _tabController,
-          children: List.generate(
-            _tabCount,
-            (index) => const Center(child: Text('Tab content coming soon')),
-          ),
+          children: List.generate(_tabCount, (index) => const Center(child: Text('Tab content coming soon'))),
         ),
       ),
     );
@@ -281,15 +258,8 @@ class _SliverTabBarDelegate extends SliverPersistentHeaderDelegate {
   double get maxExtent => tabBar.preferredSize.height;
 
   @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    return Container(
-      color: Theme.of(context).colorScheme.surface,
-      child: tabBar,
-    );
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return Container(color: Theme.of(context).colorScheme.surface, child: tabBar);
   }
 
   @override

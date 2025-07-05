@@ -66,6 +66,27 @@ class EnvironmentConfig {
     };
   }
 
+  /// WebSocket URL configuration
+  static String get websocketUrl {
+    final wsUrl = dotenv.env['WEBSOCKET_URL'] ?? _getEnvironmentSpecificWebSocketUrl();
+
+    if (kDebugMode) {
+      debugPrint('🔌 WebSocket Configuration:');
+      debugPrint('  - WebSocket URL: $wsUrl');
+    }
+
+    return wsUrl;
+  }
+
+  /// Get environment-specific WebSocket URL as fallback
+  static String _getEnvironmentSpecificWebSocketUrl() {
+    return switch (currentEnvironment) {
+      Environment.production => dotenv.env['WEBSOCKET_URL_PRODUCTION'] ?? 'wss://api-icms.gridtokenx.com/notificationHub',
+      Environment.development => dotenv.env['WEBSOCKET_URL_DEVELOPMENT'] ?? 'ws://localhost:5001/notificationHub',
+      Environment.local => dotenv.env['WEBSOCKET_URL_LOCAL'] ?? 'ws://localhost:5001/notificationHub',
+    };
+  }
+
   /// API timeout configurations
   static int get connectTimeoutMs => int.tryParse(dotenv.env['API_CONNECT_TIMEOUT'] ?? '') ?? 30000;
   static int get receiveTimeoutMs => int.tryParse(dotenv.env['API_RECEIVE_TIMEOUT'] ?? '') ?? 30000;

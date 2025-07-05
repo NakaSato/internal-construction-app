@@ -49,7 +49,7 @@ class WbsTreeWidget extends StatelessWidget {
       itemBuilder: (context, index) {
         return WbsTaskNode(
           task: wbsStructure.rootTasks[index],
-          isSelected: selectedTask?.id == wbsStructure.rootTasks[index].id,
+          isSelected: selectedTask?.wbsId == wbsStructure.rootTasks[index].wbsId,
           onTaskSelected: onTaskSelected,
           onTaskStatusChanged: onTaskStatusChanged,
           level: 0,
@@ -141,7 +141,7 @@ class _WbsTaskNodeState extends State<WbsTaskNode> {
                           Row(
                             children: [
                               // WBS code
-                              if (widget.task.wbsCode.isNotEmpty)
+                              if (widget.task.wbsCode?.isNotEmpty == true)
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                   decoration: BoxDecoration(
@@ -149,19 +149,19 @@ class _WbsTaskNodeState extends State<WbsTaskNode> {
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: Text(
-                                    widget.task.wbsCode,
+                                    widget.task.wbsCode!,
                                     style: theme.textTheme.bodySmall?.copyWith(
                                       fontFamily: 'monospace',
                                       color: theme.colorScheme.onSurfaceVariant,
                                     ),
                                   ),
                                 ),
-                              if (widget.task.wbsCode.isNotEmpty) const SizedBox(width: 8),
+                              if (widget.task.wbsCode?.isNotEmpty == true) const SizedBox(width: 8),
 
                               // Task name
                               Expanded(
                                 child: Text(
-                                  widget.task.taskName,
+                                  widget.task.taskNameEN, // Using English name as primary, could be made dynamic
                                   style: theme.textTheme.bodyMedium?.copyWith(
                                     fontWeight: widget.isSelected ? FontWeight.w600 : FontWeight.normal,
                                     color: widget.isSelected
@@ -206,7 +206,7 @@ class _WbsTaskNodeState extends State<WbsTaskNode> {
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                _formatDate(widget.task.endDate),
+                                widget.task.endDate != null ? _formatDate(widget.task.endDate!) : 'No due date',
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   color: widget.task.isOverdue
                                       ? theme.colorScheme.error
@@ -268,7 +268,7 @@ class _WbsTaskNodeState extends State<WbsTaskNode> {
                           )
                           .toList(),
                       onSelected: (status) {
-                        widget.onTaskStatusChanged?.call(widget.task.id, status);
+                        widget.onTaskStatusChanged?.call(widget.task.wbsId, status);
                       },
                     ),
                   ],
@@ -284,7 +284,7 @@ class _WbsTaskNodeState extends State<WbsTaskNode> {
             (child) => WbsTaskNode(
               task: child,
               level: widget.level + 1,
-              isSelected: widget.isSelected && widget.task.id == child.id,
+              isSelected: widget.isSelected && widget.task.wbsId == child.wbsId,
               onTaskSelected: widget.onTaskSelected,
               onTaskStatusChanged: widget.onTaskStatusChanged,
             ),
@@ -305,6 +305,12 @@ class _WbsTaskNodeState extends State<WbsTaskNode> {
         return theme.colorScheme.error;
       case WbsTaskStatus.cancelled:
         return Colors.grey;
+      case WbsTaskStatus.onHold:
+        return Colors.amber;
+      case WbsTaskStatus.underReview:
+        return Colors.blue;
+      case WbsTaskStatus.approved:
+        return Colors.teal;
     }
   }
 
@@ -320,6 +326,12 @@ class _WbsTaskNodeState extends State<WbsTaskNode> {
         return 'Blocked';
       case WbsTaskStatus.cancelled:
         return 'Cancelled';
+      case WbsTaskStatus.onHold:
+        return 'On Hold';
+      case WbsTaskStatus.underReview:
+        return 'Under Review';
+      case WbsTaskStatus.approved:
+        return 'Approved';
     }
   }
 

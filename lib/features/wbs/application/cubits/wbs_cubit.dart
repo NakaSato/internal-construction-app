@@ -155,7 +155,7 @@ class WbsCubit extends Cubit<WbsState> {
       emit(
         currentState.copyWith(
           wbsStructure: updatedStructure,
-          selectedTask: currentState.selectedTask?.id == taskId ? null : currentState.selectedTask,
+          selectedTask: currentState.selectedTask?.wbsId == taskId ? null : currentState.selectedTask,
         ),
       );
     });
@@ -176,7 +176,7 @@ class WbsCubit extends Cubit<WbsState> {
 
   List<WbsTask> _updateTaskInList(List<WbsTask> tasks, WbsTask updatedTask) {
     return tasks.map((task) {
-      if (task.id == updatedTask.id) {
+      if (task.wbsId == updatedTask.wbsId) {
         return updatedTask;
       } else if (task.children.isNotEmpty) {
         return task.copyWith(children: _updateTaskInList(task.children, updatedTask));
@@ -197,7 +197,7 @@ class WbsCubit extends Cubit<WbsState> {
 
   List<WbsTask> _removeTaskFromList(List<WbsTask> tasks, String taskId) {
     return tasks
-        .where((task) => task.id != taskId)
+        .where((task) => task.wbsId != taskId)
         .map(
           (task) =>
               task.children.isNotEmpty ? task.copyWith(children: _removeTaskFromList(task.children, taskId)) : task,

@@ -42,6 +42,12 @@ import '../../features/project_management/data/repositories/api_project_reposito
     as _i677;
 import '../../features/project_management/domain/repositories/project_repository.dart'
     as _i475;
+import '../../features/wbs/domain/repositories/wbs_repository.dart' as _i528;
+import '../../features/wbs/domain/usecases/wbs_usecases.dart' as _i572;
+import '../../features/wbs/infrastructure/repositories/wbs_repository_impl.dart'
+    as _i1011;
+import '../../features/wbs/infrastructure/services/wbs_api_service.dart'
+    as _i66;
 import '../../features/work_calendar/application/work_calendar_bloc.dart'
     as _i937;
 import '../../features/work_calendar/domain/repositories/work_calendar_repository.dart'
@@ -49,6 +55,9 @@ import '../../features/work_calendar/domain/repositories/work_calendar_repositor
 import '../../features/work_calendar/infrastructure/repositories/api_work_calendar_repository.dart'
     as _i743;
 import '../network/dio_client.dart' as _i667;
+import '../services/realtime_service.dart' as _i301;
+import '../services/universal_realtime_handler.dart' as _i761;
+import '../storage/secure_storage_service.dart' as _i666;
 import 'auth_module.dart' as _i784;
 import 'injection.dart' as _i464;
 
@@ -76,6 +85,13 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i1066.AuthApiService>(
       () => authModule.authApiService(gh<_i361.Dio>()),
     );
+    gh.factory<_i66.WBSApiService>(() => _i66.WBSApiService(gh<_i361.Dio>()));
+    gh.lazySingleton<_i666.SecureStorageService>(
+      () => _i666.SecureStorageService(gh<_i558.FlutterSecureStorage>()),
+    );
+    gh.lazySingleton<_i528.WbsRepository>(
+      () => _i1011.WbsRepositoryImpl(gh<_i66.WBSApiService>()),
+    );
     gh.lazySingleton<_i742.AuthRepository>(
       () => _i410.ApiAuthRepository(
         gh<_i1066.AuthApiService>(),
@@ -92,6 +108,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i937.WorkCalendarBloc>(
       () => _i937.WorkCalendarBloc(gh<_i503.WorkCalendarRepository>()),
     );
+    gh.lazySingleton<_i301.RealtimeService>(
+      () => _i301.RealtimeService(gh<_i666.SecureStorageService>()),
+    );
     gh.lazySingleton<_i202.AuthRepositoryFactory>(
       () => _i202.AuthRepositoryFactory(
         gh<_i742.AuthRepository>(instanceName: 'api'),
@@ -106,6 +125,24 @@ extension GetItInjectableX on _i174.GetIt {
       () =>
           _i43.ApiCalendarManagementRepository(gh<_i1036.CalendarApiService>()),
     );
+    gh.factory<_i572.GetProjectWbs>(
+      () => _i572.GetProjectWbs(gh<_i528.WbsRepository>()),
+    );
+    gh.factory<_i572.GetWbsTask>(
+      () => _i572.GetWbsTask(gh<_i528.WbsRepository>()),
+    );
+    gh.factory<_i572.CreateWbsTask>(
+      () => _i572.CreateWbsTask(gh<_i528.WbsRepository>()),
+    );
+    gh.factory<_i572.UpdateWbsTask>(
+      () => _i572.UpdateWbsTask(gh<_i528.WbsRepository>()),
+    );
+    gh.factory<_i572.UpdateTaskStatus>(
+      () => _i572.UpdateTaskStatus(gh<_i528.WbsRepository>()),
+    );
+    gh.factory<_i572.DeleteWbsTask>(
+      () => _i572.DeleteWbsTask(gh<_i528.WbsRepository>()),
+    );
     gh.factory<_i475.EnhancedProjectRepository>(
       () => _i677.ApiProjectRepository(gh<_i421.ProjectApiService>()),
       registerFor: {_dev, _prod},
@@ -115,16 +152,20 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i646.CalendarManagementRepository>(),
       ),
     );
-    gh.factory<_i1062.EnhancedProjectBloc>(
-      () => _i1062.EnhancedProjectBloc(
-        repository: gh<_i475.EnhancedProjectRepository>(),
-      ),
+    gh.lazySingleton<_i761.UniversalRealtimeHandler>(
+      () => _i761.UniversalRealtimeHandler(gh<_i301.RealtimeService>()),
     );
     gh.factory<_i153.AuthCubit>(
       () => _i153.AuthCubit(gh<_i202.AuthRepositoryFactory>()),
     );
     gh.factory<_i574.AuthBloc>(
       () => _i574.AuthBloc(gh<_i202.AuthRepositoryFactory>()),
+    );
+    gh.factory<_i1062.EnhancedProjectBloc>(
+      () => _i1062.EnhancedProjectBloc(
+        repository: gh<_i475.EnhancedProjectRepository>(),
+        realtimeService: gh<_i301.RealtimeService>(),
+      ),
     );
     return this;
   }

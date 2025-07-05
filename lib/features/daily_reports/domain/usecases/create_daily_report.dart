@@ -6,8 +6,7 @@ import '../../../../common/models/usecase/usecase.dart';
 import '../entities/daily_report.dart';
 import '../repositories/daily_report_repository.dart';
 
-class CreateDailyReport
-    implements UseCase<DailyReport, CreateDailyReportParams> {
+class CreateDailyReport implements UseCase<DailyReport, CreateDailyReportParams> {
   final DailyReportRepository repository;
 
   CreateDailyReport(this.repository);

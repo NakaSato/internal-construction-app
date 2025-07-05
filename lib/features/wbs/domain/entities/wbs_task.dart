@@ -2,124 +2,136 @@ import 'package:equatable/equatable.dart';
 
 /// Work Breakdown Structure task entity
 /// Represents a hierarchical task in the solar PV installation WBS
+/// Aligned with the new WBS API specification
 class WbsTask extends Equatable {
   const WbsTask({
-    required this.id,
-    required this.wbsCode,
-    required this.taskName,
+    required this.wbsId,
+    required this.taskNameEN,
+    required this.taskNameTH,
     required this.projectId,
-    required this.taskType,
     required this.status,
-    required this.priority,
-    required this.startDate,
-    required this.endDate,
-    required this.progressPercentage,
-    required this.weight,
+    required this.weightPercent,
     required this.createdAt,
     required this.updatedAt,
+    this.parentWbsId,
     this.description,
-    this.parentTaskId,
-    this.estimatedDuration,
-    this.actualDuration,
-    this.assignedTo,
-    this.assignedTeam,
+    this.installationArea,
+    this.acceptanceCriteria,
+    this.plannedStartDate,
+    this.actualStartDate,
+    this.plannedEndDate,
+    this.actualEndDate,
+    this.assignedUserId,
+    this.assignedUserName,
+    this.dependencies = const [],
+    this.evidenceCount = 0,
+    this.children = const [],
+    this.taskType = WbsTaskType.workPackage,
+    this.priority = WbsTaskPriority.medium,
+    this.progressPercentage = 0,
     this.estimatedCost,
     this.actualCost,
-    this.deliverables = const [],
-    this.acceptanceCriteria = const [],
-    this.dependencies = const [],
-    this.materialsRequired = const [],
-    this.equipmentRequired = const [],
-    this.safetyRequirements = const [],
-    this.qualityStandards = const [],
-    this.evidenceRequired = const [],
-    this.evidenceAttachments = const [],
-    this.notes,
-    this.completedAt,
-    this.completedBy,
-    this.children = const [],
+    this.wbsCode, // For backward compatibility
+    this.assignedTo, // For backward compatibility
+    this.estimatedDuration, // For backward compatibility
+    this.actualDuration, // For backward compatibility
+    this.startDate, // For backward compatibility
+    this.endDate, // For backward compatibility
+    this.completedAt, // For backward compatibility
+    this.evidenceAttachments = const [], // For evidence files
   });
 
-  final String id;
-  final String wbsCode;
-  final String taskName;
+  // Core fields from new API
+  final String wbsId;
+  final String? parentWbsId;
+  final String taskNameEN;
+  final String taskNameTH;
   final String? description;
-  final String projectId;
-  final String? parentTaskId;
-  final WbsTaskType taskType;
   final WbsTaskStatus status;
-  final WbsTaskPriority priority;
-  final DateTime startDate;
-  final DateTime endDate;
-  final int? estimatedDuration;
-  final int? actualDuration;
-  final int progressPercentage;
-  final double weight;
-  final String? assignedTo;
-  final String? assignedTeam;
-  final double? estimatedCost;
-  final double? actualCost;
-  final List<String> deliverables;
-  final List<String> acceptanceCriteria;
+  final double weightPercent;
+  final String? installationArea;
+  final String? acceptanceCriteria;
+  final DateTime? plannedStartDate;
+  final DateTime? actualStartDate;
+  final DateTime? plannedEndDate;
+  final DateTime? actualEndDate;
+  final String projectId;
+  final String? assignedUserId;
+  final String? assignedUserName;
   final List<String> dependencies;
-  final List<String> materialsRequired;
-  final List<String> equipmentRequired;
-  final List<String> safetyRequirements;
-  final List<String> qualityStandards;
-  final List<String> evidenceRequired;
-  final List<WbsAttachment> evidenceAttachments;
-  final String? notes;
+  final int evidenceCount;
   final DateTime createdAt;
   final DateTime updatedAt;
-  final DateTime? completedAt;
-  final String? completedBy;
+
+  // Additional fields for compatibility and extended functionality
   final List<WbsTask> children;
+  final WbsTaskType taskType;
+  final WbsTaskPriority priority;
+  final int progressPercentage;
+  final double? estimatedCost;
+  final double? actualCost;
+  final String? wbsCode; // For backward compatibility
+  final String? assignedTo; // For backward compatibility
+  final int? estimatedDuration; // For backward compatibility
+  final int? actualDuration; // For backward compatibility
+  final DateTime? startDate; // For backward compatibility
+  final DateTime? endDate; // For backward compatibility
+  final DateTime? completedAt; // For backward compatibility
+  final List<WbsAttachment> evidenceAttachments; // For evidence files
 
   /// Check if task can be started based on dependencies
   bool get canStart {
-    // Implementation would check if all prerequisite tasks are completed
     return status != WbsTaskStatus.blocked;
   }
 
   /// Check if task is currently blocking other tasks
   bool get isBlocking {
-    return children.any((child) => child.status == WbsTaskStatus.blocked && child.dependencies.contains(id));
+    return children.any((child) => child.status == WbsTaskStatus.blocked && child.dependencies.contains(wbsId));
   }
 
   /// Check if task is overdue
   bool get isOverdue {
     if (status == WbsTaskStatus.completed) return false;
-    return DateTime.now().isAfter(endDate);
+    if (plannedEndDate == null) return false;
+    return DateTime.now().isAfter(plannedEndDate!);
   }
 
   /// Check if task is on schedule
   bool get isOnSchedule {
     if (status == WbsTaskStatus.completed) {
-      return completedAt != null && !completedAt!.isAfter(endDate);
+      return actualEndDate != null && plannedEndDate != null && !actualEndDate!.isAfter(plannedEndDate!);
     }
+
+    if (plannedStartDate == null || plannedEndDate == null) return true;
 
     final now = DateTime.now();
-    final totalDuration = endDate.difference(startDate).inDays;
-    final elapsedDuration = now.difference(startDate).inDays;
-    final expectedProgress = totalDuration > 0 ? (elapsedDuration / totalDuration * 100).clamp(0, 100) : 0;
+    final totalDuration = plannedEndDate!.difference(plannedStartDate!).inDays;
+    final elapsed = now.difference(plannedStartDate!).inDays;
 
-    return progressPercentage >= expectedProgress - 10; // 10% tolerance
+    if (totalDuration == 0) return true;
+
+    final expectedProgress = (elapsed / totalDuration * 100).clamp(0, 100);
+    return progressPercentage >= expectedProgress;
   }
 
-  /// Get task status color
-  WbsTaskStatusColor get statusColor {
-    switch (status) {
-      case WbsTaskStatus.notStarted:
-        return WbsTaskStatusColor.grey;
-      case WbsTaskStatus.inProgress:
-        return isOnSchedule ? WbsTaskStatusColor.blue : WbsTaskStatusColor.orange;
-      case WbsTaskStatus.completed:
-        return WbsTaskStatusColor.green;
-      case WbsTaskStatus.blocked:
-        return WbsTaskStatusColor.red;
-      case WbsTaskStatus.cancelled:
-        return WbsTaskStatusColor.darkGrey;
+  /// Calculate schedule variance in days
+  int get scheduleVarianceDays {
+    if (plannedEndDate == null) return 0;
+    if (status == WbsTaskStatus.completed && actualEndDate != null) {
+      return actualEndDate!.difference(plannedEndDate!).inDays;
     }
+
+    if (DateTime.now().isAfter(plannedEndDate!)) {
+      return DateTime.now().difference(plannedEndDate!).inDays;
+    }
+
+    return 0;
+  }
+
+  /// Calculate cost variance
+  double get costVariance {
+    if (estimatedCost == null || actualCost == null) return 0.0;
+    return actualCost! - estimatedCost!;
   }
 
   /// Calculate cost variance percentage
@@ -134,92 +146,140 @@ class WbsTask extends Equatable {
     return costVariancePercentage > 0;
   }
 
-  /// Create WbsTask from JSON with snake_case field names (API format)
+  /// Create WbsTask from JSON with PascalCase field names (new API format)
   factory WbsTask.fromJson(Map<String, dynamic> json) {
     return WbsTask(
-      id: json['id'] as String,
-      wbsCode: json['wbs_code'] as String? ?? '',
-      taskName: json['task_name'] as String? ?? '',
-      description: json['description'] as String?,
-      projectId: json['project_id'] as String? ?? '',
-      parentTaskId: json['parent_task_id'] as String?,
-      taskType: parseTaskType(json['task_type'] as String?),
-      status: parseTaskStatus(json['status'] as String?),
-      priority: parseTaskPriority(json['priority'] as String?),
-      startDate: DateTime.tryParse(json['start_date'] as String? ?? '') ?? DateTime.now(),
-      endDate: DateTime.tryParse(json['end_date'] as String? ?? '') ?? DateTime.now().add(const Duration(days: 7)),
-      estimatedDuration: json['estimated_duration'] as int?,
-      actualDuration: json['actual_duration'] as int?,
-      progressPercentage: json['progress_percentage'] as int? ?? 0,
-      weight: (json['weight'] as num?)?.toDouble() ?? 1.0,
-      assignedTo: json['assigned_to'] as String?,
-      assignedTeam: json['assigned_team'] as String?,
-      estimatedCost: (json['estimated_cost'] as num?)?.toDouble(),
-      actualCost: (json['actual_cost'] as num?)?.toDouble(),
-      deliverables: (json['deliverables'] as List<dynamic>?)?.cast<String>() ?? [],
-      acceptanceCriteria: (json['acceptance_criteria'] as List<dynamic>?)?.cast<String>() ?? [],
-      dependencies: (json['dependencies'] as List<dynamic>?)?.cast<String>() ?? [],
-      materialsRequired: (json['materials_required'] as List<dynamic>?)?.cast<String>() ?? [],
-      equipmentRequired: (json['equipment_required'] as List<dynamic>?)?.cast<String>() ?? [],
-      safetyRequirements: (json['safety_requirements'] as List<dynamic>?)?.cast<String>() ?? [],
-      qualityStandards: (json['quality_standards'] as List<dynamic>?)?.cast<String>() ?? [],
-      evidenceRequired: (json['evidence_required'] as List<dynamic>?)?.cast<String>() ?? [],
-      evidenceAttachments:
-          (json['evidence_attachments'] as List<dynamic>?)
-              ?.map((item) => WbsAttachment.fromJson(item as Map<String, dynamic>))
-              .toList() ??
+      wbsId: json['WbsId'] as String? ?? json['wbsId'] as String? ?? '',
+      parentWbsId: json['ParentWbsId'] as String? ?? json['parentWbsId'] as String?,
+      taskNameEN: json['TaskNameEN'] as String? ?? json['taskNameEN'] as String? ?? '',
+      taskNameTH: json['TaskNameTH'] as String? ?? json['taskNameTH'] as String? ?? '',
+      description: json['Description'] as String? ?? json['description'] as String?,
+      status: parseTaskStatus(json['Status'] as String? ?? json['status'] as String?),
+      weightPercent: (json['WeightPercent'] as num?)?.toDouble() ?? (json['weightPercent'] as num?)?.toDouble() ?? 0.0,
+      installationArea: json['InstallationArea'] as String? ?? json['installationArea'] as String?,
+      acceptanceCriteria: json['AcceptanceCriteria'] as String? ?? json['acceptanceCriteria'] as String?,
+      plannedStartDate: json['PlannedStartDate'] != null
+          ? DateTime.tryParse(json['PlannedStartDate'] as String)
+          : (json['plannedStartDate'] != null ? DateTime.tryParse(json['plannedStartDate'] as String) : null),
+      actualStartDate: json['ActualStartDate'] != null
+          ? DateTime.tryParse(json['ActualStartDate'] as String)
+          : (json['actualStartDate'] != null ? DateTime.tryParse(json['actualStartDate'] as String) : null),
+      plannedEndDate: json['PlannedEndDate'] != null
+          ? DateTime.tryParse(json['PlannedEndDate'] as String)
+          : (json['plannedEndDate'] != null ? DateTime.tryParse(json['plannedEndDate'] as String) : null),
+      actualEndDate: json['ActualEndDate'] != null
+          ? DateTime.tryParse(json['ActualEndDate'] as String)
+          : (json['actualEndDate'] != null ? DateTime.tryParse(json['actualEndDate'] as String) : null),
+      projectId: json['ProjectId'] as String? ?? json['projectId'] as String? ?? '',
+      assignedUserId: json['AssignedUserId'] as String? ?? json['assignedUserId'] as String?,
+      assignedUserName: json['AssignedUserName'] as String? ?? json['assignedUserName'] as String?,
+      dependencies:
+          (json['Dependencies'] as List<dynamic>?)?.cast<String>() ??
+          (json['dependencies'] as List<dynamic>?)?.cast<String>() ??
           [],
-      notes: json['notes'] as String?,
-      createdAt: DateTime.tryParse(json['created_at'] as String? ?? '') ?? DateTime.now(),
-      updatedAt: DateTime.tryParse(json['updated_at'] as String? ?? '') ?? DateTime.now(),
-      completedAt: json['completed_at'] != null ? DateTime.tryParse(json['completed_at'] as String) : null,
-      completedBy: json['completed_by'] as String?,
+      evidenceCount: json['EvidenceCount'] as int? ?? json['evidenceCount'] as int? ?? 0,
+      createdAt:
+          DateTime.tryParse(json['CreatedAt'] as String? ?? json['createdAt'] as String? ?? '') ?? DateTime.now(),
+      updatedAt:
+          DateTime.tryParse(json['UpdatedAt'] as String? ?? json['updatedAt'] as String? ?? '') ?? DateTime.now(),
+
+      // Additional fields for compatibility
       children:
           (json['children'] as List<dynamic>?)
               ?.map((item) => WbsTask.fromJson(item as Map<String, dynamic>))
               .toList() ??
           [],
+      taskType: parseTaskType(json['TaskType'] as String? ?? json['taskType'] as String?),
+      priority: parseTaskPriority(json['Priority'] as String? ?? json['priority'] as String?),
+      progressPercentage: json['ProgressPercentage'] as int? ?? json['progressPercentage'] as int? ?? 0,
+      estimatedCost: (json['EstimatedCost'] as num?)?.toDouble() ?? (json['estimatedCost'] as num?)?.toDouble(),
+      actualCost: (json['ActualCost'] as num?)?.toDouble() ?? (json['actualCost'] as num?)?.toDouble(),
+      wbsCode: json['WbsCode'] as String? ?? json['wbsCode'] as String?,
+      assignedTo: json['AssignedTo'] as String? ?? json['assignedTo'] as String?,
+      estimatedDuration: json['EstimatedDuration'] as int? ?? json['estimatedDuration'] as int?,
+      actualDuration: json['ActualDuration'] as int? ?? json['actualDuration'] as int?,
+      startDate: json['StartDate'] != null
+          ? DateTime.tryParse(json['StartDate'] as String)
+          : (json['startDate'] != null ? DateTime.tryParse(json['startDate'] as String) : null),
+      endDate: json['EndDate'] != null
+          ? DateTime.tryParse(json['EndDate'] as String)
+          : (json['endDate'] != null ? DateTime.tryParse(json['endDate'] as String) : null),
+      completedAt: json['CompletedAt'] != null
+          ? DateTime.tryParse(json['CompletedAt'] as String)
+          : (json['completedAt'] != null ? DateTime.tryParse(json['completedAt'] as String) : null),
+      evidenceAttachments:
+          (json['EvidenceAttachments'] as List<dynamic>?)
+              ?.map((item) => WbsAttachment.fromJson(item as Map<String, dynamic>))
+              .toList() ??
+          [],
     );
   }
 
-  /// Convert WbsTask to JSON
+  /// Convert WbsTask to JSON with PascalCase field names (new API format)
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
-      'wbs_code': wbsCode,
-      'task_name': taskName,
-      'description': description,
-      'project_id': projectId,
-      'parent_task_id': parentTaskId,
-      'task_type': taskType.name,
-      'status': status.name,
-      'priority': priority.name,
-      'start_date': startDate.toIso8601String(),
-      'end_date': endDate.toIso8601String(),
-      'estimated_duration': estimatedDuration,
-      'actual_duration': actualDuration,
-      'progress_percentage': progressPercentage,
-      'weight': weight,
-      'assigned_to': assignedTo,
-      'assigned_team': assignedTeam,
-      'estimated_cost': estimatedCost,
-      'actual_cost': actualCost,
-      'deliverables': deliverables,
-      'acceptance_criteria': acceptanceCriteria,
-      'dependencies': dependencies,
-      'materials_required': materialsRequired,
-      'equipment_required': equipmentRequired,
-      'safety_requirements': safetyRequirements,
-      'quality_standards': qualityStandards,
-      'evidence_required': evidenceRequired,
-      'evidence_attachments': evidenceAttachments.map((e) => e.toJson()).toList(),
-      'notes': notes,
-      'created_at': createdAt.toIso8601String(),
-      'updated_at': updatedAt.toIso8601String(),
-      'completed_at': completedAt?.toIso8601String(),
-      'completed_by': completedBy,
-      'children': children.map((e) => e.toJson()).toList(),
+      'WbsId': wbsId,
+      'ParentWbsId': parentWbsId,
+      'TaskNameEN': taskNameEN,
+      'TaskNameTH': taskNameTH,
+      'Description': description,
+      'Status': status.name,
+      'WeightPercent': weightPercent,
+      'InstallationArea': installationArea,
+      'AcceptanceCriteria': acceptanceCriteria,
+      'PlannedStartDate': plannedStartDate?.toIso8601String(),
+      'ActualStartDate': actualStartDate?.toIso8601String(),
+      'PlannedEndDate': plannedEndDate?.toIso8601String(),
+      'ActualEndDate': actualEndDate?.toIso8601String(),
+      'ProjectId': projectId,
+      'AssignedUserId': assignedUserId,
+      'AssignedUserName': assignedUserName,
+      'Dependencies': dependencies,
+      'EvidenceCount': evidenceCount,
+      'CreatedAt': createdAt.toIso8601String(),
+      'UpdatedAt': updatedAt.toIso8601String(),
+      'TaskType': taskType.name,
+      'Priority': priority.name,
+      'ProgressPercentage': progressPercentage,
+      'EstimatedCost': estimatedCost,
+      'ActualCost': actualCost,
+      'WbsCode': wbsCode,
+      'AssignedTo': assignedTo,
+      'EstimatedDuration': estimatedDuration,
+      'ActualDuration': actualDuration,
+      'StartDate': startDate?.toIso8601String(),
+      'EndDate': endDate?.toIso8601String(),
+      'CompletedAt': completedAt?.toIso8601String(),
+      'EvidenceAttachments': evidenceAttachments.map((e) => e.toJson()).toList(),
     };
+  }
+
+  /// Parse task status from string
+  static WbsTaskStatus parseTaskStatus(String? status) {
+    switch (status?.toLowerCase()) {
+      case 'not_started':
+      case 'notstarted':
+        return WbsTaskStatus.notStarted;
+      case 'in_progress':
+      case 'inprogress':
+        return WbsTaskStatus.inProgress;
+      case 'completed':
+        return WbsTaskStatus.completed;
+      case 'blocked':
+        return WbsTaskStatus.blocked;
+      case 'on_hold':
+      case 'onhold':
+        return WbsTaskStatus.onHold;
+      case 'cancelled':
+        return WbsTaskStatus.cancelled;
+      case 'under_review':
+      case 'underreview':
+        return WbsTaskStatus.underReview;
+      case 'approved':
+        return WbsTaskStatus.approved;
+      default:
+        return WbsTaskStatus.notStarted;
+    }
   }
 
   /// Parse task type from string
@@ -239,26 +299,6 @@ class WbsTask extends Equatable {
     }
   }
 
-  /// Parse task status from string
-  static WbsTaskStatus parseTaskStatus(String? status) {
-    switch (status?.toLowerCase()) {
-      case 'not_started':
-      case 'notstarted':
-        return WbsTaskStatus.notStarted;
-      case 'in_progress':
-      case 'inprogress':
-        return WbsTaskStatus.inProgress;
-      case 'completed':
-        return WbsTaskStatus.completed;
-      case 'blocked':
-        return WbsTaskStatus.blocked;
-      case 'cancelled':
-        return WbsTaskStatus.cancelled;
-      default:
-        return WbsTaskStatus.notStarted;
-    }
-  }
-
   /// Parse task priority from string
   static WbsTaskPriority parseTaskPriority(String? priority) {
     switch (priority?.toLowerCase()) {
@@ -275,120 +315,154 @@ class WbsTask extends Equatable {
     }
   }
 
+  /// Create a copy of this task with some values changed
   WbsTask copyWith({
-    String? id,
-    String? wbsCode,
-    String? taskName,
+    String? wbsId,
+    String? parentWbsId,
+    String? taskNameEN,
+    String? taskNameTH,
     String? description,
-    String? projectId,
-    String? parentTaskId,
-    WbsTaskType? taskType,
     WbsTaskStatus? status,
-    WbsTaskPriority? priority,
-    DateTime? startDate,
-    DateTime? endDate,
-    int? estimatedDuration,
-    int? actualDuration,
-    int? progressPercentage,
-    double? weight,
-    String? assignedTo,
-    String? assignedTeam,
-    double? estimatedCost,
-    double? actualCost,
-    List<String>? deliverables,
-    List<String>? acceptanceCriteria,
+    double? weightPercent,
+    String? installationArea,
+    String? acceptanceCriteria,
+    DateTime? plannedStartDate,
+    DateTime? actualStartDate,
+    DateTime? plannedEndDate,
+    DateTime? actualEndDate,
+    String? projectId,
+    String? assignedUserId,
+    String? assignedUserName,
     List<String>? dependencies,
-    List<String>? materialsRequired,
-    List<String>? equipmentRequired,
-    List<String>? safetyRequirements,
-    List<String>? qualityStandards,
-    List<String>? evidenceRequired,
-    List<WbsAttachment>? evidenceAttachments,
-    String? notes,
+    int? evidenceCount,
     DateTime? createdAt,
     DateTime? updatedAt,
-    DateTime? completedAt,
-    String? completedBy,
     List<WbsTask>? children,
+    WbsTaskType? taskType,
+    WbsTaskPriority? priority,
+    int? progressPercentage,
+    double? estimatedCost,
+    double? actualCost,
+    String? wbsCode, // For backward compatibility
+    String? assignedTo, // For backward compatibility
+    int? estimatedDuration, // For backward compatibility
+    int? actualDuration, // For backward compatibility
+    DateTime? startDate, // For backward compatibility
+    DateTime? endDate, // For backward compatibility
+    DateTime? completedAt, // For backward compatibility
+    List<WbsAttachment>? evidenceAttachments, // For evidence files
   }) {
     return WbsTask(
-      id: id ?? this.id,
-      wbsCode: wbsCode ?? this.wbsCode,
-      taskName: taskName ?? this.taskName,
+      wbsId: wbsId ?? this.wbsId,
+      parentWbsId: parentWbsId ?? this.parentWbsId,
+      taskNameEN: taskNameEN ?? this.taskNameEN,
+      taskNameTH: taskNameTH ?? this.taskNameTH,
       description: description ?? this.description,
-      projectId: projectId ?? this.projectId,
-      parentTaskId: parentTaskId ?? this.parentTaskId,
-      taskType: taskType ?? this.taskType,
       status: status ?? this.status,
-      priority: priority ?? this.priority,
-      startDate: startDate ?? this.startDate,
-      endDate: endDate ?? this.endDate,
-      estimatedDuration: estimatedDuration ?? this.estimatedDuration,
-      actualDuration: actualDuration ?? this.actualDuration,
-      progressPercentage: progressPercentage ?? this.progressPercentage,
-      weight: weight ?? this.weight,
-      assignedTo: assignedTo ?? this.assignedTo,
-      assignedTeam: assignedTeam ?? this.assignedTeam,
-      estimatedCost: estimatedCost ?? this.estimatedCost,
-      actualCost: actualCost ?? this.actualCost,
-      deliverables: deliverables ?? this.deliverables,
+      weightPercent: weightPercent ?? this.weightPercent,
+      installationArea: installationArea ?? this.installationArea,
       acceptanceCriteria: acceptanceCriteria ?? this.acceptanceCriteria,
+      plannedStartDate: plannedStartDate ?? this.plannedStartDate,
+      actualStartDate: actualStartDate ?? this.actualStartDate,
+      plannedEndDate: plannedEndDate ?? this.plannedEndDate,
+      actualEndDate: actualEndDate ?? this.actualEndDate,
+      projectId: projectId ?? this.projectId,
+      assignedUserId: assignedUserId ?? this.assignedUserId,
+      assignedUserName: assignedUserName ?? this.assignedUserName,
       dependencies: dependencies ?? this.dependencies,
-      materialsRequired: materialsRequired ?? this.materialsRequired,
-      equipmentRequired: equipmentRequired ?? this.equipmentRequired,
-      safetyRequirements: safetyRequirements ?? this.safetyRequirements,
-      qualityStandards: qualityStandards ?? this.qualityStandards,
-      evidenceRequired: evidenceRequired ?? this.evidenceRequired,
-      evidenceAttachments: evidenceAttachments ?? this.evidenceAttachments,
-      notes: notes ?? this.notes,
+      evidenceCount: evidenceCount ?? this.evidenceCount,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
-      completedAt: completedAt ?? this.completedAt,
-      completedBy: completedBy ?? this.completedBy,
       children: children ?? this.children,
+      taskType: taskType ?? this.taskType,
+      priority: priority ?? this.priority,
+      progressPercentage: progressPercentage ?? this.progressPercentage,
+      estimatedCost: estimatedCost ?? this.estimatedCost,
+      actualCost: actualCost ?? this.actualCost,
+      wbsCode: wbsCode ?? this.wbsCode,
+      assignedTo: assignedTo ?? this.assignedTo,
+      estimatedDuration: estimatedDuration ?? this.estimatedDuration,
+      actualDuration: actualDuration ?? this.actualDuration,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
+      completedAt: completedAt ?? this.completedAt,
+      evidenceAttachments: evidenceAttachments ?? this.evidenceAttachments,
     );
   }
 
   @override
   List<Object?> get props => [
-    id,
-    wbsCode,
-    taskName,
+    wbsId,
+    parentWbsId,
+    taskNameEN,
+    taskNameTH,
     description,
-    projectId,
-    parentTaskId,
-    taskType,
     status,
-    priority,
-    startDate,
-    endDate,
-    estimatedDuration,
-    actualDuration,
-    progressPercentage,
-    weight,
-    assignedTo,
-    assignedTeam,
-    estimatedCost,
-    actualCost,
-    deliverables,
+    weightPercent,
+    installationArea,
     acceptanceCriteria,
+    plannedStartDate,
+    actualStartDate,
+    plannedEndDate,
+    actualEndDate,
+    projectId,
+    assignedUserId,
+    assignedUserName,
     dependencies,
-    materialsRequired,
-    equipmentRequired,
-    safetyRequirements,
-    qualityStandards,
-    evidenceRequired,
-    evidenceAttachments,
-    notes,
+    evidenceCount,
     createdAt,
     updatedAt,
-    completedAt,
-    completedBy,
     children,
+    taskType,
+    priority,
+    progressPercentage,
+    estimatedCost,
+    actualCost,
+    wbsCode,
+    assignedTo,
+    estimatedDuration,
+    actualDuration,
+    startDate,
+    endDate,
+    completedAt,
+    evidenceAttachments,
   ];
 }
 
-/// WBS task types based on hierarchical structure
+/// Task status enumeration with all API-supported statuses
+enum WbsTaskStatus {
+  notStarted,
+  inProgress,
+  completed,
+  blocked,
+  onHold,
+  cancelled,
+  underReview,
+  approved;
+
+  String get displayName {
+    switch (this) {
+      case WbsTaskStatus.notStarted:
+        return 'Not Started';
+      case WbsTaskStatus.inProgress:
+        return 'In Progress';
+      case WbsTaskStatus.completed:
+        return 'Completed';
+      case WbsTaskStatus.blocked:
+        return 'Blocked';
+      case WbsTaskStatus.onHold:
+        return 'On Hold';
+      case WbsTaskStatus.cancelled:
+        return 'Cancelled';
+      case WbsTaskStatus.underReview:
+        return 'Under Review';
+      case WbsTaskStatus.approved:
+        return 'Approved';
+    }
+  }
+}
+
+/// Task type enumeration
 enum WbsTaskType {
   phase,
   deliverable,
@@ -407,69 +481,9 @@ enum WbsTaskType {
         return 'Activity';
     }
   }
-
-  String get description {
-    switch (this) {
-      case WbsTaskType.phase:
-        return 'High-level project phases (Initiation, Planning, Execution, Monitoring, Closure)';
-      case WbsTaskType.deliverable:
-        return 'Major project deliverables or outcomes';
-      case WbsTaskType.workPackage:
-        return 'Specific work items that can be assigned and tracked';
-      case WbsTaskType.activity:
-        return 'Detailed activities within work packages';
-    }
-  }
 }
 
-/// WBS task status following the defined flow
-enum WbsTaskStatus {
-  notStarted,
-  inProgress,
-  completed,
-  blocked,
-  cancelled;
-
-  String get displayName {
-    switch (this) {
-      case WbsTaskStatus.notStarted:
-        return 'Not Started';
-      case WbsTaskStatus.inProgress:
-        return 'In Progress';
-      case WbsTaskStatus.completed:
-        return 'Completed';
-      case WbsTaskStatus.blocked:
-        return 'Blocked';
-      case WbsTaskStatus.cancelled:
-        return 'Cancelled';
-    }
-  }
-
-  bool get isActive {
-    return this == WbsTaskStatus.inProgress || this == WbsTaskStatus.notStarted;
-  }
-
-  bool get isCompleted {
-    return this == WbsTaskStatus.completed;
-  }
-
-  bool get canTransitionTo {
-    switch (this) {
-      case WbsTaskStatus.notStarted:
-        return true; // Can transition to any state
-      case WbsTaskStatus.inProgress:
-        return true; // Can transition to any state
-      case WbsTaskStatus.completed:
-        return false; // Cannot transition from completed
-      case WbsTaskStatus.blocked:
-        return true; // Can be unblocked
-      case WbsTaskStatus.cancelled:
-        return false; // Cannot transition from cancelled
-    }
-  }
-}
-
-/// WBS task priority levels
+/// Task priority enumeration
 enum WbsTaskPriority {
   low,
   medium,
@@ -488,130 +502,67 @@ enum WbsTaskPriority {
         return 'Critical';
     }
   }
-
-  String get description {
-    switch (this) {
-      case WbsTaskPriority.low:
-        return 'Tasks that can be delayed if necessary';
-      case WbsTaskPriority.medium:
-        return 'Standard priority tasks';
-      case WbsTaskPriority.high:
-        return 'Important tasks with tight deadlines';
-      case WbsTaskPriority.critical:
-        return 'Tasks that block project completion';
-    }
-  }
-
-  int get sortOrder {
-    switch (this) {
-      case WbsTaskPriority.critical:
-        return 4;
-      case WbsTaskPriority.high:
-        return 3;
-      case WbsTaskPriority.medium:
-        return 2;
-      case WbsTaskPriority.low:
-        return 1;
-    }
-  }
 }
 
-/// WBS task status colors for UI
-enum WbsTaskStatusColor { grey, blue, green, orange, red, darkGrey }
-
-/// Evidence attachment for WBS tasks
+/// WBS attachment entity for evidence files
 class WbsAttachment extends Equatable {
   const WbsAttachment({
     required this.id,
     required this.filename,
-    required this.fileType,
-    required this.fileSize,
     required this.url,
-    required this.uploadedBy,
     required this.uploadedAt,
-    this.thumbnailUrl,
     this.description,
+    this.fileSize,
+    this.fileType,
   });
 
   final String id;
   final String filename;
-  final WbsAttachmentType fileType;
-  final int fileSize;
   final String url;
-  final String? thumbnailUrl;
-  final String uploadedBy;
-  final DateTime uploadedAt;
   final String? description;
+  final int? fileSize;
+  final WbsAttachmentType? fileType;
+  final DateTime uploadedAt;
 
-  /// Get file size in human readable format
-  String get formattedFileSize {
-    if (fileSize < 1024) return '$fileSize B';
-    if (fileSize < 1024 * 1024) return '${(fileSize / 1024).toStringAsFixed(1)} KB';
-    if (fileSize < 1024 * 1024 * 1024) return '${(fileSize / (1024 * 1024)).toStringAsFixed(1)} MB';
-    return '${(fileSize / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
-  }
-
-  /// Create WbsAttachment from JSON
   factory WbsAttachment.fromJson(Map<String, dynamic> json) {
     return WbsAttachment(
-      id: json['id'] as String,
-      filename: json['filename'] as String? ?? 'unknown',
-      fileType: WbsAttachment.parseFileType(json['file_type'] as String?),
-      fileSize: json['file_size'] as int? ?? 0,
+      id: json['id'] as String? ?? '',
+      filename: json['filename'] as String? ?? '',
       url: json['url'] as String? ?? '',
-      thumbnailUrl: json['thumbnail_url'] as String?,
-      uploadedBy: json['uploaded_by'] as String? ?? 'unknown',
-      uploadedAt: DateTime.tryParse(json['uploaded_at'] as String? ?? '') ?? DateTime.now(),
       description: json['description'] as String?,
+      fileSize: json['file_size'] as int?,
+      fileType: json['file_type'] != null
+          ? WbsAttachmentType.values.firstWhere(
+              (e) => e.name == json['file_type'],
+              orElse: () => WbsAttachmentType.other,
+            )
+          : null,
+      uploadedAt: DateTime.tryParse(json['uploaded_at'] as String? ?? '') ?? DateTime.now(),
     );
   }
 
-  /// Convert WbsAttachment to JSON
   Map<String, dynamic> toJson() {
     return {
       'id': id,
       'filename': filename,
-      'file_type': fileType.name,
-      'file_size': fileSize,
       'url': url,
-      'thumbnail_url': thumbnailUrl,
-      'uploaded_by': uploadedBy,
-      'uploaded_at': uploadedAt.toIso8601String(),
       'description': description,
+      'file_size': fileSize,
+      'file_type': fileType?.name,
+      'uploaded_at': uploadedAt.toIso8601String(),
     };
   }
 
-  /// Parse file type from string
-  static WbsAttachmentType parseFileType(String? type) {
-    switch (type?.toLowerCase()) {
-      case 'image':
-        return WbsAttachmentType.image;
-      case 'document':
-        return WbsAttachmentType.document;
-      case 'video':
-        return WbsAttachmentType.video;
-      default:
-        return WbsAttachmentType.document;
-    }
-  }
-
-  /// Get file size in human readable format
-  String get formattedSize {
-    if (fileSize < 1024) return '$fileSize B';
-    if (fileSize < 1024 * 1024) return '${(fileSize / 1024).toStringAsFixed(1)} KB';
-    if (fileSize < 1024 * 1024 * 1024) return '${(fileSize / (1024 * 1024)).toStringAsFixed(1)} MB';
-    return '${(fileSize / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
-  }
-
   @override
-  List<Object?> get props => [id, filename, fileType, fileSize, url, thumbnailUrl, uploadedBy, uploadedAt, description];
+  List<Object?> get props => [id, filename, url, description, fileSize, fileType, uploadedAt];
 }
 
-/// Attachment file types
+/// Attachment file type enumeration
 enum WbsAttachmentType {
   image,
   document,
-  video;
+  video,
+  other;
 
   String get displayName {
     switch (this) {
@@ -621,17 +572,8 @@ enum WbsAttachmentType {
         return 'Document';
       case WbsAttachmentType.video:
         return 'Video';
-    }
-  }
-
-  List<String> get allowedExtensions {
-    switch (this) {
-      case WbsAttachmentType.image:
-        return ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-      case WbsAttachmentType.document:
-        return ['pdf', 'doc', 'docx', 'txt', 'xlsx', 'xls'];
-      case WbsAttachmentType.video:
-        return ['mp4', 'mov', 'avi', 'mkv', 'webm'];
+      case WbsAttachmentType.other:
+        return 'Other';
     }
   }
 }

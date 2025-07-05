@@ -5,7 +5,7 @@ import '../../domain/entities/wbs_progress.dart';
 import '../../domain/entities/wbs_structure.dart';
 import '../../domain/repositories/wbs_repository.dart';
 import '../services/wbs_api_service.dart';
-import '../../../../core/errors/failures.dart';
+import '../../../../common/models/errors/failures.dart';
 
 @LazySingleton(as: WbsRepository)
 class WbsRepositoryImpl implements WbsRepository {
@@ -378,7 +378,7 @@ class WbsRepositoryImpl implements WbsRepository {
 
       var tasks = tasksData
           .map((taskJson) => WbsTask.fromJson(taskJson as Map<String, dynamic>))
-          .where((task) => task.assignedTo == assigneeId)
+          .where((task) => task.assignedUserId == assigneeId || task.assignedTo == assigneeId)
           .toList();
 
       if (status != null) {
@@ -424,7 +424,8 @@ class WbsRepositoryImpl implements WbsRepository {
           .map((taskJson) => WbsTask.fromJson(taskJson as Map<String, dynamic>))
           .where(
             (task) =>
-                task.taskName.toLowerCase().contains(searchQuery.toLowerCase()) ||
+                task.taskNameEN.toLowerCase().contains(searchQuery.toLowerCase()) ||
+                task.taskNameTH.toLowerCase().contains(searchQuery.toLowerCase()) ||
                 (task.description?.toLowerCase().contains(searchQuery.toLowerCase()) ?? false),
           )
           .toList();
