@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/navigation/app_router.dart';
 import '../../../../common/widgets/error_message_widget.dart';
@@ -10,14 +9,6 @@ import '../../application/auth_event.dart';
 import '../../application/auth_state.dart';
 import '../../domain/entities/user.dart';
 
-/// Login screen with modern UI, responsive design, and username persistence
-/// 
-/// Features:
-/// - Responsive layout for phones, tablets, and different orientations
-/// - Username persistence with SharedPreferences
-/// - Modern glassmorphism design with smooth animations
-/// - Comprehensive form validation with proper error messages
-/// - Accessibility support
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -25,8 +16,7 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen>
-    with TickerProviderStateMixin {
+class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin {
   // UI Constants
   static const double _containerBorderRadius = 18.0;
   static const double _iconContainerSize = 8.0;
@@ -50,13 +40,8 @@ class _LoginScreenState extends State<LoginScreen>
   static const double _mediumScreenWidth = 400;
 
   // Spacing Constants (will be adjusted based on screen size)
-  static const EdgeInsets _containerPadding = EdgeInsets.symmetric(
-    horizontal: 32,
-    vertical: 28,
-  );
-  static const EdgeInsets _containerMargin = EdgeInsets.symmetric(
-    horizontal: 12.0,
-  );
+  static const EdgeInsets _containerPadding = EdgeInsets.symmetric(horizontal: 32, vertical: 28);
+  static const EdgeInsets _containerMargin = EdgeInsets.symmetric(horizontal: 12.0);
 
   // Form controllers and focus nodes
   final _formKey = GlobalKey<FormState>();
@@ -88,20 +73,11 @@ class _LoginScreenState extends State<LoginScreen>
   /// Sets up all animations used in the login screen
   /// Includes fade-in, slide, button scale, and background zoom animations
   void _setupAnimations() {
-    _animationController = AnimationController(
-      duration: _animationDuration,
-      vsync: this,
-    );
+    _animationController = AnimationController(duration: _animationDuration, vsync: this);
 
-    _buttonAnimationController = AnimationController(
-      duration: _buttonAnimationDuration,
-      vsync: this,
-    );
+    _buttonAnimationController = AnimationController(duration: _buttonAnimationDuration, vsync: this);
 
-    _backgroundZoomController = AnimationController(
-      duration: _backgroundZoomDuration,
-      vsync: this,
-    );
+    _backgroundZoomController = AnimationController(duration: _backgroundZoomDuration, vsync: this);
 
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
@@ -110,24 +86,22 @@ class _LoginScreenState extends State<LoginScreen>
       ),
     );
 
-    _slideAnimation =
-        Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
-          CurvedAnimation(
-            parent: _animationController,
-            curve: const Interval(0.2, 1.0, curve: Curves.easeOut),
-          ),
-        );
-
-    _buttonScaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
+    _slideAnimation = Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
       CurvedAnimation(
-        parent: _buttonAnimationController,
-        curve: Curves.easeInOut,
+        parent: _animationController,
+        curve: const Interval(0.2, 1.0, curve: Curves.easeOut),
       ),
     );
 
-    _backgroundZoomAnimation = Tween<double>(begin: 1.0, end: 2.0).animate(
-      CurvedAnimation(parent: _backgroundZoomController, curve: Curves.linear),
-    );
+    _buttonScaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.95,
+    ).animate(CurvedAnimation(parent: _buttonAnimationController, curve: Curves.easeInOut));
+
+    _backgroundZoomAnimation = Tween<double>(
+      begin: 1.0,
+      end: 2.0,
+    ).animate(CurvedAnimation(parent: _backgroundZoomController, curve: Curves.linear));
 
     _animationController.forward();
     _backgroundZoomController.repeat(reverse: true);
@@ -165,29 +139,19 @@ class _LoginScreenState extends State<LoginScreen>
       ),
       hintText: hintText,
       hintStyle: TextStyle(
-        color: Theme.of(
-          context,
-        ).colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+        color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
         fontSize: hintFontSize,
       ),
       prefixIcon: prefixIcon,
       suffixIcon: suffixIcon,
       border: _buildOutlineInputBorder(),
-      enabledBorder: _buildOutlineInputBorder(
-        color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.4),
-      ),
+      enabledBorder: _buildOutlineInputBorder(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.4)),
       focusedBorder: _buildOutlineInputBorder(
         color: const Color(0xFF4CAF50), // Green theme color
         width: 2.5,
       ),
-      errorBorder: _buildOutlineInputBorder(
-        color: Theme.of(context).colorScheme.error,
-        width: 2,
-      ),
-      focusedErrorBorder: _buildOutlineInputBorder(
-        color: Theme.of(context).colorScheme.error,
-        width: 2.5,
-      ),
+      errorBorder: _buildOutlineInputBorder(color: Theme.of(context).colorScheme.error, width: 2),
+      focusedErrorBorder: _buildOutlineInputBorder(color: Theme.of(context).colorScheme.error, width: 2.5),
       filled: true,
       fillColor: Colors.white.withValues(alpha: 0.9),
       contentPadding: EdgeInsets.symmetric(
@@ -199,18 +163,11 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   // Helper method to create consistent outline input border
-  OutlineInputBorder _buildOutlineInputBorder({
-    Color? color,
-    double width = 1,
-  }) {
+  OutlineInputBorder _buildOutlineInputBorder({Color? color, double width = 1}) {
     return OutlineInputBorder(
-      borderRadius: BorderRadius.circular(
-        16,
-      ), // Slightly smaller radius for modern look
+      borderRadius: BorderRadius.circular(16), // Slightly smaller radius for modern look
       borderSide: BorderSide(
-        color:
-            color ??
-            Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+        color: color ?? Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
         width: width,
       ),
     );
@@ -222,14 +179,9 @@ class _LoginScreenState extends State<LoginScreen>
       margin: const EdgeInsets.all(12),
       padding: const EdgeInsets.all(_iconContainerSize),
       decoration: BoxDecoration(
-        color: const Color(
-          0xFF4CAF50,
-        ).withValues(alpha: 0.12), // Green theme with transparency
+        color: const Color(0xFF4CAF50).withValues(alpha: 0.12), // Green theme with transparency
         borderRadius: BorderRadius.circular(12), // More modern radius
-        border: Border.all(
-          color: const Color(0xFF4CAF50).withValues(alpha: 0.2),
-          width: 1,
-        ),
+        border: Border.all(color: const Color(0xFF4CAF50).withValues(alpha: 0.2), width: 1),
       ),
       child: Icon(
         iconData,
@@ -245,16 +197,8 @@ class _LoginScreenState extends State<LoginScreen>
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-          BoxShadow(
-            color: const Color(0xFF4CAF50).withValues(alpha: 0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2)),
+          BoxShadow(color: const Color(0xFF4CAF50).withValues(alpha: 0.08), blurRadius: 12, offset: const Offset(0, 4)),
         ],
       ),
       child: child,
@@ -273,87 +217,55 @@ class _LoginScreenState extends State<LoginScreen>
                 // Animated background with zoom effect
                 Positioned.fill(child: _buildAnimatedBackground()),
                 // Gradient overlay for energy theme
-                Positioned.fill(
-                  child: Container(
-                    decoration: _buildBackgroundDecoration(context),
-                  ),
-                ),
-                // Main content with improved scrolling
+                Positioned.fill(child: Container(decoration: _buildBackgroundDecoration(context))),
+                // Main content with perfect centering
                 SafeArea(
                   child: LayoutBuilder(
                     builder: (context, constraints) {
                       final isSmallScreen = _isSmallScreen(context);
                       final screenHeight = constraints.maxHeight;
-                      final keyboardHeight = MediaQuery.of(
-                        context,
-                      ).viewInsets.bottom;
+                      final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+                      final isKeyboardOpen = keyboardHeight > 0;
 
                       return SingleChildScrollView(
                         physics: const BouncingScrollPhysics(),
                         child: ConstrainedBox(
-                          constraints: BoxConstraints(
-                            minHeight:
-                                screenHeight -
-                                keyboardHeight -
-                                20, // Reduced minHeight by 20px
-                            maxWidth: double.infinity,
-                          ),
-                          child: IntrinsicHeight(
+                          constraints: BoxConstraints(minHeight: screenHeight, maxWidth: double.infinity),
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 16.0 : 24.0),
                             child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
                               children: [
-                                // Flexible top spacer
-                                const Flexible(flex: 1, child: SizedBox()),
-                                // Main content area
-                                Flexible(
-                                  flex: 8,
-                                  child: Padding(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: isSmallScreen ? 8.0 : 12.0,
-                                    ),
-                                    child: Center(
-                                      child: SingleChildScrollView(
-                                        child: Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            // Sign out option for already authenticated users
-                                            if (state is AuthAuthenticated) ...[
-                                              _buildSignOutHeader(
-                                                context,
-                                                state.user,
-                                              ),
-                                              SizedBox(
-                                                height: isSmallScreen
-                                                    ? 8
-                                                    : 12, // Reduced spacing
-                                              ),
-                                            ],
+                                // Responsive top spacer
+                                SizedBox(height: _getTopSpacing(screenHeight, isKeyboardOpen, isSmallScreen)),
 
-                                            // Main login form
-                                            AnimatedBuilder(
-                                              animation: _animationController,
-                                              builder: (context, child) {
-                                                return FadeTransition(
-                                                  opacity: _fadeAnimation,
-                                                  child: SlideTransition(
-                                                    position: _slideAnimation,
-                                                    child: _buildLoginForm(
-                                                      context,
-                                                    ),
-                                                  ),
-                                                );
-                                              },
-                                            ),
-                                          ],
-                                        ),
+                                // Sign out option for already authenticated users
+                                if (state is AuthAuthenticated) ...[
+                                  _buildSignOutHeader(context, state.user),
+                                  SizedBox(height: isSmallScreen ? 16 : 24),
+                                ],
+
+                                // Main login form - perfectly centered
+                                AnimatedBuilder(
+                                  animation: _animationController,
+                                  builder: (context, child) {
+                                    return FadeTransition(
+                                      opacity: _fadeAnimation,
+                                      child: SlideTransition(
+                                        position: _slideAnimation,
+                                        child: Center(child: _buildLoginForm(context)),
                                       ),
-                                    ),
-                                  ),
+                                    );
+                                  },
                                 ),
 
-                                // Flexible bottom spacer
-                                const Flexible(flex: 1, child: SizedBox()),
+                                // Responsive bottom spacer
+                                SizedBox(height: _getBottomSpacing(screenHeight, isKeyboardOpen, isSmallScreen)),
+
+                                // Bottom safe area padding
+                                SizedBox(height: isKeyboardOpen ? 0 : (isSmallScreen ? 16 : 24)),
                               ],
                             ),
                           ),
@@ -397,10 +309,7 @@ class _LoginScreenState extends State<LoginScreen>
           scale: _backgroundZoomAnimation.value,
           child: Container(
             decoration: const BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage('assets/images/bg.jpg'),
-                fit: BoxFit.cover,
-              ),
+              image: DecorationImage(image: AssetImage('assets/images/bg.jpg'), fit: BoxFit.cover),
             ),
           ),
         );
@@ -414,67 +323,55 @@ class _LoginScreenState extends State<LoginScreen>
     final responsiveMargin = _getResponsiveMargin(context);
     final responsiveMaxWidth = _getResponsiveMaxWidth(context);
 
-    return Form(
-      key: _formKey,
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxWidth: responsiveMaxWidth),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min, // Important: minimize the form size
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          SizedBox(height: isSmallScreen ? 4 : 8), // Reduced spacing
+          // Header section
           _buildHeader(context),
-          SizedBox(height: isSmallScreen ? 8 : 16), // Reduced spacing
-          Center(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: responsiveMaxWidth),
-              child: Container(
-                padding: responsivePadding,
-                margin: responsiveMargin,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.95),
-                  borderRadius: BorderRadius.circular(_containerBorderRadius),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    width: 1,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 20,
-                      offset: const Offset(0, 8),
-                    ),
-                    BoxShadow(
-                      color: const Color(0xFFCDDC39).withValues(alpha: 0.1),
-                      blurRadius: 40,
-                      offset: const Offset(0, 16),
-                    ),
-                  ],
+          SizedBox(height: isSmallScreen ? 24 : 32),
+
+          // Login form container
+          Container(
+            width: double.infinity,
+            padding: responsivePadding,
+            margin: responsiveMargin,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.95),
+              borderRadius: BorderRadius.circular(_containerBorderRadius),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 1),
+              boxShadow: [
+                BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 20, offset: const Offset(0, 8)),
+                BoxShadow(
+                  color: const Color(0xFFCDDC39).withValues(alpha: 0.1),
+                  blurRadius: 40,
+                  offset: const Offset(0, 16),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  mainAxisSize:
-                      MainAxisSize.min, // Important: minimize column size
-                  children: [
-                    _buildInputFieldWrapper(child: _buildUsernameField()),
-                    SizedBox(
-                      height: isSmallScreen ? 12 : 16,
-                    ), // Reduced spacing
-                    _buildInputFieldWrapper(child: _buildPasswordField()),
-                    SizedBox(
-                      height: isSmallScreen ? 16 : 20,
-                    ), // Reduced spacing
-                    _buildOptionsRow(),
-                    SizedBox(
-                      height: isSmallScreen ? 16 : 20,
-                    ), // Reduced spacing
-                    _buildSignInButton(),
-                  ],
-                ),
+              ],
+            ),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildInputFieldWrapper(child: _buildUsernameField()),
+                  SizedBox(height: isSmallScreen ? 16 : 20),
+                  _buildInputFieldWrapper(child: _buildPasswordField()),
+                  SizedBox(height: isSmallScreen ? 20 : 24),
+                  _buildOptionsRow(),
+                  SizedBox(height: isSmallScreen ? 20 : 24),
+                  _buildSignInButton(),
+                ],
               ),
             ),
           ),
-          SizedBox(height: isSmallScreen ? 8 : 12), // Reduced spacing
+
+          // Sign up section
+          SizedBox(height: isSmallScreen ? 16 : 20),
           _buildSignUpSection(),
-          SizedBox(height: isSmallScreen ? 4 : 8), // Reduced spacing
         ],
       ),
     );
@@ -485,9 +382,7 @@ class _LoginScreenState extends State<LoginScreen>
     final screenWidth = MediaQuery.of(context).size.width;
 
     // Responsive font sizes
-    final titleFontSize = isSmallScreen
-        ? (screenWidth < 320 ? 28.0 : 32.0)
-        : 40.0;
+    final titleFontSize = isSmallScreen ? (screenWidth < 320 ? 28.0 : 32.0) : 40.0;
     final descriptionFontSize = isSmallScreen ? 14.0 : 16.0;
 
     return Column(
@@ -506,11 +401,7 @@ class _LoginScreenState extends State<LoginScreen>
                 height: 1.1,
                 fontSize: titleFontSize,
                 shadows: [
-                  Shadow(
-                    offset: const Offset(0, 2),
-                    blurRadius: 8,
-                    color: Colors.black.withValues(alpha: 0.3),
-                  ),
+                  Shadow(offset: const Offset(0, 2), blurRadius: 8, color: Colors.black.withValues(alpha: 0.3)),
                 ],
               ),
               textAlign: TextAlign.center,
@@ -520,13 +411,9 @@ class _LoginScreenState extends State<LoginScreen>
         ),
         SizedBox(height: isSmallScreen ? 6 : 8), // Further reduced spacing
         // Responsive description with better padding
-        if (!isSmallScreen ||
-            MediaQuery.of(context).size.height >
-                600) // Hide description on very small screens
+        if (!isSmallScreen || MediaQuery.of(context).size.height > 600) // Hide description on very small screens
           Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: isSmallScreen ? 16.0 : 20.0,
-            ),
+            padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 16.0 : 20.0),
             child: Text(
               'Manage your solar construction projects',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
@@ -535,11 +422,7 @@ class _LoginScreenState extends State<LoginScreen>
                 fontSize: descriptionFontSize,
                 fontWeight: FontWeight.w500,
                 shadows: [
-                  Shadow(
-                    offset: const Offset(0, 1),
-                    blurRadius: 4,
-                    color: Colors.black.withValues(alpha: 0.2),
-                  ),
+                  Shadow(offset: const Offset(0, 1), blurRadius: 4, color: Colors.black.withValues(alpha: 0.2)),
                 ],
               ),
               textAlign: TextAlign.center,
@@ -570,7 +453,15 @@ class _LoginScreenState extends State<LoginScreen>
         hintText: 'Enter your username',
         prefixIcon: _buildPrefixIcon(Icons.person_rounded),
       ),
-      validator: (value) => _validateUsername(value),
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Please enter your username';
+        }
+        if (value.length < _minUsernameLength) {
+          return 'Username must be at least $_minUsernameLength characters';
+        }
+        return null;
+      },
       onFieldSubmitted: (_) {
         FocusScope.of(context).requestFocus(_passwordFocusNode);
       },
@@ -599,21 +490,15 @@ class _LoginScreenState extends State<LoginScreen>
           margin: const EdgeInsets.only(right: 8),
           child: IconButton(
             icon: Icon(
-              _obscurePassword
-                  ? Icons.visibility_off_rounded
-                  : Icons.visibility_rounded,
-              color: const Color(
-                0xFF4CAF50,
-              ).withValues(alpha: 0.8), // Match theme
+              _obscurePassword ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+              color: const Color(0xFF4CAF50).withValues(alpha: 0.8), // Match theme
               size: 22,
             ),
             style: IconButton.styleFrom(
               padding: const EdgeInsets.all(8),
               minimumSize: const Size(40, 40),
               backgroundColor: const Color(0xFF4CAF50).withValues(alpha: 0.08),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
             onPressed: _isLoading
                 ? null
@@ -625,7 +510,15 @@ class _LoginScreenState extends State<LoginScreen>
           ),
         ),
       ),
-      validator: (value) => _validatePassword(value),
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Please enter your password';
+        }
+        if (value.length < _minPasswordLength) {
+          return 'Password must be at least $_minPasswordLength characters';
+        }
+        return null;
+      },
       onFieldSubmitted: (_) => _handleSignIn(),
     );
   }
@@ -664,20 +557,14 @@ class _LoginScreenState extends State<LoginScreen>
                       border: Border.all(
                         color: _rememberMe
                             ? const Color(0xFF4CAF50)
-                            : Theme.of(
-                                context,
-                              ).colorScheme.outline.withValues(alpha: 0.6),
+                            : Theme.of(context).colorScheme.outline.withValues(alpha: 0.6),
                         width: _rememberMe ? 2 : 1.5,
                       ),
-                      color: _rememberMe
-                          ? const Color(0xFF4CAF50)
-                          : Colors.transparent,
+                      color: _rememberMe ? const Color(0xFF4CAF50) : Colors.transparent,
                       boxShadow: _rememberMe
                           ? [
                               BoxShadow(
-                                color: const Color(
-                                  0xFF4CAF50,
-                                ).withValues(alpha: 0.3),
+                                color: const Color(0xFF4CAF50).withValues(alpha: 0.3),
                                 blurRadius: 8,
                                 offset: const Offset(0, 2),
                               ),
@@ -685,25 +572,19 @@ class _LoginScreenState extends State<LoginScreen>
                           : null,
                     ),
                     child: _rememberMe
-                        ? Icon(
-                            Icons.check_rounded,
-                            color: Colors.white,
-                            size: isSmallScreen ? 14.0 : 16.0,
-                          )
+                        ? Icon(Icons.check_rounded, color: Colors.white, size: isSmallScreen ? 14.0 : 16.0)
                         : null,
                   ),
                   const SizedBox(width: 12),
                   // Enhanced text with better typography
-                  Flexible(
+                  Expanded(
                     child: Text(
                       'Remember me',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: _rememberMe
                             ? Theme.of(context).colorScheme.onSurface
                             : Theme.of(context).colorScheme.onSurfaceVariant,
-                        fontWeight: _rememberMe
-                            ? FontWeight.w600
-                            : FontWeight.w500,
+                        fontWeight: _rememberMe ? FontWeight.w600 : FontWeight.w500,
                         fontSize: fontSize,
                         letterSpacing: 0.2,
                       ),
@@ -716,20 +597,11 @@ class _LoginScreenState extends State<LoginScreen>
         ),
         // Enhanced Forgot password button (responsive)
         TextButton(
-          onPressed: _isLoading
-              ? null
-              : () => context.go(AppRoutes.forgotPassword),
+          onPressed: _isLoading ? null : () => context.go(AppRoutes.forgotPassword),
           style: TextButton.styleFrom(
-            padding: EdgeInsets.symmetric(
-              horizontal: isSmallScreen ? 12 : 16,
-              vertical: isSmallScreen ? 8 : 12,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            backgroundColor: Theme.of(
-              context,
-            ).colorScheme.primary.withValues(alpha: 0.04),
+            padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 12 : 16, vertical: isSmallScreen ? 8 : 12),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.04),
           ),
           child: Text(
             'Forgot Password?',
@@ -767,11 +639,7 @@ class _LoginScreenState extends State<LoginScreen>
                   blurRadius: 20,
                   offset: const Offset(0, 8),
                 ),
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 30,
-                  offset: const Offset(0, 12),
-                ),
+                BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 30, offset: const Offset(0, 12)),
               ],
             ),
             child: ElevatedButton(
@@ -780,9 +648,7 @@ class _LoginScreenState extends State<LoginScreen>
                 backgroundColor: Colors.transparent,
                 shadowColor: Colors.transparent,
                 elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
               ),
               child: _isLoading
                   ? Row(
@@ -848,18 +714,14 @@ class _LoginScreenState extends State<LoginScreen>
       children: [
         Text(
           "Don't have an account? ",
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-            fontSize: fontSize,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: fontSize),
         ),
         TextButton(
           onPressed: _isLoading ? null : () => context.go(AppRoutes.register),
           style: TextButton.styleFrom(
-            padding: EdgeInsets.symmetric(
-              horizontal: isSmallScreen ? 8 : 12,
-              vertical: isSmallScreen ? 4 : 8,
-            ),
+            padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 8 : 12, vertical: isSmallScreen ? 4 : 8),
           ),
           child: Text(
             'Sign Up',
@@ -879,22 +741,16 @@ class _LoginScreenState extends State<LoginScreen>
       margin: const EdgeInsets.only(top: 16, bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(
-          context,
-        ).colorScheme.primaryContainer.withValues(alpha: 0.8),
+        color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
-        ),
+        border: Border.all(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [
           CircleAvatar(
             radius: 20,
             backgroundColor: Theme.of(context).colorScheme.primary,
-            backgroundImage: user.profileImageUrl != null
-                ? NetworkImage(user.profileImageUrl!)
-                : null,
+            backgroundImage: user.profileImageUrl != null ? NetworkImage(user.profileImageUrl!) : null,
             child: user.profileImageUrl == null
                 ? Text(
                     _getInitials(user),
@@ -914,9 +770,7 @@ class _LoginScreenState extends State<LoginScreen>
                 Text(
                   'Signed in as',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onPrimaryContainer.withValues(alpha: 0.7),
+                    color: Theme.of(context).colorScheme.onPrimaryContainer.withValues(alpha: 0.7),
                   ),
                 ),
                 Text(
@@ -932,24 +786,14 @@ class _LoginScreenState extends State<LoginScreen>
           ),
           TextButton.icon(
             onPressed: () => _showSignOutDialog(context),
-            icon: Icon(
-              Icons.logout,
-              size: 18,
-              color: Theme.of(context).colorScheme.error,
-            ),
+            icon: Icon(Icons.logout, size: 18, color: Theme.of(context).colorScheme.error),
             label: Text(
               'Sign Out',
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.error,
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
-              ),
+              style: TextStyle(color: Theme.of(context).colorScheme.error, fontWeight: FontWeight.w600, fontSize: 13),
             ),
             style: TextButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
           ),
         ],
@@ -975,34 +819,18 @@ class _LoginScreenState extends State<LoginScreen>
         return AlertDialog(
           title: Text(
             'Sign Out',
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface,
-              fontWeight: FontWeight.w600,
-            ),
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w600),
           ),
           content: Text(
             'Are you sure you want to sign out? You can sign in again with a different account.',
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
           ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
-              style: TextButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: Text(
-                'Cancel',
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
+              style: TextButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+              child: Text('Cancel', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
             ),
             ElevatedButton(
               onPressed: () {
@@ -1012,9 +840,7 @@ class _LoginScreenState extends State<LoginScreen>
               style: ElevatedButton.styleFrom(
                 backgroundColor: Theme.of(context).colorScheme.error,
                 foregroundColor: Theme.of(context).colorScheme.onError,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
               child: const Text('Sign Out'),
             ),
@@ -1050,10 +876,7 @@ class _LoginScreenState extends State<LoginScreen>
     FocusScope.of(context).unfocus();
 
     context.read<AuthBloc>().add(
-      AuthSignInRequested(
-        username: _usernameController.text.trim(),
-        password: _passwordController.text,
-      ),
+      AuthSignInRequested(username: _usernameController.text.trim(), password: _passwordController.text),
     );
   }
 
@@ -1068,18 +891,50 @@ class _LoginScreenState extends State<LoginScreen>
     return size.height < _mediumScreenHeight || size.width < _mediumScreenWidth;
   }
 
+  /// Calculate responsive top spacing for proper centering
+  double _getTopSpacing(double screenHeight, bool isKeyboardOpen, bool isSmallScreen) {
+    if (isKeyboardOpen) {
+      return isSmallScreen ? 20.0 : 30.0;
+    }
+
+    // Calculate spacing based on screen size for perfect centering
+    final baseSpacing = screenHeight * 0.15;
+
+    if (isSmallScreen) {
+      return baseSpacing.clamp(20.0, 80.0);
+    }
+
+    return baseSpacing.clamp(40.0, 120.0);
+  }
+
+  /// Calculate responsive bottom spacing for proper centering
+  double _getBottomSpacing(double screenHeight, bool isKeyboardOpen, bool isSmallScreen) {
+    if (isKeyboardOpen) {
+      return isSmallScreen ? 20.0 : 30.0;
+    }
+
+    // Calculate spacing based on screen size for perfect centering
+    final baseSpacing = screenHeight * 0.15;
+
+    if (isSmallScreen) {
+      return baseSpacing.clamp(20.0, 80.0);
+    }
+
+    return baseSpacing.clamp(40.0, 120.0);
+  }
+
   EdgeInsets _getResponsivePadding(BuildContext context) {
     if (_isSmallScreen(context)) {
-      return const EdgeInsets.symmetric(horizontal: 8.0, vertical: 16.0);
+      return const EdgeInsets.symmetric(horizontal: 20.0, vertical: 24.0);
     } else if (_isMediumScreen(context)) {
-      return const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0);
+      return const EdgeInsets.symmetric(horizontal: 28.0, vertical: 28.0);
     }
     return _containerPadding;
   }
 
   EdgeInsets _getResponsiveMargin(BuildContext context) {
     if (_isSmallScreen(context)) {
-      return const EdgeInsets.symmetric(horizontal: 8.0);
+      return const EdgeInsets.symmetric(horizontal: 4.0);
     }
     return _containerMargin;
   }
@@ -1087,44 +942,10 @@ class _LoginScreenState extends State<LoginScreen>
   double _getResponsiveMaxWidth(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     if (_isSmallScreen(context)) {
-      return screenWidth - 32; // Leave 16px margin on each side
+      return screenWidth * 0.92; // 92% of screen width for small screens
     } else if (_isMediumScreen(context)) {
-      return 360;
+      return 400; // Fixed width for medium screens
     }
-    return 380;
+    return 420; // Fixed width for large screens
   }
-
-  //#region Form Validation
-  /// Validates username input with comprehensive error checking
-  String? _validateUsername(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Please enter your username';
-    }
-    
-    final trimmedValue = value.trim();
-    if (trimmedValue.length < _minUsernameLength) {
-      return 'Username must be at least $_minUsernameLength characters';
-    }
-    
-    // Additional validation rules
-    if (trimmedValue.contains(' ')) {
-      return 'Username cannot contain spaces';
-    }
-    
-    return null;
-  }
-
-  /// Validates password input with security requirements
-  String? _validatePassword(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Please enter your password';
-    }
-    
-    if (value.length < _minPasswordLength) {
-      return 'Password must be at least $_minPasswordLength characters';
-    }
-    
-    return null;
-  }
-  //#endregion
 }

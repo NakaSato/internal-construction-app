@@ -14,13 +14,8 @@ import 'api_services_registration.dart';
 
 final GetIt getIt = GetIt.instance;
 
-@InjectableInit(
-  initializerName: 'init',
-  preferRelativeImports: true,
-  asExtension: true,
-)
-void configureDependencies() =>
-    getIt.init(environment: _getInjectableEnvironment());
+@InjectableInit(initializerName: 'init', preferRelativeImports: true, asExtension: true)
+void configureDependencies() => getIt.init(environment: _getInjectableEnvironment());
 
 /// Maps app environment to Injectable environment constants
 String _getInjectableEnvironment() {
@@ -94,7 +89,5 @@ abstract class ExternalDependenciesModule {
   FlutterSecureStorage get secureStorage => const FlutterSecureStorage();
 
   @lazySingleton
-  String get baseUrl =>
-      dotenv.env['API_BASE_URL'] ??
-      'https://solar-projects-api.azurewebsites.net';
+  String get baseUrl => dotenv.env['API_BASE_URL'] ?? 'https://api-icms.gridtokenx.com';
 }

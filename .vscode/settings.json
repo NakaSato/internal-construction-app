@@ -1,3 +1,35 @@
 {
-  "cmake.sourceDirectory": "/Users/chanthawat/Development/flutter-dev-solar-mana/linux"
+  "cmake.sourceDirectory": "/Users/chanthawat/Development/flutter-dev-solar-mana/linux",
+  "cmake.cmakePath": "/opt/homebrew/bin/cmake",
+  "cmake.configureOnOpen": false,
+  "cmake.configureOnEdit": false,
+  "cmake.showSystemKits": false,
+  "cmake.automaticReconfigure": false,
+  "cmake.statusbar.advanced": {
+    "debug": {
+      "visibility": "hidden"
+    },
+    "launch": {
+      "visibility": "hidden"
+    },
+    "build": {
+      "visibility": "hidden"
+    },
+    "buildTarget": {
+      "visibility": "hidden"
+    }
+  },
+  "dart.flutterSdkPath": "/opt/homebrew/bin/flutter",
+  "dart.lineLength": 120,
+  "dart.previewFlutterUiGuides": true,
+  "dart.previewFlutterUiGuidesCustomTracking": true,
+  "flutter.experimentalRefactors": true,
+  "files.exclude": {
+    "**/.dart_tool": true,
+    "**/build": true,
+    "**/.gradle": true,
+    "**/CMakeFiles": true,
+    "**/cmake_install.cmake": true,
+    "**/CMakeCache.txt": true
+  }
 }

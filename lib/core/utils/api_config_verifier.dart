@@ -30,11 +30,11 @@ class ApiConfigVerifier {
 
       // Validate URL format
       final apiUrl = EnvironmentConfig.apiBaseUrl;
-      if (apiUrl.startsWith('http://localhost:5002')) {
-        debugPrint('\n✅ API URL is correctly configured for localhost:5002');
+      if (apiUrl.startsWith('http://localhost:8080')) {
+        debugPrint('\n✅ API URL is correctly configured for localhost:8080');
       } else {
         debugPrint('\n⚠️  API URL might not be correctly configured');
-        debugPrint('   Expected: http://localhost:5002');
+        debugPrint('   Expected: http://localhost:8080');
         debugPrint('   Actual: $apiUrl');
       }
 
@@ -48,7 +48,7 @@ class ApiConfigVerifier {
       'apiBaseUrl': EnvironmentConfig.apiBaseUrl,
       'environment': EnvironmentConfig.currentEnvironment.toString(),
       'debugMode': EnvironmentConfig.enableDebugMode,
-      'isCorrectHost': EnvironmentConfig.apiBaseUrl.contains('localhost:5002'),
+      'isCorrectHost': EnvironmentConfig.apiBaseUrl.contains('localhost:8080'),
     };
   }
 }

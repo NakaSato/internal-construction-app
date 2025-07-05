@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -24,18 +25,88 @@ class EnhancedProjectListScreen extends StatefulWidget {
 class _EnhancedProjectListScreenState extends State<EnhancedProjectListScreen> {
   final TextEditingController _searchController = TextEditingController();
   ProjectsQuery _currentQuery = const ProjectsQuery();
+  Timer? _refreshTimer;
+  bool _isLiveReloadEnabled = true;
+  bool _isSilentRefreshing = false;
+  
+  // Live reload interval (30 seconds)
+  static const Duration _refreshInterval = Duration(seconds: 30);
 
   @override
   void initState() {
     super.initState();
     // Load initial projects
     context.read<EnhancedProjectBloc>().add(const LoadProjectsRequested());
+    
+    // Start live reload timer
+    _startLiveReload();
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _stopLiveReload();
     super.dispose();
+  }
+
+  /// Start the live reload timer for automatic project updates
+  void _startLiveReload() {
+    if (_isLiveReloadEnabled) {
+      _refreshTimer = Timer.periodic(_refreshInterval, (timer) {
+        _silentRefresh();
+      });
+    }
+  }
+
+  /// Stop the live reload timer
+  void _stopLiveReload() {
+    _refreshTimer?.cancel();
+    _refreshTimer = null;
+  }
+
+  /// Toggle live reload on/off
+  void _toggleLiveReload() {
+    setState(() {
+      _isLiveReloadEnabled = !_isLiveReloadEnabled;
+    });
+    
+    if (_isLiveReloadEnabled) {
+      _startLiveReload();
+    } else {
+      _stopLiveReload();
+    }
+  }
+
+  /// Silent refresh that doesn't show loading indicators
+  void _silentRefresh() {
+    if (!mounted) return;
+    
+    setState(() {
+      _isSilentRefreshing = true;
+    });
+    
+    final searchTerm = _searchController.text.trim();
+    if (searchTerm.isNotEmpty) {
+      context.read<EnhancedProjectBloc>().add(
+        SearchProjectsRequested(
+          searchTerm: searchTerm, 
+          filters: _currentQuery,
+        ),
+      );
+    } else {
+      context.read<EnhancedProjectBloc>().add(
+        LoadProjectsRequested(query: _currentQuery),
+      );
+    }
+    
+    // Hide the refresh indicator after 2 seconds
+    Timer(const Duration(seconds: 2), () {
+      if (mounted) {
+        setState(() {
+          _isSilentRefreshing = false;
+        });
+      }
+    });
   }
 
   void _onSearchChanged(String searchTerm) {
@@ -83,6 +154,12 @@ class _EnhancedProjectListScreenState extends State<EnhancedProjectListScreen> {
   }
 
   void _onRefresh() {
+    // Restart the live reload timer
+    if (_isLiveReloadEnabled) {
+      _stopLiveReload();
+      _startLiveReload();
+    }
+    
     final searchTerm = _searchController.text.trim();
     if (searchTerm.isNotEmpty) {
       context.read<EnhancedProjectBloc>().add(
@@ -146,6 +223,82 @@ class _EnhancedProjectListScreenState extends State<EnhancedProjectListScreen> {
               ),
               child: Column(
                 children: [
+                  // Live Reload Status Bar
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: _isLiveReloadEnabled 
+                        ? Theme.of(context).colorScheme.primaryContainer
+                        : Theme.of(context).colorScheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: _isLiveReloadEnabled
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(context).colorScheme.outline,
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          _isLiveReloadEnabled ? Icons.wifi : Icons.wifi_off,
+                          size: 16,
+                          color: _isLiveReloadEnabled
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          _isLiveReloadEnabled ? 'Live Updates: ON' : 'Live Updates: OFF',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: _isLiveReloadEnabled
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context).colorScheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        if (_isSilentRefreshing) ...[
+                          const SizedBox(width: 8),
+                          SizedBox(
+                            width: 12,
+                            height: 12,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Theme.of(context).colorScheme.primary,
+                              ),
+                            ),
+                          ),
+                        ],
+                        const SizedBox(width: 8),
+                        GestureDetector(
+                          onTap: _toggleLiveReload,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: _isLiveReloadEnabled
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context).colorScheme.outline,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              _isLiveReloadEnabled ? 'ON' : 'OFF',
+                              style: TextStyle(
+                                color: _isLiveReloadEnabled
+                                  ? Theme.of(context).colorScheme.onPrimary
+                                  : Theme.of(context).colorScheme.surface,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  
                   ProjectSearchBar(
                     controller: _searchController,
                     onChanged: _onSearchChanged,

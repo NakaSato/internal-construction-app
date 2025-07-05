@@ -52,37 +52,169 @@ class _DailyReportsScreenState extends State<DailyReportsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
+      backgroundColor: colorScheme.surface,
+
+      // Modern styled app bar with gradient
       appBar: AppBar(
-        title: const Text('Daily Reports'),
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        backgroundColor: Colors.transparent,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                colorScheme.primary.withOpacity(0.9),
+                colorScheme.primary,
+              ],
+            ),
+          ),
+        ),
+        title: Text(
+          'Daily Reports',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            color: colorScheme.onPrimary,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.3,
+          ),
+        ),
+        iconTheme: IconThemeData(color: colorScheme.onPrimary),
         actions: [
-          // Filter button
-          IconButton(
-            onPressed: _showFilterSheet,
-            icon: const Icon(Icons.filter_list),
-            tooltip: 'Filter Reports',
+          // Styled filter button
+          Container(
+            margin: const EdgeInsets.only(right: 12),
+            decoration: BoxDecoration(
+              color: colorScheme.onPrimary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: colorScheme.onPrimary.withOpacity(0.2),
+                width: 1,
+              ),
+            ),
+            child: IconButton(
+              onPressed: _showFilterSheet,
+              icon: Icon(Icons.tune, color: colorScheme.onPrimary),
+              tooltip: 'Filter Reports',
+            ),
           ),
         ],
       ),
 
-      // Floating action button to create a new report
-      floatingActionButton: FloatingActionButton(
-        heroTag: "daily_reports_fab",
-        onPressed: () => _navigateToCreateReport(context),
-        child: const Icon(Icons.add),
+      // Modern floating action button with gradient
+      floatingActionButton: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [colorScheme.primary, colorScheme.primary.withOpacity(0.8)],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: colorScheme.primary.withOpacity(0.3),
+              blurRadius: 12,
+              spreadRadius: 2,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: FloatingActionButton(
+          heroTag: "daily_reports_fab",
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          onPressed: () => _navigateToCreateReport(context),
+          child: Icon(
+            Icons.add_rounded,
+            color: colorScheme.onPrimary,
+            size: 28,
+          ),
+        ),
       ),
 
-      body: BlocBuilder<DailyReportsCubit, DailyReportsState>(
-        builder: (context, state) {
-          if (state is DailyReportsInitial || state is DailyReportsLoading) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (state is DailyReportsError) {
-            return _buildErrorView(state.message);
-          } else if (state is DailyReportsLoaded) {
-            return _buildReportsList(state);
-          }
-          return const Center(child: Text('Unexpected state'));
-        },
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [colorScheme.surface, colorScheme.surfaceContainerLowest],
+          ),
+        ),
+        child: BlocBuilder<DailyReportsCubit, DailyReportsState>(
+          builder: (context, state) {
+            if (state is DailyReportsInitial || state is DailyReportsLoading) {
+              return _buildLoadingView();
+            } else if (state is DailyReportsError) {
+              return _buildErrorView(state.message);
+            } else if (state is DailyReportsLoaded) {
+              return _buildReportsList(state);
+            }
+            return const Center(child: Text('Unexpected state'));
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoadingView() {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: colorScheme.shadow.withOpacity(0.1),
+                  blurRadius: 12,
+                  spreadRadius: 2,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: colorScheme.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      colorScheme.primary,
+                    ),
+                    strokeWidth: 3,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Loading Reports...',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: colorScheme.onSurface,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Please wait while we fetch your daily reports',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -98,23 +230,55 @@ class _DailyReportsScreenState extends State<DailyReportsScreen> {
       },
       child: ListView.builder(
         controller: _scrollController,
+        padding: const EdgeInsets.all(16),
         itemCount: state.reports.length + (state.hasReachedMax ? 0 : 1),
         itemBuilder: (context, index) {
           // Show loading indicator at the end if more items are being loaded
           if (index >= state.reports.length) {
-            return const Center(
-              child: Padding(
-                padding: EdgeInsets.all(16),
-                child: CircularProgressIndicator(),
+            return Container(
+              margin: const EdgeInsets.symmetric(vertical: 16),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.outlineVariant,
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Theme.of(context).colorScheme.primary,
+                      ),
+                      strokeWidth: 2,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Loading more reports...',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
               ),
             );
           }
 
           // Show daily report card
           final report = state.reports[index];
-          return DailyReportCard(
-            report: report,
-            onTap: () => _navigateToReportDetails(context, report),
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: DailyReportCard(
+              report: report,
+              onTap: () => _navigateToReportDetails(context, report),
+            ),
           );
         },
       ),
@@ -122,70 +286,235 @@ class _DailyReportsScreenState extends State<DailyReportsScreen> {
   }
 
   Widget _buildEmptyView() {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.description_outlined,
-            size: 64,
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'No daily reports found',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Create a new report to get started',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Modern illustration-style icon container
+            Container(
+              padding: const EdgeInsets.all(32),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    colorScheme.primary.withOpacity(0.1),
+                    colorScheme.primary.withOpacity(0.05),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(32),
+                border: Border.all(
+                  color: colorScheme.primary.withOpacity(0.2),
+                  width: 2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: colorScheme.primary.withOpacity(0.1),
+                    blurRadius: 20,
+                    spreadRadius: 5,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Icon(
+                Icons.description_outlined,
+                size: 64,
+                color: colorScheme.primary.withOpacity(0.7),
+              ),
             ),
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: () => _navigateToCreateReport(context),
-            icon: const Icon(Icons.add),
-            label: const Text('Create New Report'),
-          ),
-        ],
+
+            const SizedBox(height: 32),
+
+            // Modern typography
+            Text(
+              'No Daily Reports Yet',
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: colorScheme.onSurface,
+                letterSpacing: 0.3,
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            Text(
+              'Start tracking your daily work progress\nby creating your first report',
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+                height: 1.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
+
+            const SizedBox(height: 40),
+
+            // Modern styled button with gradient
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    colorScheme.primary,
+                    colorScheme.primary.withOpacity(0.8),
+                  ],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: colorScheme.primary.withOpacity(0.3),
+                    blurRadius: 12,
+                    spreadRadius: 2,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: ElevatedButton.icon(
+                onPressed: () => _navigateToCreateReport(context),
+                icon: Icon(Icons.add_rounded, color: colorScheme.onPrimary),
+                label: Text(
+                  'Create New Report',
+                  style: TextStyle(
+                    color: colorScheme.onPrimary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 16,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildErrorView(String message) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.error_outline,
-              size: 48,
-              color: Theme.of(context).colorScheme.error,
+            // Modern error icon container
+            Container(
+              padding: const EdgeInsets.all(32),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    colorScheme.error.withOpacity(0.1),
+                    colorScheme.error.withOpacity(0.05),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(32),
+                border: Border.all(
+                  color: colorScheme.error.withOpacity(0.2),
+                  width: 2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: colorScheme.error.withOpacity(0.1),
+                    blurRadius: 20,
+                    spreadRadius: 5,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Icon(
+                Icons.error_outline_rounded,
+                size: 64,
+                color: colorScheme.error.withOpacity(0.7),
+              ),
             ),
-            const SizedBox(height: 16),
+
+            const SizedBox(height: 32),
+
             Text(
-              'Error loading reports',
-              style: Theme.of(context).textTheme.titleMedium,
+              'Oops! Something went wrong',
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: colorScheme.onSurface,
+                letterSpacing: 0.3,
+              ),
             ),
-            const SizedBox(height: 8),
+
+            const SizedBox(height: 12),
+
             Text(
               message,
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+                height: 1.5,
               ),
             ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: () {
-                context.read<DailyReportsCubit>().loadDailyReports();
-              },
-              icon: const Icon(Icons.refresh),
-              label: const Text('Try Again'),
+
+            const SizedBox(height: 40),
+
+            // Modern retry button
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    colorScheme.primary,
+                    colorScheme.primary.withOpacity(0.8),
+                  ],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: colorScheme.primary.withOpacity(0.3),
+                    blurRadius: 12,
+                    spreadRadius: 2,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  context.read<DailyReportsCubit>().loadDailyReports();
+                },
+                icon: Icon(Icons.refresh_rounded, color: colorScheme.onPrimary),
+                label: Text(
+                  'Try Again',
+                  style: TextStyle(
+                    color: colorScheme.onPrimary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 16,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+              ),
             ),
           ],
         ),

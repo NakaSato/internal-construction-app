@@ -127,52 +127,55 @@ class _CalendarManagementViewState extends State<CalendarManagementView>
   Widget _buildMonthView() {
     return BlocBuilder<CalendarManagementBloc, CalendarManagementState>(
       builder: (context, state) {
-        return Column(
-          children: [
-            EnhancedTableCalendar(
-              selectedDay: _selectedDay,
-              onDaySelected: (selectedDay, focusedDay) {
-                setState(() {
-                  _selectedDay = selectedDay;
-                  _focusedDay = focusedDay;
-                });
-                // Load events for selected day
-                context.read<CalendarManagementBloc>().add(
-                  CalendarEventsRequested(
-                    startDate: selectedDay,
-                    endDate: selectedDay.add(const Duration(days: 1)),
-                  ),
-                );
-              },
-              onPageChanged: (focusedDay) {
-                setState(() {
-                  _focusedDay = focusedDay;
-                });
-                // Load events for the month
-                final monthStart = DateTime(
-                  focusedDay.year,
-                  focusedDay.month,
-                  1,
-                );
-                final monthEnd = DateTime(
-                  focusedDay.year,
-                  focusedDay.month + 1,
-                  0,
-                );
-                context.read<CalendarManagementBloc>().add(
-                  CalendarEventsRequested(
-                    startDate: monthStart,
-                    endDate: monthEnd,
-                  ),
-                );
-              },
-            ),
-            Expanded(
-              child: _EventsList(
-                onEventTap: (event) => _showEventDetails(context, event),
+        return SingleChildScrollView(
+          child: Column(
+            children: [
+              EnhancedTableCalendar(
+                selectedDay: _selectedDay,
+                onDaySelected: (selectedDay, focusedDay) {
+                  setState(() {
+                    _selectedDay = selectedDay;
+                    _focusedDay = focusedDay;
+                  });
+                  // Load events for selected day
+                  context.read<CalendarManagementBloc>().add(
+                    CalendarEventsRequested(
+                      startDate: selectedDay,
+                      endDate: selectedDay.add(const Duration(days: 1)),
+                    ),
+                  );
+                },
+                onPageChanged: (focusedDay) {
+                  setState(() {
+                    _focusedDay = focusedDay;
+                  });
+                  // Load events for the month
+                  final monthStart = DateTime(
+                    focusedDay.year,
+                    focusedDay.month,
+                    1,
+                  );
+                  final monthEnd = DateTime(
+                    focusedDay.year,
+                    focusedDay.month + 1,
+                    0,
+                  );
+                  context.read<CalendarManagementBloc>().add(
+                    CalendarEventsRequested(
+                      startDate: monthStart,
+                      endDate: monthEnd,
+                    ),
+                  );
+                },
               ),
-            ),
-          ],
+              SizedBox(
+                height: 300, // Fixed height for events list
+                child: _EventsList(
+                  onEventTap: (event) => _showEventDetails(context, event),
+                ),
+              ),
+            ],
+          ),
         );
       },
     );

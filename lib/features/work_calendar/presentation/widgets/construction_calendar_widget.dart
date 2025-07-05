@@ -40,66 +40,113 @@ class _ConstructionCalendarWidgetState
 
   @override
   Widget build(BuildContext context) {
-    return SfCalendar(
-      controller: _controller,
-      view: widget.view,
-      dataSource: ConstructionDataSource(
-        tasks: widget.tasks,
-        events: widget.events,
-      ),
-      monthViewSettings: MonthViewSettings(
-        appointmentDisplayMode: MonthAppointmentDisplayMode.appointment,
-        showAgenda: true,
-        agendaStyle: AgendaStyle(
-          backgroundColor: Theme.of(context).colorScheme.surface,
-          appointmentTextStyle: Theme.of(context).textTheme.bodyMedium,
-          dayTextStyle: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-          dateTextStyle: Theme.of(context).textTheme.headlineMedium?.copyWith(
-            color: Theme.of(context).colorScheme.primary,
-          ),
-        ),
-        monthCellStyle: MonthCellStyle(
-          backgroundColor: Theme.of(context).colorScheme.surface,
-          todayBackgroundColor: Theme.of(context).colorScheme.primaryContainer,
-          leadingDatesBackgroundColor: Theme.of(
-            context,
-          ).colorScheme.surfaceContainerHighest,
-          trailingDatesBackgroundColor: Theme.of(
-            context,
-          ).colorScheme.surfaceContainerHighest,
-          textStyle: Theme.of(context).textTheme.bodyMedium,
-          todayTextStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: Theme.of(context).colorScheme.onPrimaryContainer,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-      timeSlotViewSettings: const TimeSlotViewSettings(
-        startHour: 6,
-        endHour: 22,
-        timeInterval: Duration(minutes: 30),
-        timeIntervalHeight: 60,
-      ),
-      appointmentBuilder: _buildAppointment,
-      onTap: _onCalendarTapped,
-      todayHighlightColor: Theme.of(context).colorScheme.primary,
-      selectionDecoration: BoxDecoration(
-        color: Colors.transparent,
-        border: Border.all(
-          color: Theme.of(context).colorScheme.primary,
-          width: 2,
-        ),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      headerStyle: CalendarHeaderStyle(
-        textAlign: TextAlign.center,
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        textStyle: Theme.of(context).textTheme.headlineSmall?.copyWith(
-          fontWeight: FontWeight.bold,
-          color: Theme.of(context).colorScheme.onSurface,
-        ),
+    return SafeArea(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // Calculate safe dimensions with fallbacks
+          final availableHeight = constraints.maxHeight > 0
+              ? constraints.maxHeight
+              : 300.0;
+          final availableWidth = constraints.maxWidth > 0
+              ? constraints.maxWidth
+              : MediaQuery.of(context).size.width;
+
+          final minCalendarHeight = 250.0;
+          final maxCalendarHeight = availableHeight * 0.9;
+
+          final calendarHeight = availableHeight > minCalendarHeight
+              ? (availableHeight < maxCalendarHeight
+                    ? availableHeight
+                    : maxCalendarHeight)
+              : minCalendarHeight;
+
+          return Container(
+            width: availableWidth,
+            height: calendarHeight,
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+              ),
+            ),
+            child: SfCalendar(
+              controller: _controller,
+              view: widget.view,
+              dataSource: ConstructionDataSource(
+                tasks: widget.tasks,
+                events: widget.events,
+              ),
+              monthViewSettings: MonthViewSettings(
+                appointmentDisplayMode: MonthAppointmentDisplayMode.appointment,
+                showAgenda: widget.view == CalendarView.month,
+                agendaItemHeight: 45,
+                agendaViewHeight: widget.view == CalendarView.month
+                    ? (calendarHeight * 0.25).clamp(80, 150)
+                    : 0,
+                agendaStyle: AgendaStyle(
+                  backgroundColor: Theme.of(context).colorScheme.surface,
+                  appointmentTextStyle: Theme.of(context).textTheme.bodyMedium,
+                  dayTextStyle: Theme.of(context).textTheme.titleMedium
+                      ?.copyWith(fontWeight: FontWeight.bold),
+                  dateTextStyle: Theme.of(context).textTheme.headlineMedium
+                      ?.copyWith(color: Theme.of(context).colorScheme.primary),
+                ),
+                monthCellStyle: MonthCellStyle(
+                  backgroundColor: Theme.of(context).colorScheme.surface,
+                  todayBackgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.primaryContainer,
+                  leadingDatesBackgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainerHighest,
+                  trailingDatesBackgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainerHighest,
+                  textStyle: Theme.of(context).textTheme.bodyMedium,
+                  todayTextStyle: Theme.of(context).textTheme.bodyMedium
+                      ?.copyWith(
+                        color: Theme.of(context).colorScheme.onPrimaryContainer,
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+              ),
+              timeSlotViewSettings: const TimeSlotViewSettings(
+                startHour: 6,
+                endHour: 22,
+                timeInterval: Duration(minutes: 30),
+                timeIntervalHeight: 60,
+              ),
+              scheduleViewSettings: const ScheduleViewSettings(
+                appointmentItemHeight: 50,
+                hideEmptyScheduleWeek: true,
+              ),
+              appointmentBuilder: _buildAppointment,
+              onTap: _onCalendarTapped,
+              todayHighlightColor: Theme.of(context).colorScheme.primary,
+              backgroundColor: Theme.of(context).colorScheme.surface,
+              cellBorderColor: Theme.of(
+                context,
+              ).colorScheme.outline.withOpacity(0.1),
+              selectionDecoration: BoxDecoration(
+                color: Colors.transparent,
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.primary,
+                  width: 2,
+                ),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              headerStyle: CalendarHeaderStyle(
+                textAlign: TextAlign.center,
+                backgroundColor: Theme.of(context).colorScheme.surface,
+                textStyle: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -136,10 +183,7 @@ class _ConstructionCalendarWidgetState
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: priorityColor,
-          width: task.priority == TaskPriority.critical ? 3 : 2,
-        ),
+        border: Border.all(color: priorityColor, width: 2),
         boxShadow: [
           BoxShadow(
             color: statusColor.withOpacity(0.3),
@@ -148,98 +192,85 @@ class _ConstructionCalendarWidgetState
           ),
         ],
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header with status indicator
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(
-              color: priorityColor.withOpacity(0.2),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(6),
-                topRight: Radius.circular(6),
-              ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Padding(
+        padding: const EdgeInsets.all(6),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Task title with progress
+            Row(
               children: [
                 Expanded(
                   child: Text(
                     task.title,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                if (task.isOverdue)
-                  const Icon(Icons.warning, color: Colors.white, size: 14),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    '${(task.progress * 100).toInt()}%',
+                    style: const TextStyle(
+                      fontSize: 10,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
               ],
             ),
-          ),
 
-          // Progress bar
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (task.progress > 0) ...[
-                    Container(
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.3),
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                      child: FractionallySizedBox(
-                        alignment: Alignment.centerLeft,
-                        widthFactor: task.progress,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                  ],
+            const SizedBox(height: 2),
 
-                  // Progress percentage and status
-                  Text(
-                    '${(task.progress * 100).toInt()}% • ${task.status.displayName}',
-                    style: const TextStyle(
-                      color: Colors.white,
+            // Progress bar
+            LinearProgressIndicator(
+              value: task.progress,
+              backgroundColor: Colors.white.withOpacity(0.3),
+              valueColor: AlwaysStoppedAnimation<Color>(
+                Colors.white.withOpacity(0.8),
+              ),
+            ),
+
+            const SizedBox(height: 2),
+
+            // Team and priority
+            Row(
+              children: [
+                Icon(
+                  Icons.group,
+                  size: 12,
+                  color: Colors.white.withOpacity(0.8),
+                ),
+                const SizedBox(width: 2),
+                Expanded(
+                  child: Text(
+                    task.assignedTeam ?? 'Unassigned',
+                    style: TextStyle(
                       fontSize: 10,
-                      fontWeight: FontWeight.w500,
+                      color: Colors.white.withOpacity(0.8),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-
-                  if (task.assignedTeam != null) ...[
-                    const SizedBox(height: 1),
-                    Text(
-                      task.assignedTeam!,
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.8),
-                        fontSize: 9,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ],
-              ),
+                ),
+                _buildPriorityIcon(task.priority),
+              ],
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -249,59 +280,75 @@ class _ConstructionCalendarWidgetState
     WorkEvent event,
     CalendarAppointmentDetails details,
   ) {
-    final eventColor = _getEventTypeColor(event.eventType);
+    final eventColor = _getWorkEventTypeColor(event.eventType);
 
     return Container(
       margin: const EdgeInsets.all(2),
       decoration: BoxDecoration(
         color: eventColor,
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: eventColor.withOpacity(0.8), width: 1),
+        border: Border.all(color: eventColor.withOpacity(0.7), width: 1),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.start,
+        padding: const EdgeInsets.all(4),
+        child: Row(
           children: [
-            Row(
-              children: [
-                Icon(
-                  _getEventTypeIcon(event.eventType),
-                  color: Colors.white,
-                  size: 12,
-                ),
-                const SizedBox(width: 4),
-                Expanded(
-                  child: Text(
-                    event.title,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
+            Container(
+              width: 12,
+              height: 12,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.8),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Icon(
+                _getWorkEventTypeIcon(event.eventType),
+                size: 8,
+                color: eventColor,
+              ),
             ),
-            if (event.location != null) ...[
-              const SizedBox(height: 2),
-              Text(
-                event.location!,
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.8),
-                  fontSize: 9,
+            const SizedBox(width: 4),
+            Expanded(
+              child: Text(
+                event.title,
+                style: const TextStyle(
+                  fontSize: 10,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w500,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-            ],
+            ),
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildPriorityIcon(TaskPriority priority) {
+    IconData iconData;
+    Color color;
+
+    switch (priority) {
+      case TaskPriority.critical:
+        iconData = Icons.priority_high;
+        color = Colors.red.shade300;
+        break;
+      case TaskPriority.high:
+        iconData = Icons.keyboard_arrow_up;
+        color = Colors.orange.shade300;
+        break;
+      case TaskPriority.medium:
+        iconData = Icons.remove;
+        color = Colors.yellow.shade300;
+        break;
+      case TaskPriority.low:
+        iconData = Icons.keyboard_arrow_down;
+        color = Colors.green.shade300;
+        break;
+    }
+
+    return Icon(iconData, size: 12, color: color);
   }
 
   void _onCalendarTapped(CalendarTapDetails details) {
@@ -310,65 +357,64 @@ class _ConstructionCalendarWidgetState
 
       if (appointment is ConstructionTask) {
         widget.onTaskTapped?.call(appointment);
-      } else if (appointment is WorkEvent) {
-        // Handle work event tap if needed
       }
     } else if (details.targetElement == CalendarElement.calendarCell) {
       widget.onTaskCreated?.call(details.date!);
     }
   }
 
-  Color _parseColor(String hexColor) {
+  Color _parseColor(String colorString) {
     try {
-      return Color(int.parse(hexColor.replaceAll('#', '0xFF')));
+      final hexColor = colorString.replaceAll('#', '');
+      return Color(int.parse('FF$hexColor', radix: 16));
     } catch (e) {
-      return Colors.blue; // Fallback color
+      return Theme.of(context).colorScheme.primary;
     }
   }
 
-  Color _getEventTypeColor(WorkEventType type) {
-    switch (type) {
+  Color _getWorkEventTypeColor(WorkEventType eventType) {
+    switch (eventType) {
       case WorkEventType.meeting:
-        return Colors.blue;
-      case WorkEventType.task:
-        return Colors.green;
-      case WorkEventType.reminder:
-        return Colors.orange;
+        return Colors.blue.shade600;
       case WorkEventType.appointment:
-        return Colors.purple;
-      case WorkEventType.break_:
-        return Colors.red;
-      case WorkEventType.travel:
-        return Colors.brown;
+        return Colors.orange.shade600;
+      case WorkEventType.task:
+        return Colors.green.shade600;
+      case WorkEventType.reminder:
+        return Colors.purple.shade600;
       case WorkEventType.training:
-        return Colors.indigo;
+        return Colors.teal.shade600;
       case WorkEventType.conference:
-        return Colors.pink;
+        return Colors.red.shade600;
+      case WorkEventType.break_:
+        return Colors.cyan.shade600;
+      case WorkEventType.travel:
+        return Colors.brown.shade600;
       case WorkEventType.other:
-        return Colors.teal;
+        return Colors.grey.shade600;
     }
   }
 
-  IconData _getEventTypeIcon(WorkEventType type) {
-    switch (type) {
+  IconData _getWorkEventTypeIcon(WorkEventType eventType) {
+    switch (eventType) {
       case WorkEventType.meeting:
-        return Icons.people;
+        return Icons.group;
+      case WorkEventType.appointment:
+        return Icons.calendar_today;
       case WorkEventType.task:
         return Icons.task;
       case WorkEventType.reminder:
         return Icons.notifications;
-      case WorkEventType.appointment:
-        return Icons.event;
-      case WorkEventType.break_:
-        return Icons.coffee;
-      case WorkEventType.travel:
-        return Icons.directions_car;
       case WorkEventType.training:
         return Icons.school;
       case WorkEventType.conference:
         return Icons.video_call;
+      case WorkEventType.break_:
+        return Icons.coffee;
+      case WorkEventType.travel:
+        return Icons.directions_car;
       case WorkEventType.other:
-        return Icons.circle;
+        return Icons.event;
     }
   }
 }
@@ -387,57 +433,53 @@ class ConstructionDataSource extends CalendarDataSource {
 
   Appointment _taskToAppointment(ConstructionTask task) {
     return Appointment(
-      id: task.id,
-      subject: task.title,
       startTime: task.startDate,
-      endTime: task.endDate.add(const Duration(hours: 23, minutes: 59)),
-      color: _parseColor(task.statusColor),
+      endTime: task.endDate,
+      subject: task.title,
       notes: task.description,
-      isAllDay: task.durationInDays > 1,
+      color: _parseColor(task.statusColor),
     );
   }
 
   Appointment _eventToAppointment(WorkEvent event) {
     return Appointment(
-      id: event.id,
-      subject: event.title,
       startTime: event.startTime,
       endTime: event.endTime,
-      color: _getEventTypeColor(event.eventType),
+      subject: event.title,
       notes: event.description,
-      location: event.location,
-      isAllDay: event.isAllDay,
+      color: _getWorkEventTypeColor(event.eventType),
     );
   }
 
-  Color _parseColor(String hexColor) {
+  Color _parseColor(String colorString) {
     try {
-      return Color(int.parse(hexColor.replaceAll('#', '0xFF')));
+      final hexColor = colorString.replaceAll('#', '');
+      return Color(int.parse('FF$hexColor', radix: 16));
     } catch (e) {
       return Colors.blue;
     }
   }
 
-  Color _getEventTypeColor(WorkEventType type) {
-    switch (type) {
+  Color _getWorkEventTypeColor(WorkEventType eventType) {
+    switch (eventType) {
       case WorkEventType.meeting:
-        return Colors.blue;
-      case WorkEventType.task:
-        return Colors.green;
-      case WorkEventType.reminder:
-        return Colors.orange;
+        return Colors.blue.shade600;
       case WorkEventType.appointment:
-        return Colors.purple;
-      case WorkEventType.break_:
-        return Colors.red;
-      case WorkEventType.travel:
-        return Colors.brown;
+        return Colors.orange.shade600;
+      case WorkEventType.task:
+        return Colors.green.shade600;
+      case WorkEventType.reminder:
+        return Colors.purple.shade600;
       case WorkEventType.training:
-        return Colors.indigo;
+        return Colors.teal.shade600;
       case WorkEventType.conference:
-        return Colors.pink;
+        return Colors.red.shade600;
+      case WorkEventType.break_:
+        return Colors.cyan.shade600;
+      case WorkEventType.travel:
+        return Colors.brown.shade600;
       case WorkEventType.other:
-        return Colors.teal;
+        return Colors.grey.shade600;
     }
   }
 }

@@ -936,7 +936,7 @@ Here are practical cURL examples for testing all notification endpoints:
 ```bash
 # Set your JWT token (replace with actual token)
 export JWT_TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-export API_BASE="http://localhost:5001"
+export API_BASE="http://localhost:8080"
 ```
 
 #### Get Notifications
@@ -1076,7 +1076,7 @@ curl -X POST "$API_BASE/api/v1/notifications/announcement" \
 #!/bin/bash
 # notification_test.sh - Comprehensive notification testing
 
-API_BASE="http://localhost:5001"
+API_BASE="http://localhost:8080"
 JWT_TOKEN="your-jwt-token-here"
 
 echo "🧪 Starting Notification API Tests..."

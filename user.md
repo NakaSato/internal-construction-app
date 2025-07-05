@@ -1,9 +1,9 @@
 Test Accounts Created:
 Role	Username	Password	Email	Database Status
-👨‍💼 Admin	test_admin	Admin123!	test_admin@example.com	✅ Active
-👩‍💼 Manager	test_manager	Manager123!	test_manager@example.com	✅ Active
-👨‍🔧 User	test_user	User123!	test_user@example.com	✅ Active
-👁️ Viewer	test_viewer	Viewer123!	test_viewer@example.com	✅ Active
+Admin	test_admin	Admin123!	test_admin@example.com	✅ Active
+Manager	test_manager	Manager123!	test_manager@example.com	✅ Active
+User	test_user	User123!	test_user@example.com	✅ Active
+Viewer	test_viewer	Viewer123!	test_viewer@example.com	✅ Active
 
 
 ## ✅ Account Creation Status

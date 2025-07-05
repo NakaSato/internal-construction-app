@@ -75,173 +75,236 @@ class _StyledCalendarWidgetState extends State<StyledCalendarWidget> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: colorScheme.shadow.withOpacity(0.08),
-            blurRadius: 12,
-            spreadRadius: 2,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Card(
-        elevation: 0,
-        shadowColor: Colors.transparent,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: BorderSide(color: colorScheme.outlineVariant, width: 1),
-        ),
-        clipBehavior: Clip.antiAlias,
-        margin: EdgeInsets.zero,
-        child: SfCalendar(
-          controller: _controller,
-          view: widget.view,
-          showNavigationArrow: widget.showNavigationArrows,
-          showDatePickerButton: widget.showDatePickerButton,
-          dataSource: _getCalendarDataSource(),
-          onTap: _onCalendarTapped,
-          todayHighlightColor: colorScheme.primary,
-          cellBorderColor: colorScheme.outlineVariant.withOpacity(0.2),
-          backgroundColor: colorScheme.surface,
-          appointmentBuilder: _buildAppointment,
+    return SafeArea(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // Calculate safe dimensions with fallbacks
+          final availableHeight = constraints.maxHeight > 0
+              ? constraints.maxHeight
+              : 400.0;
+          final availableWidth = constraints.maxWidth > 0
+              ? constraints.maxWidth
+              : MediaQuery.of(context).size.width - 32;
 
-          // Enhanced selection decoration with subtle gradient and glow effect
-          selectionDecoration: BoxDecoration(
-            color: colorScheme.primary.withOpacity(0.05),
-            border: Border.all(color: colorScheme.primary, width: 2),
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: colorScheme.primary.withOpacity(0.15),
-                blurRadius: 4,
-                spreadRadius: 1,
-              ),
-            ],
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                colorScheme.primaryContainer.withOpacity(0.1),
-                colorScheme.primary.withOpacity(0.08),
+          final minCalendarHeight = 300.0;
+          final maxCalendarHeight = availableHeight * 0.95;
+
+          final calendarHeight = availableHeight > minCalendarHeight
+              ? (availableHeight < maxCalendarHeight
+                    ? availableHeight
+                    : maxCalendarHeight)
+              : minCalendarHeight;
+
+          return Container(
+            width: availableWidth,
+            height: calendarHeight,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: colorScheme.shadow.withOpacity(0.08),
+                  blurRadius: 12,
+                  spreadRadius: 2,
+                  offset: const Offset(0, 4),
+                ),
               ],
             ),
-          ),
-
-          // Modern header styling with gradient and improved typography
-          headerStyle: CalendarHeaderStyle(
-            textAlign: TextAlign.center,
-            backgroundColor: colorScheme.surfaceContainerHighest,
-            textStyle: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: colorScheme.onSurfaceVariant,
-              letterSpacing: 0.3,
-            ),
-          ),
-
-          // Enhanced view header styling with subtle gradient and improved typography
-          viewHeaderStyle: ViewHeaderStyle(
-            backgroundColor: colorScheme.surfaceContainerHighest.withOpacity(
-              0.7,
-            ),
-            dayTextStyle: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.5,
-            ),
-            dateTextStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-
-          // Month view settings with enhanced styling
-          monthViewSettings: MonthViewSettings(
-            appointmentDisplayMode: MonthAppointmentDisplayMode.appointment,
-            showAgenda: true,
-            dayFormat: 'EEE',
-            agendaStyle: AgendaStyle(
-              backgroundColor: colorScheme.surface,
-              appointmentTextStyle: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: colorScheme.onSurface),
-              dayTextStyle: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: colorScheme.primary,
+            child: Card(
+              elevation: 0,
+              shadowColor: Colors.transparent,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+                side: BorderSide(color: colorScheme.outlineVariant, width: 1),
               ),
-              dateTextStyle: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(color: colorScheme.secondary),
-            ),
-            monthCellStyle: MonthCellStyle(
-              backgroundColor: colorScheme.surface,
-              todayBackgroundColor: colorScheme.primaryContainer.withOpacity(
-                0.3,
-              ),
-              leadingDatesBackgroundColor: colorScheme.surfaceContainerHighest
-                  .withOpacity(0.4),
-              trailingDatesBackgroundColor: colorScheme.surfaceContainerHighest
-                  .withOpacity(0.4),
-              textStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurface,
-                fontWeight: FontWeight.w500,
-              ),
-              leadingDatesTextStyle: Theme.of(context).textTheme.bodySmall
-                  ?.copyWith(
-                    color: colorScheme.onSurfaceVariant.withOpacity(0.6),
-                    fontSize: 11,
+              clipBehavior: Clip.antiAlias,
+              margin: EdgeInsets.zero,
+              child: SfCalendar(
+                controller: _controller,
+                view: widget.view,
+                showNavigationArrow: widget.showNavigationArrows,
+                showDatePickerButton: widget.showDatePickerButton,
+                dataSource: _getCalendarDataSource(),
+                onTap: _onCalendarTapped,
+                todayHighlightColor: colorScheme.primary,
+                cellBorderColor: colorScheme.outlineVariant.withOpacity(0.2),
+                backgroundColor: colorScheme.surface,
+                appointmentBuilder: _buildAppointment,
+
+                // Enhanced selection decoration with subtle gradient and glow effect
+                selectionDecoration: BoxDecoration(
+                  color: colorScheme.primary.withOpacity(0.05),
+                  border: Border.all(color: colorScheme.primary, width: 2),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: colorScheme.primary.withOpacity(0.15),
+                      blurRadius: 4,
+                      spreadRadius: 1,
+                    ),
+                  ],
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      colorScheme.primaryContainer.withOpacity(0.1),
+                      colorScheme.primary.withOpacity(0.08),
+                    ],
                   ),
-              trailingDatesTextStyle: Theme.of(context).textTheme.bodySmall
-                  ?.copyWith(
-                    color: colorScheme.onSurfaceVariant.withOpacity(0.6),
-                    fontSize: 11,
+                ),
+
+                // Modern header styling with gradient and improved typography
+                headerStyle: CalendarHeaderStyle(
+                  textAlign: TextAlign.center,
+                  backgroundColor: colorScheme.surfaceContainerHighest,
+                  textStyle: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.onSurfaceVariant,
+                    letterSpacing: 0.3,
                   ),
-              todayTextStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: colorScheme.primary,
-                fontWeight: FontWeight.bold,
+                ),
+
+                // Enhanced view header styling with subtle gradient and improved typography
+                viewHeaderStyle: ViewHeaderStyle(
+                  backgroundColor: colorScheme.surfaceContainerHighest
+                      .withOpacity(0.7),
+                  dayTextStyle: Theme.of(context).textTheme.labelMedium
+                      ?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.5,
+                      ),
+                  dateTextStyle: Theme.of(context).textTheme.bodySmall
+                      ?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w500,
+                      ),
+                ),
+
+                // Month view settings with enhanced styling
+                monthViewSettings: MonthViewSettings(
+                  appointmentDisplayMode:
+                      MonthAppointmentDisplayMode.appointment,
+                  showAgenda: widget.view == CalendarView.month,
+                  dayFormat: 'EEE',
+                  agendaItemHeight: 50,
+                  agendaViewHeight: widget.view == CalendarView.month
+                      ? (calendarHeight * 0.25).clamp(100, 200)
+                      : 0,
+                  agendaStyle: AgendaStyle(
+                    backgroundColor: colorScheme.surface,
+                    appointmentTextStyle: Theme.of(context).textTheme.bodyMedium
+                        ?.copyWith(color: colorScheme.onSurface),
+                    dayTextStyle: Theme.of(context).textTheme.titleMedium
+                        ?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.primary,
+                        ),
+                    dateTextStyle: Theme.of(context).textTheme.titleMedium
+                        ?.copyWith(color: colorScheme.secondary),
+                  ),
+                  monthCellStyle: MonthCellStyle(
+                    backgroundColor: colorScheme.surface,
+                    todayBackgroundColor: colorScheme.primaryContainer
+                        .withOpacity(0.3),
+                    leadingDatesBackgroundColor: colorScheme
+                        .surfaceContainerHighest
+                        .withOpacity(0.4),
+                    trailingDatesBackgroundColor: colorScheme
+                        .surfaceContainerHighest
+                        .withOpacity(0.4),
+                    textStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurface,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    leadingDatesTextStyle: Theme.of(context).textTheme.bodySmall
+                        ?.copyWith(
+                          color: colorScheme.onSurfaceVariant.withOpacity(0.6),
+                          fontSize: 11,
+                        ),
+                    trailingDatesTextStyle: Theme.of(context)
+                        .textTheme
+                        .bodySmall
+                        ?.copyWith(
+                          color: colorScheme.onSurfaceVariant.withOpacity(0.6),
+                          fontSize: 11,
+                        ),
+                    todayTextStyle: Theme.of(context).textTheme.bodyMedium
+                        ?.copyWith(
+                          color: colorScheme.onPrimaryContainer,
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                ),
+
+                // Enhanced time slot view settings
+                timeSlotViewSettings: TimeSlotViewSettings(
+                  startHour: 6,
+                  endHour: 22,
+                  timeInterval: const Duration(minutes: 30),
+                  timeIntervalHeight: 60,
+                  timeFormat: 'h:mm a',
+                  timeTextStyle: Theme.of(context).textTheme.bodySmall
+                      ?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w500,
+                      ),
+                ),
+
+                // Schedule view settings
+                scheduleViewSettings: ScheduleViewSettings(
+                  appointmentItemHeight: 60,
+                  hideEmptyScheduleWeek: true,
+                  appointmentTextStyle: Theme.of(context).textTheme.bodyMedium
+                      ?.copyWith(color: colorScheme.onSurface),
+                  dayHeaderSettings: DayHeaderSettings(
+                    dayFormat: 'EEEE',
+                    width: 70,
+                    dayTextStyle: Theme.of(context).textTheme.titleSmall
+                        ?.copyWith(
+                          color: colorScheme.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                    dateTextStyle: Theme.of(context).textTheme.headlineSmall
+                        ?.copyWith(
+                          color: colorScheme.onSurface,
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  weekHeaderSettings: WeekHeaderSettings(
+                    startDateFormat: 'dd MMM',
+                    endDateFormat: 'dd MMM',
+                    height: 50,
+                    textAlign: TextAlign.center,
+                    backgroundColor: colorScheme.surfaceContainerHighest,
+                    weekTextStyle: Theme.of(context).textTheme.titleMedium
+                        ?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                ),
               ),
             ),
-            agendaViewHeight: 150,
-            navigationDirection: MonthNavigationDirection.horizontal,
-          ), // Enhanced time slot view settings with modern styling
-          timeSlotViewSettings: TimeSlotViewSettings(
-            startHour: 6,
-            endHour: 22,
-            timeInterval: const Duration(minutes: 30),
-            timeIntervalHeight: 60,
-            timeFormat: 'HH:mm',
-            dateFormat: 'd',
-            dayFormat: 'EEE',
-            timeTextStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: colorScheme.onSurface,
-              fontWeight: FontWeight.w500,
-              letterSpacing: 0.3,
-            ),
-            timeRulerSize: 64,
-            nonWorkingDays: const <int>[DateTime.saturday, DateTime.sunday],
-          ),
-        ),
+          );
+        },
       ),
     );
   }
 
   CalendarDataSource _getCalendarDataSource() {
-    return ConstructionDataSource(tasks: widget.tasks, events: widget.events);
+    return StyledCalendarDataSource(tasks: widget.tasks, events: widget.events);
   }
 
   void _onCalendarTapped(CalendarTapDetails details) {
     if (details.targetElement == CalendarElement.appointment) {
       final appointment = details.appointments?.first;
-      if (appointment is ConstructionTask && widget.onTaskTapped != null) {
-        widget.onTaskTapped!(appointment);
-      } else if (appointment is WorkEvent && widget.onEventTapped != null) {
-        widget.onEventTapped!(appointment);
+      if (appointment is ConstructionTask) {
+        widget.onTaskTapped?.call(appointment);
+      } else if (appointment is WorkEvent) {
+        widget.onEventTapped?.call(appointment);
       }
-    } else if (details.targetElement == CalendarElement.calendarCell &&
-        widget.onTaskCreated != null) {
-      widget.onTaskCreated!(details.date ?? DateTime.now());
+    } else if (details.targetElement == CalendarElement.calendarCell) {
+      widget.onTaskCreated?.call(details.date!);
     }
   }
 
@@ -250,11 +313,12 @@ class _StyledCalendarWidgetState extends State<StyledCalendarWidget> {
     CalendarAppointmentDetails details,
   ) {
     final appointment = details.appointments.first;
+    final colorScheme = Theme.of(context).colorScheme;
 
     if (appointment is ConstructionTask) {
-      return _buildTaskAppointment(context, appointment, details);
+      return _buildTaskAppointment(context, appointment, colorScheme);
     } else if (appointment is WorkEvent) {
-      return _buildEventAppointment(context, appointment, details);
+      return _buildEventAppointment(context, appointment, colorScheme);
     }
 
     return Container();
@@ -263,225 +327,265 @@ class _StyledCalendarWidgetState extends State<StyledCalendarWidget> {
   Widget _buildTaskAppointment(
     BuildContext context,
     ConstructionTask task,
-    CalendarAppointmentDetails details,
+    ColorScheme colorScheme,
   ) {
-    final statusColor = _parseColor(task.statusColor);
-    final priorityColor = _parseColor(task.priorityColor);
-    final isCompact = details.bounds.width < 100 || details.bounds.height < 30;
+    final statusColor = _getTaskStatusColor(task.status);
+    final priorityColor = _getTaskPriorityColor(task.priority);
 
     return Container(
       margin: const EdgeInsets.all(2),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            statusColor.withOpacity(0.85),
-            statusColor,
-            statusColor.withOpacity(0.92),
-          ],
+          colors: [statusColor.withOpacity(0.9), statusColor],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: priorityColor,
-          width: task.priority == TaskPriority.critical ? 3 : 2,
-        ),
+        border: Border.all(color: priorityColor, width: 2),
         boxShadow: [
           BoxShadow(
-            color: statusColor.withOpacity(0.4),
+            color: statusColor.withOpacity(0.3),
             blurRadius: 6,
-            offset: const Offset(0, 2),
-            spreadRadius: 1,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(7),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          child: isCompact
-              ? _buildCompactTaskDisplay(context, task)
-              : _buildDetailedTaskDisplay(context, task),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCompactTaskDisplay(BuildContext context, ConstructionTask task) {
-    return Center(
-      child: Icon(_getTaskIcon(task.status), color: Colors.white, size: 16),
-    );
-  }
-
-  Widget _buildDetailedTaskDisplay(
-    BuildContext context,
-    ConstructionTask task,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(_getTaskIcon(task.status), color: Colors.white, size: 14),
-            const SizedBox(width: 4),
-            Expanded(
-              child: Text(
-                task.title,
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
+            // Task title with progress indicator
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    task.title,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-                overflow: TextOverflow.ellipsis,
-              ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.25),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '${(task.progress * 100).toInt()}%',
+                    style: const TextStyle(
+                      fontSize: 10,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            // Team and priority
+            Row(
+              children: [
+                Icon(
+                  Icons.group,
+                  size: 12,
+                  color: Colors.white.withOpacity(0.8),
+                ),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    task.assignedTeam ?? 'Unassigned',
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: Colors.white.withOpacity(0.8),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                _buildPriorityIcon(task.priority),
+              ],
             ),
           ],
         ),
-        const Spacer(),
-        if (task.assignedTeam != null && task.assignedTeam!.isNotEmpty)
-          Text(
-            'Assigned: ${task.assignedTeam}',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Colors.white.withOpacity(0.9),
-              fontSize: 10,
-            ),
-            overflow: TextOverflow.ellipsis,
-          ),
-      ],
+      ),
     );
   }
 
   Widget _buildEventAppointment(
     BuildContext context,
     WorkEvent event,
-    CalendarAppointmentDetails details,
+    ColorScheme colorScheme,
   ) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final eventColor = event.color != null
-        ? _parseColor(event.color!)
-        : colorScheme.tertiary;
-    final isCompact = details.bounds.width < 100 || details.bounds.height < 30;
+    final eventColor = _getWorkEventTypeColor(event.eventType);
 
     return Container(
       margin: const EdgeInsets.all(2),
       decoration: BoxDecoration(
         gradient: LinearGradient(
+          colors: [eventColor.withOpacity(0.8), eventColor],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [eventColor.withOpacity(0.15), eventColor.withOpacity(0.25)],
         ),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: eventColor, width: 1.5),
+        borderRadius: BorderRadius.circular(10),
         boxShadow: [
           BoxShadow(
-            color: eventColor.withOpacity(0.15),
+            color: eventColor.withOpacity(0.3),
             blurRadius: 4,
-            spreadRadius: 0.5,
-            offset: const Offset(0, 1),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(7),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          child: isCompact
-              ? Center(child: Icon(Icons.event, color: eventColor, size: 14))
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(Icons.event, color: eventColor, size: 14),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                            event.title,
-                            style: Theme.of(context).textTheme.labelMedium
-                                ?.copyWith(
-                                  color: colorScheme.onSurface,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const Spacer(),
-                    if (event.description != null &&
-                        event.description!.isNotEmpty)
-                      Text(
-                        event.description!,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                          fontSize: 10,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                      ),
-                  ],
+      child: Padding(
+        padding: const EdgeInsets.all(6),
+        child: Row(
+          children: [
+            Container(
+              width: 14,
+              height: 14,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.9),
+                borderRadius: BorderRadius.circular(7),
+              ),
+              child: Icon(
+                _getWorkEventTypeIcon(event.eventType),
+                size: 10,
+                color: eventColor,
+              ),
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                event.title,
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
                 ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  IconData _getTaskIcon(TaskStatus status) {
+  Widget _buildPriorityIcon(TaskPriority priority) {
+    IconData iconData;
+    Color color;
+
+    switch (priority) {
+      case TaskPriority.critical:
+        iconData = Icons.priority_high;
+        color = Colors.red.shade200;
+        break;
+      case TaskPriority.high:
+        iconData = Icons.keyboard_arrow_up;
+        color = Colors.orange.shade200;
+        break;
+      case TaskPriority.medium:
+        iconData = Icons.remove;
+        color = Colors.yellow.shade200;
+        break;
+      case TaskPriority.low:
+        iconData = Icons.keyboard_arrow_down;
+        color = Colors.green.shade200;
+        break;
+    }
+
+    return Icon(iconData, size: 12, color: color);
+  }
+
+  Color _getTaskStatusColor(TaskStatus status) {
     switch (status) {
       case TaskStatus.notStarted:
-        return Icons.schedule;
+        return Colors.grey.shade600;
       case TaskStatus.inProgress:
-        return Icons.construction;
+        return Colors.blue.shade600;
       case TaskStatus.completed:
-        return Icons.check_circle;
-      case TaskStatus.delayed:
-        return Icons.warning;
+        return Colors.green.shade600;
       case TaskStatus.onHold:
-        return Icons.pause_circle;
+        return Colors.orange.shade600;
       case TaskStatus.cancelled:
-        return Icons.cancel;
+        return Colors.red.shade600;
+      case TaskStatus.delayed:
+        return Colors.amber.shade600;
     }
   }
 
-  Color _parseColor(String colorString) {
-    try {
-      if (colorString.startsWith('#')) {
-        String hexColor = colorString.replaceAll('#', '');
-        if (hexColor.length == 6) {
-          hexColor = 'FF$hexColor';
-        }
-        return Color(int.parse('0x$hexColor'));
-      } else if (colorString.startsWith('0x')) {
-        return Color(int.parse(colorString));
-      }
-    } catch (e) {
-      // Return a default color if parsing fails
+  Color _getTaskPriorityColor(TaskPriority priority) {
+    switch (priority) {
+      case TaskPriority.low:
+        return Colors.green.shade400;
+      case TaskPriority.medium:
+        return Colors.yellow.shade500;
+      case TaskPriority.high:
+        return Colors.orange.shade500;
+      case TaskPriority.critical:
+        return Colors.red.shade500;
     }
+  }
 
-    // Default color by name
-    switch (colorString.toLowerCase()) {
-      case 'red':
-        return Colors.red;
-      case 'green':
-        return Colors.green;
-      case 'blue':
-        return Colors.blue;
-      case 'orange':
-        return Colors.orange;
-      case 'purple':
-        return Colors.purple;
-      case 'amber':
-        return Colors.amber;
-      case 'teal':
-        return Colors.teal;
-      default:
-        return Colors.blue;
+  Color _getWorkEventTypeColor(WorkEventType eventType) {
+    switch (eventType) {
+      case WorkEventType.meeting:
+        return Colors.blue.shade600;
+      case WorkEventType.appointment:
+        return Colors.orange.shade600;
+      case WorkEventType.task:
+        return Colors.green.shade600;
+      case WorkEventType.reminder:
+        return Colors.purple.shade600;
+      case WorkEventType.training:
+        return Colors.teal.shade600;
+      case WorkEventType.conference:
+        return Colors.red.shade600;
+      case WorkEventType.break_:
+        return Colors.cyan.shade600;
+      case WorkEventType.travel:
+        return Colors.brown.shade600;
+      case WorkEventType.other:
+        return Colors.grey.shade600;
+    }
+  }
+
+  IconData _getWorkEventTypeIcon(WorkEventType eventType) {
+    switch (eventType) {
+      case WorkEventType.meeting:
+        return Icons.group;
+      case WorkEventType.appointment:
+        return Icons.calendar_today;
+      case WorkEventType.task:
+        return Icons.task;
+      case WorkEventType.reminder:
+        return Icons.notifications;
+      case WorkEventType.training:
+        return Icons.school;
+      case WorkEventType.conference:
+        return Icons.video_call;
+      case WorkEventType.break_:
+        return Icons.coffee;
+      case WorkEventType.travel:
+        return Icons.directions_car;
+      case WorkEventType.other:
+        return Icons.event;
     }
   }
 }
 
-/// Custom calendar data source for construction tasks and work events
-class ConstructionDataSource extends CalendarDataSource {
-  ConstructionDataSource({
+/// Custom data source for the styled calendar widget
+class StyledCalendarDataSource extends CalendarDataSource {
+  StyledCalendarDataSource({
     required List<ConstructionTask> tasks,
     required List<WorkEvent> events,
   }) {
@@ -507,7 +611,7 @@ class ConstructionDataSource extends CalendarDataSource {
     } else if (appointment is WorkEvent) {
       return appointment.endTime;
     }
-    return DateTime.now();
+    return DateTime.now().add(const Duration(hours: 1));
   }
 
   @override
@@ -525,60 +629,61 @@ class ConstructionDataSource extends CalendarDataSource {
   Color getColor(int index) {
     final appointment = appointments![index];
     if (appointment is ConstructionTask) {
-      return _parseColor(appointment.statusColor);
+      return _getTaskStatusColor(appointment.status);
     } else if (appointment is WorkEvent) {
-      return appointment.color != null
-          ? _parseColor(appointment.color!)
-          : Colors.blue;
+      return _getWorkEventTypeColor(appointment.eventType);
     }
     return Colors.blue;
   }
 
   @override
-  bool isAllDay(int index) {
+  String? getNotes(int index) {
     final appointment = appointments![index];
     if (appointment is ConstructionTask) {
-      // Construction tasks are typically all-day events
-      return true;
+      return appointment.description;
     } else if (appointment is WorkEvent) {
-      return appointment.isAllDay;
+      return appointment.description;
     }
-    return false;
+    return null;
   }
 
-  Color _parseColor(String colorString) {
-    try {
-      if (colorString.startsWith('#')) {
-        String hexColor = colorString.replaceAll('#', '');
-        if (hexColor.length == 6) {
-          hexColor = 'FF$hexColor';
-        }
-        return Color(int.parse('0x$hexColor'));
-      } else if (colorString.startsWith('0x')) {
-        return Color(int.parse(colorString));
-      }
-    } catch (e) {
-      // Return a default color if parsing fails
+  Color _getTaskStatusColor(TaskStatus status) {
+    switch (status) {
+      case TaskStatus.notStarted:
+        return Colors.grey.shade600;
+      case TaskStatus.inProgress:
+        return Colors.blue.shade600;
+      case TaskStatus.completed:
+        return Colors.green.shade600;
+      case TaskStatus.delayed:
+        return Colors.red.shade700;
+      case TaskStatus.onHold:
+        return Colors.orange.shade600;
+      case TaskStatus.cancelled:
+        return Colors.red.shade600;
     }
+  }
 
-    // Default color by name
-    switch (colorString.toLowerCase()) {
-      case 'red':
-        return Colors.red;
-      case 'green':
-        return Colors.green;
-      case 'blue':
-        return Colors.blue;
-      case 'orange':
-        return Colors.orange;
-      case 'purple':
-        return Colors.purple;
-      case 'amber':
-        return Colors.amber;
-      case 'teal':
-        return Colors.teal;
-      default:
-        return Colors.blue;
+  Color _getWorkEventTypeColor(WorkEventType eventType) {
+    switch (eventType) {
+      case WorkEventType.meeting:
+        return Colors.blue.shade600;
+      case WorkEventType.appointment:
+        return Colors.orange.shade600;
+      case WorkEventType.task:
+        return Colors.green.shade600;
+      case WorkEventType.reminder:
+        return Colors.purple.shade600;
+      case WorkEventType.training:
+        return Colors.teal.shade600;
+      case WorkEventType.conference:
+        return Colors.red.shade600;
+      case WorkEventType.break_:
+        return Colors.cyan.shade600;
+      case WorkEventType.travel:
+        return Colors.brown.shade600;
+      case WorkEventType.other:
+        return Colors.grey.shade600;
     }
   }
 }

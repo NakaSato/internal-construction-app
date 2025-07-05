@@ -1,0 +1,23 @@
+{
+  "api_base_url": "https://api-icms.gridtokenx.com",
+  "users": {
+    "admin": {
+      "username": "sysadmin",
+      "password": "Admin123!",
+      "email": "sysadmin@gridtokenx.com",
+      "role": "Admin"
+    },
+    "manager": {
+      "username": "projectmanager", 
+      "password": "Manager123!",
+      "email": "manager@gridtokenx.com",
+      "role": "Manager"
+    },
+    "user": {
+      "username": "testuser123",
+      "password": "Password123!",
+      "email": "testuser@example.com", 
+      "role": "User"
+    }
+  }
+}

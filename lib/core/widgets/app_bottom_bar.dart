@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:salomon_bottom_bar/salomon_bottom_bar.dart';
+import '../theme/solar_app_theme.dart';
 
 class CustomBottomBar extends StatelessWidget {
   /// Creates a CustomBottomBar
@@ -33,28 +34,19 @@ class CustomBottomBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Container(
-      margin: margin ?? const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: backgroundColor ?? theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+      margin: margin ?? const EdgeInsets.all(SolarSpacing.sm),
+      decoration: SolarDecorations.createCardDecoration(
+        color: backgroundColor ?? context.colorScheme.surface,
+        elevation: 2,
+        borderRadius: SolarBorderRadius.xl,
       ),
       child: SalomonBottomBar(
         currentIndex: currentIndex,
         onTap: onTap,
-        selectedItemColor: selectedItemColor ?? theme.colorScheme.primary,
-        unselectedItemColor:
-            unselectedItemColor ?? theme.colorScheme.onSurfaceVariant,
-        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        selectedItemColor: selectedItemColor ?? context.colorScheme.primary,
+        unselectedItemColor: unselectedItemColor ?? context.colorScheme.onSurfaceVariant,
+        margin: const EdgeInsets.symmetric(horizontal: SolarSpacing.sm, vertical: SolarSpacing.sm),
         items: [
           /// Dashboard
           SalomonBottomBarItem(

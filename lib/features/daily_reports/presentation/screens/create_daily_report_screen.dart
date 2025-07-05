@@ -339,13 +339,15 @@ class _CreateDailyReportScreenState extends State<CreateDailyReportScreen> {
   Widget _buildProjectDropdown() {
     // In a real app, we'd fetch projects from API
     final projects = [
-      {'id': 'proj1', 'name': 'Solar Installation Alpha'},
-      {'id': 'proj2', 'name': 'Commercial Rooftop Retrofit'},
-      {'id': 'proj3', 'name': 'Residential Solar Array'},
+      {'id': 'proj-001', 'name': 'Solar Installation Alpha'},
+      {'id': 'proj-002', 'name': 'Commercial Rooftop Retrofit'},
+      {'id': 'proj-003', 'name': 'Residential Solar Array'},
     ];
 
     return DropdownButtonFormField<String>(
-      value: _selectedProjectId,
+      value: projects.any((p) => p['id'] == _selectedProjectId)
+          ? _selectedProjectId
+          : null, // Only use the value if it exists in the list
       decoration: InputDecoration(
         labelText: 'Project',
         hintText: 'Select a project',

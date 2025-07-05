@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../../../../core/theme/solar_app_theme.dart';
 
 /// Utility class for formatting values consistently across info components
 class InfoFormatters {
@@ -9,29 +10,13 @@ class InfoFormatters {
   static String formatCurrency(double amount, String currencySymbol) {
     final formatted = amount
         .toStringAsFixed(2)
-        .replaceAllMapped(
-          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-          (match) => '${match[1]},',
-        );
+        .replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (match) => '${match[1]},');
     return '$currencySymbol$formatted';
   }
 
   /// Formats date with optional time
   static String formatDate(DateTime date, {bool includeTime = false}) {
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
     final monthName = months[date.month - 1];
     final day = date.day;
@@ -132,13 +117,7 @@ class InfoFormatters {
 /// - Customizable background color
 /// - Responsive design with proper elevation and borders
 class InfoCard extends StatelessWidget {
-  const InfoCard({
-    super.key,
-    required this.title,
-    required this.children,
-    this.icon,
-    this.backgroundColor,
-  });
+  const InfoCard({super.key, required this.title, required this.children, this.icon, this.backgroundColor});
 
   final String title;
   final List<Widget> children;
@@ -147,32 +126,28 @@ class InfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8),
+      margin: const EdgeInsets.symmetric(vertical: SolarSpacing.sm),
       elevation: 2,
-      color: backgroundColor ?? theme.colorScheme.surface,
+      color: backgroundColor ?? context.colorScheme.surface,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
-        ),
+        borderRadius: BorderRadius.circular(SolarBorderRadius.md),
+        side: BorderSide(color: context.colorScheme.outlineVariant.withValues(alpha: 0.3)),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(SolarSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Card title with optional icon
-            _buildHeader(theme),
+            _buildHeader(context),
 
-            const SizedBox(height: 12),
+            const SizedBox(height: SolarSpacing.md),
 
             // Divider
-            _buildDivider(theme),
+            _buildDivider(context),
 
-            const SizedBox(height: 12),
+            const SizedBox(height: SolarSpacing.md),
 
             // Content
             ...children,
@@ -182,19 +157,19 @@ class InfoCard extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(ThemeData theme) {
+  Widget _buildHeader(BuildContext context) {
     return Row(
       children: [
         if (icon != null) ...[
-          Icon(icon, color: theme.colorScheme.primary, size: 20),
-          const SizedBox(width: 8),
+          Icon(icon, color: context.colorScheme.primary, size: 20),
+          const SizedBox(width: SolarSpacing.sm),
         ],
         Expanded(
           child: Text(
             title,
-            style: theme.textTheme.titleMedium?.copyWith(
+            style: context.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w600,
-              color: theme.colorScheme.primary,
+              color: context.colorScheme.primary,
             ),
           ),
         ),
@@ -202,11 +177,8 @@ class InfoCard extends StatelessWidget {
     );
   }
 
-  Widget _buildDivider(ThemeData theme) {
-    return Container(
-      height: 1,
-      color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
-    );
+  Widget _buildDivider(BuildContext context) {
+    return Container(height: 1, color: context.colorScheme.outlineVariant.withValues(alpha: 0.3));
   }
 }
 
@@ -239,26 +211,21 @@ class InfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final isEmpty = InfoFormatters.isEmptyValue(value);
     final displayValue = InfoFormatters.handleEmptyValue(value);
     final textColor = isEmpty
-        ? theme.colorScheme.onSurface.withValues(alpha: 0.5)
-        : valueColor ?? theme.colorScheme.onSurface;
+        ? context.colorScheme.onSurface.withValues(alpha: 0.5)
+        : valueColor ?? context.colorScheme.onSurface;
 
     Widget content = Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(vertical: SolarSpacing.xs),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Optional leading icon
           if (icon != null) ...[
-            Icon(
-              icon,
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-              size: 16,
-            ),
-            const SizedBox(width: 12),
+            Icon(icon, color: context.colorScheme.onSurface.withValues(alpha: 0.7), size: 16),
+            const SizedBox(width: SolarSpacing.md),
           ],
 
           // Label
@@ -266,26 +233,17 @@ class InfoRow extends StatelessWidget {
             flex: 2,
             child: Text(
               label,
-              style: theme.textTheme.bodyMedium?.copyWith(
+              style: context.textTheme.bodyMedium?.copyWith(
                 fontWeight: FontWeight.w500,
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
+                color: context.colorScheme.onSurface.withValues(alpha: 0.8),
               ),
             ),
           ),
 
-          const SizedBox(width: 16),
+          const SizedBox(width: SolarSpacing.lg),
 
           // Value with optional copy button
-          Expanded(
-            flex: 3,
-            child: _buildValueSection(
-              context,
-              theme,
-              displayValue,
-              isEmpty,
-              textColor,
-            ),
-          ),
+          Expanded(flex: 3, child: _buildValueSection(context, displayValue, isEmpty, textColor)),
         ],
       ),
     );
@@ -294,9 +252,9 @@ class InfoRow extends StatelessWidget {
     if (onTap != null) {
       content = InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(SolarSpacing.sm),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
+          padding: const EdgeInsets.symmetric(horizontal: SolarSpacing.sm),
           child: content,
         ),
       );
@@ -305,19 +263,13 @@ class InfoRow extends StatelessWidget {
     return content;
   }
 
-  Widget _buildValueSection(
-    BuildContext context,
-    ThemeData theme,
-    String displayValue,
-    bool isEmpty,
-    Color textColor,
-  ) {
+  Widget _buildValueSection(BuildContext context, String displayValue, bool isEmpty, Color textColor) {
     return Row(
       children: [
         Expanded(
           child: Text(
             displayValue,
-            style: theme.textTheme.bodyMedium?.copyWith(
+            style: context.textTheme.bodyMedium?.copyWith(
               color: textColor,
               fontStyle: isEmpty ? FontStyle.italic : FontStyle.normal,
             ),
@@ -341,21 +293,15 @@ class InfoRow extends StatelessWidget {
     try {
       await Clipboard.setData(ClipboardData(text: text));
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Copied "$text" to clipboard'),
-            duration: const Duration(seconds: 2),
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Copied "$text" to clipboard'), duration: const Duration(seconds: 2)));
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to copy to clipboard'),
-            duration: Duration(seconds: 2),
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Failed to copy to clipboard'), duration: Duration(seconds: 2)));
       }
     }
   }
@@ -369,13 +315,7 @@ class InfoRow extends StatelessWidget {
 /// - Green color for monetary values
 /// - Handles null amounts gracefully
 class CurrencyInfoRow extends StatelessWidget {
-  const CurrencyInfoRow({
-    super.key,
-    required this.label,
-    required this.amount,
-    this.icon,
-    this.currency = '฿',
-  });
+  const CurrencyInfoRow({super.key, required this.label, required this.amount, this.icon, this.currency = '฿'});
 
   final String label;
   final double? amount;
@@ -384,9 +324,7 @@ class CurrencyInfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final formattedAmount = amount != null
-        ? InfoFormatters.formatCurrency(amount!, currency)
-        : 'Not Set';
+    final formattedAmount = amount != null ? InfoFormatters.formatCurrency(amount!, currency) : 'Not Set';
 
     return InfoRow(
       label: label,
@@ -405,13 +343,7 @@ class CurrencyInfoRow extends StatelessWidget {
 /// - Handles null dates gracefully
 /// - Readable month abbreviations
 class DateInfoRow extends StatelessWidget {
-  const DateInfoRow({
-    super.key,
-    required this.label,
-    required this.date,
-    this.icon,
-    this.showTime = false,
-  });
+  const DateInfoRow({super.key, required this.label, required this.date, this.icon, this.showTime = false});
 
   final String label;
   final DateTime? date;
@@ -420,9 +352,7 @@ class DateInfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final formattedDate = date != null
-        ? InfoFormatters.formatDate(date!, includeTime: showTime)
-        : 'Not Set';
+    final formattedDate = date != null ? InfoFormatters.formatDate(date!, includeTime: showTime) : 'Not Set';
 
     return InfoRow(label: label, value: formattedDate, icon: icon);
   }
@@ -453,9 +383,7 @@ class SpecInfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final formattedValue = value != null
-        ? InfoFormatters.formatSpec(value!, unit, precision: precision)
-        : 'Not Set';
+    final formattedValue = value != null ? InfoFormatters.formatSpec(value!, unit, precision: precision) : 'Not Set';
 
     return InfoRow(label: label, value: formattedValue, icon: icon);
   }
@@ -501,37 +429,21 @@ class PercentageInfoRow extends StatelessWidget {
       return _buildWithProgressBar(theme, formattedPercentage, color);
     }
 
-    return InfoRow(
-      label: label,
-      value: formattedPercentage,
-      icon: icon,
-      valueColor: color,
-    );
+    return InfoRow(label: label, value: formattedPercentage, icon: icon, valueColor: color);
   }
 
-  Widget _buildWithProgressBar(
-    ThemeData theme,
-    String formattedPercentage,
-    Color? color,
-  ) {
+  Widget _buildWithProgressBar(ThemeData theme, String formattedPercentage, Color? color) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          InfoRow(
-            label: label,
-            value: formattedPercentage,
-            icon: icon,
-            valueColor: color,
-          ),
+          InfoRow(label: label, value: formattedPercentage, icon: icon, valueColor: color),
           const SizedBox(height: 4),
           LinearProgressIndicator(
             value: (percentage! / 100).clamp(0.0, 1.0),
             backgroundColor: theme.colorScheme.outline.withValues(alpha: 0.2),
-            valueColor: AlwaysStoppedAnimation<Color>(
-              color ?? theme.colorScheme.primary,
-            ),
+            valueColor: AlwaysStoppedAnimation<Color>(color ?? theme.colorScheme.primary),
           ),
         ],
       ),
@@ -582,11 +494,7 @@ class StatusInfoRow extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (icon != null) ...[
-              Icon(
-                icon,
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-                size: 16,
-              ),
+              Icon(icon, color: theme.colorScheme.onSurface.withValues(alpha: 0.7), size: 16),
               const SizedBox(width: 12),
             ],
             Expanded(
@@ -611,10 +519,7 @@ class StatusInfoRow extends StatelessWidget {
                 ),
                 child: Text(
                   status,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: color,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: theme.textTheme.bodySmall?.copyWith(color: color, fontWeight: FontWeight.w600),
                 ),
               ),
             ),
@@ -697,12 +602,9 @@ class ContactInfoRow extends StatelessWidget {
   void _handleContactTap(BuildContext context) {
     // Here you could implement actual contact functionality
     // like opening email client, phone dialer, or web browser
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Contact action for: $contact'),
-        duration: const Duration(seconds: 2),
-      ),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('Contact action for: $contact'), duration: const Duration(seconds: 2)));
   }
 }
 

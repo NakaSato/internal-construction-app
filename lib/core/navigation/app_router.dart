@@ -8,6 +8,7 @@ import '../../features/authentication/presentation/screens/forgot_password_scree
 import '../../features/authentication/presentation/screens/login_screen.dart';
 import '../../features/authentication/presentation/screens/register_screen.dart';
 import '../../features/calendar_management/presentation/screens/calendar_management_screen.dart';
+import '../../features/calendar_management/presentation/screens/modern_schedule_screen.dart';
 import '../../features/notifications/presentation/screens/notifications_screen.dart';
 import '../../features/project_management/presentation/screens/image_project_card_list_screen.dart';
 import '../../features/project_management/presentation/screens/create_project_screen.dart';
@@ -33,6 +34,7 @@ class AppRoutes {
   static const String calendar = '/calendar';
   static const String calendarDetail = '/calendar/:id';
   static const String calendarManagement = '/calendar-management';
+  static const String modernSchedule = '/modern-schedule';
 
   // Project management routes
   static const String projects = '/projects';
@@ -53,22 +55,16 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 class AppRouter {
   static final GoRouter router = GoRouter(
     navigatorKey: navigatorKey,
-    initialLocation: AppRoutes
-        .login, // Start with login screen for authentication-first approach
+    initialLocation: AppRoutes.login, // Start with login screen for authentication-first approach
     debugLogDiagnostics: true,
     routes: [
       // Authentication routes
       GoRoute(
         path: AppRoutes.login,
         name: 'login',
-        builder: (context, state) =>
-            const LoginScreen(), // Use enhanced login screen
+        builder: (context, state) => const LoginScreen(), // Use enhanced login screen
       ),
-      GoRoute(
-        path: AppRoutes.register,
-        name: 'register',
-        builder: (context, state) => const RegisterScreen(),
-      ),
+      GoRoute(path: AppRoutes.register, name: 'register', builder: (context, state) => const RegisterScreen()),
       GoRoute(
         path: AppRoutes.forgotPassword,
         name: 'forgot-password',
@@ -85,8 +81,7 @@ class AppRouter {
           GoRoute(
             path: 'profile',
             name: 'profile',
-            builder: (context, state) =>
-                const MainAppScreen(initialTabIndex: 3), // Profile tab
+            builder: (context, state) => const MainAppScreen(initialTabIndex: 3), // Profile tab
           ),
         ],
       ),
@@ -115,22 +110,19 @@ class AppRouter {
         builder: (context, state) => const CalendarManagementScreen(),
       ),
       GoRoute(
+        path: AppRoutes.modernSchedule,
+        name: 'modern-schedule',
+        builder: (context, state) => const ModernScheduleScreen(),
+      ),
+      GoRoute(
         path: AppRoutes.calendarDetail,
         name: 'calendar-detail',
         builder: (context, state) {
           final id = state.pathParameters['id']!;
-          return Placeholder(
-            fallbackHeight: 200,
-            fallbackWidth: 200,
-            child: Text('Calendar Detail: $id'),
-          );
+          return Placeholder(fallbackHeight: 200, fallbackWidth: 200, child: Text('Calendar Detail: $id'));
         },
       ),
-      GoRoute(
-        path: '/projects',
-        name: 'projects',
-        builder: (context, state) => const ImageProjectCardListScreen(),
-      ),
+      GoRoute(path: '/projects', name: 'projects', builder: (context, state) => const ImageProjectCardListScreen()),
       GoRoute(
         path: '/projects/create',
         name: 'create-project',
@@ -162,10 +154,7 @@ class AppRouter {
             const SizedBox(height: 16),
             Text('Page not found: ${state.matchedLocation}'),
             const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () => context.go(AppRoutes.login),
-              child: const Text('Go to Login'),
-            ),
+            ElevatedButton(onPressed: () => context.go(AppRoutes.login), child: const Text('Go to Login')),
           ],
         ),
       ),

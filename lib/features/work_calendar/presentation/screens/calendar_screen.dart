@@ -298,34 +298,84 @@ class _CalendarScreenState extends State<CalendarScreen>
           children: [
             if (state is WorkCalendarLoading) const LinearProgressIndicator(),
             Expanded(
-              child: SfCalendar(
-                controller: _calendarController,
-                view: _currentView,
-                dataSource: WorkEventDataSource(events),
-                monthViewSettings: const MonthViewSettings(
-                  appointmentDisplayMode:
-                      MonthAppointmentDisplayMode.appointment,
-                  showAgenda: true,
-                ),
-                timeSlotViewSettings: const TimeSlotViewSettings(
-                  startHour: 6,
-                  endHour: 22,
-                  timeInterval: Duration(minutes: 30),
-                ),
-                onTap: _onCalendarTapped,
-                onViewChanged: _onViewChanged,
-                headerStyle: const CalendarHeaderStyle(
-                  textAlign: TextAlign.center,
-                  backgroundColor: Colors.transparent,
-                ),
-                todayHighlightColor: Theme.of(context).primaryColor,
-                selectionDecoration: BoxDecoration(
-                  color: Colors.transparent,
-                  border: Border.all(
-                    color: Theme.of(context).primaryColor,
-                    width: 2,
-                  ),
-                  borderRadius: BorderRadius.circular(4),
+              child: SafeArea(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    // Calculate available height with safe minimums
+                    final availableHeight = constraints.maxHeight;
+                    final minCalendarHeight = 300.0;
+                    final maxCalendarHeight = availableHeight * 0.95;
+
+                    // Ensure we have positive constraints
+                    final calendarHeight = availableHeight > minCalendarHeight
+                        ? (availableHeight < maxCalendarHeight
+                              ? availableHeight
+                              : maxCalendarHeight)
+                        : minCalendarHeight;
+
+                    return Container(
+                      height: calendarHeight,
+                      width: constraints.maxWidth,
+                      clipBehavior: Clip.antiAlias,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.outline.withOpacity(0.2),
+                        ),
+                      ),
+                      child: SfCalendar(
+                        controller: _calendarController,
+                        view: _currentView,
+                        dataSource: WorkEventDataSource(events),
+                        monthViewSettings: MonthViewSettings(
+                          appointmentDisplayMode:
+                              MonthAppointmentDisplayMode.appointment,
+                          showAgenda: _currentView == CalendarView.month,
+                          agendaItemHeight: 50,
+                          agendaViewHeight: _currentView == CalendarView.month
+                              ? (calendarHeight * 0.3).clamp(100, 200)
+                              : 0,
+                        ),
+                        timeSlotViewSettings: const TimeSlotViewSettings(
+                          startHour: 6,
+                          endHour: 22,
+                          timeInterval: Duration(minutes: 30),
+                          timeIntervalHeight: 60,
+                        ),
+                        scheduleViewSettings: const ScheduleViewSettings(
+                          appointmentItemHeight: 60,
+                          hideEmptyScheduleWeek: true,
+                        ),
+                        onTap: _onCalendarTapped,
+                        onViewChanged: _onViewChanged,
+                        headerStyle: CalendarHeaderStyle(
+                          textAlign: TextAlign.center,
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.surface,
+                          textStyle: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                        todayHighlightColor: Theme.of(
+                          context,
+                        ).colorScheme.primary,
+                        backgroundColor: Theme.of(context).colorScheme.surface,
+                        cellBorderColor: Theme.of(
+                          context,
+                        ).colorScheme.outline.withOpacity(0.1),
+                        selectionDecoration: BoxDecoration(
+                          color: Colors.transparent,
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.primary,
+                            width: 2,
+                          ),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
             ),
@@ -654,60 +704,83 @@ class _CalendarScreenState extends State<CalendarScreen>
   }
 
   Widget _buildConstructionView() {
-    return DefaultTabController(
-      length: 2,
-      child: Column(
-        children: [
-          // Progress Overview
-          ConstructionProgressOverview(
-            tasks: _constructionTasks,
-            projectId: _currentProjectId,
-            onTaskStatusTapped: (status) {
-              _showTasksByStatus(status);
-            },
-          ),
-          // Sub-tabs for different construction views
-          Container(
-            color: Theme.of(context).colorScheme.surfaceContainerHighest,
-            child: const TabBar(
-              tabs: [
-                Tab(icon: Icon(Icons.calendar_view_month), text: 'Calendar'),
-                Tab(icon: Icon(Icons.timeline), text: 'Timeline'),
-              ],
+    return SafeArea(
+      child: DefaultTabController(
+        length: 2,
+        child: Column(
+          children: [
+            // Progress Overview with safe height constraints
+            Container(
+              constraints: const BoxConstraints(minHeight: 120, maxHeight: 180),
+              child: ConstructionProgressOverview(
+                tasks: _constructionTasks,
+                projectId: _currentProjectId,
+                onTaskStatusTapped: (status) {
+                  _showTasksByStatus(status);
+                },
+              ),
             ),
-          ),
-          // Construction views
-          Expanded(
-            child: TabBarView(
-              children: [
-                // Calendar View
-                ConstructionCalendarWidget(
-                  tasks: _constructionTasks,
-                  events: const [],
-                  view: _currentView,
-                  controller: _calendarController,
-                  onTaskTapped: (task) {
-                    _showTaskDetailsDialog(task);
-                  },
-                  onTaskCreated: (date) {
-                    _showCreateTaskDialog(selectedDate: date);
-                  },
-                ),
-                // Timeline View
-                ConstructionTimelineView(
-                  tasks: _constructionTasks,
-                  projectId: _currentProjectId,
-                  onTaskTapped: (task) {
-                    _showTaskDetailsDialog(task);
-                  },
-                  onTaskCreated: (date) {
-                    _showCreateTaskDialog(selectedDate: date);
-                  },
-                ),
-              ],
+            // Sub-tabs for different construction views
+            Container(
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              child: const TabBar(
+                tabs: [
+                  Tab(icon: Icon(Icons.calendar_view_month), text: 'Calendar'),
+                  Tab(icon: Icon(Icons.timeline), text: 'Timeline'),
+                ],
+              ),
             ),
-          ),
-        ],
+            // Construction views with proper constraints
+            Expanded(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final availableHeight = constraints.maxHeight;
+                  final minViewHeight = 250.0;
+
+                  return Container(
+                    height: availableHeight > minViewHeight
+                        ? availableHeight
+                        : minViewHeight,
+                    child: TabBarView(
+                      children: [
+                        // Calendar View with safe constraints
+                        Container(
+                          padding: const EdgeInsets.all(8.0),
+                          child: ConstructionCalendarWidget(
+                            tasks: _constructionTasks,
+                            events: const [],
+                            view: _currentView,
+                            controller: _calendarController,
+                            onTaskTapped: (task) {
+                              _showTaskDetailsDialog(task);
+                            },
+                            onTaskCreated: (date) {
+                              _showCreateTaskDialog(selectedDate: date);
+                            },
+                          ),
+                        ),
+                        // Timeline View with safe constraints
+                        Container(
+                          padding: const EdgeInsets.all(8.0),
+                          child: ConstructionTimelineView(
+                            tasks: _constructionTasks,
+                            projectId: _currentProjectId,
+                            onTaskTapped: (task) {
+                              _showTaskDetailsDialog(task);
+                            },
+                            onTaskCreated: (date) {
+                              _showCreateTaskDialog(selectedDate: date);
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

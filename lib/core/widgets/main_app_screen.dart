@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:get_it/get_it.dart';
 
 // Core imports
 import '../navigation/app_router.dart';
@@ -14,17 +13,11 @@ import '../../features/authentication/application/auth_bloc.dart';
 import '../../features/authentication/application/auth_state.dart';
 
 // Feature imports - Calendar Management
-import '../../features/calendar_management/presentation/screens/calendar_management_screen.dart';
-import '../../features/calendar_management/application/calendar_management_bloc.dart';
-import '../../features/calendar_management/application/calendar_management_event.dart'
-    as cm_events;
+import '../../features/calendar_management/presentation/screens/calendar_tab_screen.dart';
 import '../../features/calendar_management/config/mock_calendar_management_di.dart';
 
 // Feature imports - Work Request Approval
-import '../../features/work_request_approval/presentation/screens/my_work_requests_screen.dart';
-import '../../features/work_request_approval/application/cubits/my_work_requests_cubit.dart';
-import '../../features/work_request_approval/domain/usecases/get_my_work_requests_usecase.dart';
-import '../../features/work_request_approval/infrastructure/repositories/mock_work_request_approval_repository.dart';
+import '../../features/work_request_approval/presentation/screens/approvals_tab_screen.dart';
 
 // Feature imports - Profile
 import '../../features/profile/presentation/screens/profile_screen.dart';
@@ -149,23 +142,9 @@ class _MainAppScreenState extends State<MainAppScreen>
           // Home/Dashboard - uses the extracted dashboard tab
           DashboardTab(authState: state, onProfileTap: _navigateToProfileTab),
           // Calendar - Enhanced Calendar Management with API integration
-          MultiBlocProvider(
-            providers: [
-              BlocProvider(
-                create: (context) =>
-                    GetIt.instance<CalendarManagementBloc>()
-                      ..add(const cm_events.CalendarEventsRequested()),
-              ),
-            ],
-            child: const CalendarManagementScreen(),
-          ),
+          const CalendarTabScreen(),
           // Work Request Approvals
-          BlocProvider(
-            create: (context) => MyWorkRequestsCubit(
-              GetMyWorkRequestsUseCase(MockWorkRequestApprovalRepository()),
-            ),
-            child: const MyWorkRequestsScreen(),
-          ),
+          const ApprovalsTabScreen(),
           // Profile - extracted to dedicated screen
           const ProfileScreen(),
         ],

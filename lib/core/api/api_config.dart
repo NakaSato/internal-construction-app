@@ -11,10 +11,9 @@ class ApiConfig {
 
   /// Environment-specific base URLs
   static const Map<ApiEnvironment, String> _environmentUrls = {
-    ApiEnvironment.development:
-        'https://dev-solar-projects-api.azurewebsites.net',
-    ApiEnvironment.production: 'https://solar-projects-api.azurewebsites.net',
-    ApiEnvironment.local: 'http://localhost:3000',
+    ApiEnvironment.development: 'https://api-icms.gridtokenx.com',
+    ApiEnvironment.production: 'https://api-icms.gridtokenx.com',
+    ApiEnvironment.local: 'http://localhost:5001',
   };
 
   /// Current environment (defaults to production)
@@ -30,12 +29,11 @@ class ApiConfig {
 
   /// Get base URL for a specific environment
   static String getEnvironmentUrl(ApiEnvironment environment) {
-    return _environmentUrls[environment] ??
-        _environmentUrls[ApiEnvironment.production]!;
+    return _environmentUrls[environment] ?? _environmentUrls[ApiEnvironment.production]!;
   }
 
   /// Production API base URL (backward compatibility)
-  static const String baseUrl = 'https://solar-projects-api.azurewebsites.net';
+  static const String baseUrl = 'https://api-icms.gridtokenx.com';
 
   /// Get the configured base URL with environment support
   static String get configuredBaseUrl {
@@ -113,8 +111,7 @@ class ApiConfig {
   static const String workCalendarEvents = '/api/v1/work-calendar/events';
   static const String workCalendarTasks = '/api/v1/work-calendar/tasks';
   static const String workCalendarSchedule = '/api/v1/work-calendar/schedule';
-  static const String workCalendarAvailability =
-      '/api/v1/work-calendar/availability';
+  static const String workCalendarAvailability = '/api/v1/work-calendar/availability';
 
   // =============================================================================
   // TASK MANAGEMENT ENDPOINTS
@@ -133,8 +130,7 @@ class ApiConfig {
   /// Daily reports endpoints
   static const String dailyReports = '/api/v1/daily-reports';
   static const String dailyReportById = '/api/v1/daily-reports/{id}';
-  static const String dailyReportsByProject =
-      '/api/v1/daily-reports/project/{projectId}';
+  static const String dailyReportsByProject = '/api/v1/daily-reports/project/{projectId}';
   static const String dailyReportSubmit = '/api/v1/daily-reports/submit';
 
   // =============================================================================
@@ -144,10 +140,8 @@ class ApiConfig {
   /// Work request approval endpoints
   static const String workRequests = '/api/v1/work-requests';
   static const String workRequestById = '/api/v1/work-requests/{id}';
-  static const String workRequestApproval =
-      '/api/v1/work-requests/{id}/approve';
-  static const String workRequestRejection =
-      '/api/v1/work-requests/{id}/reject';
+  static const String workRequestApproval = '/api/v1/work-requests/{id}/approve';
+  static const String workRequestRejection = '/api/v1/work-requests/{id}/reject';
   static const String workRequestPending = '/api/v1/work-requests/pending';
 
   // =============================================================================
@@ -236,19 +230,16 @@ class ApiConfig {
   }
 
   /// Check if current environment is production
-  static bool get isProduction =>
-      _currentEnvironment == ApiEnvironment.production;
+  static bool get isProduction => _currentEnvironment == ApiEnvironment.production;
 
   /// Check if current environment is development
-  static bool get isDevelopment =>
-      _currentEnvironment == ApiEnvironment.development;
+  static bool get isDevelopment => _currentEnvironment == ApiEnvironment.development;
 
   /// Check if current environment is local
   static bool get isLocal => _currentEnvironment == ApiEnvironment.local;
 
   /// Get all available environments for UI selection
-  static List<ApiEnvironment> get availableEnvironments =>
-      ApiEnvironment.values;
+  static List<ApiEnvironment> get availableEnvironments => ApiEnvironment.values;
 
   /// Get environment display names for UI
   static Map<ApiEnvironment, String> get environmentDisplayNames => {

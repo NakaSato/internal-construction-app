@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 
 /// Configuration class for API client settings
 class ApiConfig {
-  static const String baseUrl = 'http://localhost:5001';
+  static const String baseUrl = 'https://api-icms.gridtokenx.com';
   static const String apiVersion = 'api/v1';
   static const Duration connectTimeout = Duration(seconds: 30);
   static const Duration receiveTimeout = Duration(seconds: 30);
@@ -50,10 +50,7 @@ class ApiClient {
         connectTimeout: ApiConfig.connectTimeout,
         receiveTimeout: ApiConfig.receiveTimeout,
         sendTimeout: ApiConfig.sendTimeout,
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
+        headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
       ),
     );
 
@@ -91,9 +88,7 @@ class ApiClient {
 
         onResponse: (response, handler) {
           if (kDebugMode) {
-            print(
-              '✅ API Response: ${response.statusCode} ${response.requestOptions.path}',
-            );
+            print('✅ API Response: ${response.statusCode} ${response.requestOptions.path}');
             if (response.data != null) {
               print('📄 Response Data: ${response.data}');
             }
@@ -103,9 +98,7 @@ class ApiClient {
 
         onError: (error, handler) {
           if (kDebugMode) {
-            print(
-              '❌ API Error: ${error.response?.statusCode} ${error.requestOptions.path}',
-            );
+            print('❌ API Error: ${error.response?.statusCode} ${error.requestOptions.path}');
             print('🔍 Error Message: ${error.message}');
             if (error.response?.data != null) {
               print('📄 Error Data: ${error.response?.data}');
@@ -263,16 +256,11 @@ class ApiClient {
 
       case DioExceptionType.badResponse:
         final statusCode = e.response?.statusCode ?? 0;
-        final message =
-            _extractErrorMessage(e.response?.data) ?? 'Server error occurred';
+        final message = _extractErrorMessage(e.response?.data) ?? 'Server error occurred';
 
         switch (statusCode) {
           case 400:
-            return ApiException(
-              message: message,
-              statusCode: statusCode,
-              type: ApiExceptionType.badRequest,
-            );
+            return ApiException(message: message, statusCode: statusCode, type: ApiExceptionType.badRequest);
           case 401:
             return ApiException(
               message: 'Authentication required. Please log in again.',
@@ -292,11 +280,7 @@ class ApiClient {
               type: ApiExceptionType.notFound,
             );
           case 422:
-            return ApiException(
-              message: message,
-              statusCode: statusCode,
-              type: ApiExceptionType.validationError,
-            );
+            return ApiException(message: message, statusCode: statusCode, type: ApiExceptionType.validationError);
           case 500:
             return ApiException(
               message: 'Internal server error. Please try again later.',
@@ -304,19 +288,11 @@ class ApiClient {
               type: ApiExceptionType.serverError,
             );
           default:
-            return ApiException(
-              message: message,
-              statusCode: statusCode,
-              type: ApiExceptionType.unknown,
-            );
+            return ApiException(message: message, statusCode: statusCode, type: ApiExceptionType.unknown);
         }
 
       case DioExceptionType.cancel:
-        return const ApiException(
-          message: 'Request was cancelled',
-          statusCode: 0,
-          type: ApiExceptionType.cancelled,
-        );
+        return const ApiException(message: 'Request was cancelled', statusCode: 0, type: ApiExceptionType.cancelled);
 
       case DioExceptionType.unknown:
       case DioExceptionType.connectionError:
@@ -335,11 +311,7 @@ class ApiClient {
 
     if (data is Map<String, dynamic>) {
       // Try common error message fields
-      final message =
-          data['message'] ??
-          data['error'] ??
-          data['detail'] ??
-          data['description'];
+      final message = data['message'] ?? data['error'] ?? data['detail'] ?? data['description'];
 
       if (message is String) return message;
 
@@ -425,12 +397,7 @@ class ApiException implements Exception {
   final ApiExceptionType type;
   final dynamic data;
 
-  const ApiException({
-    required this.message,
-    required this.statusCode,
-    required this.type,
-    this.data,
-  });
+  const ApiException({required this.message, required this.statusCode, required this.type, this.data});
 
   @override
   String toString() {
@@ -462,13 +429,7 @@ class ApiResult<T> {
       try {
         return ApiResult.success(mapper(data as T));
       } catch (e) {
-        return ApiResult.failure(
-          ApiException(
-            message: e.toString(),
-            statusCode: 0,
-            type: ApiExceptionType.unknown,
-          ),
-        );
+        return ApiResult.failure(ApiException(message: e.toString(), statusCode: 0, type: ApiExceptionType.unknown));
       }
     }
     return ApiResult.failure(error!);

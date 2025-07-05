@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'core/config/app_theme.dart';
+import 'core/theme/solar_app_theme.dart';
 import 'core/di/injection.dart';
 import 'core/navigation/app_router.dart';
 import 'features/authentication/application/auth_bloc.dart';
@@ -25,39 +25,26 @@ class ConstructionApp extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         // Authentication state management
-        BlocProvider<AuthBloc>(
-          create: (context) =>
-              getIt<AuthBloc>()..add(const AuthCheckRequested()),
-        ),
+        BlocProvider<AuthBloc>(create: (context) => getIt<AuthBloc>()..add(const AuthCheckRequested())),
 
         // Authorization state management
-        BlocProvider<AuthorizationBloc>(
-          create: (context) => getIt<AuthorizationBloc>(),
-        ),
+        BlocProvider<AuthorizationBloc>(create: (context) => getIt<AuthorizationBloc>()),
 
         // Work calendar state management
-        BlocProvider<WorkCalendarBloc>(
-          create: (context) => getIt<WorkCalendarBloc>(),
-        ),
+        BlocProvider<WorkCalendarBloc>(create: (context) => getIt<WorkCalendarBloc>()),
 
         // Project management state management
-        BlocProvider<EnhancedProjectBloc>(
-          create: (context) => getIt<EnhancedProjectBloc>(),
-        ),
+        BlocProvider<EnhancedProjectBloc>(create: (context) => getIt<EnhancedProjectBloc>()),
 
         // Daily reports state management
-        BlocProvider<DailyReportsCubit>(
-          create: (context) => getIt<DailyReportsCubit>(),
-        ),
+        BlocProvider<DailyReportsCubit>(create: (context) => getIt<DailyReportsCubit>()),
       ],
       child: MaterialApp.router(
-        title: 'Construction Internal',
+        title: 'Solar Manager',
 
-        // Theme configuration
-        theme: AppTheme.lightTheme,
-        darkTheme: AppTheme.darkTheme,
-        themeMode: ThemeMode.system,
-
+        // Theme configuration - Using new solar-themed design
+        theme: SolarAppTheme.themeData,
+        themeMode: ThemeMode.light, // Using light theme with solar colors
         // Routing configuration
         routerConfig: AppRouter.router,
 

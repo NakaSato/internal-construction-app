@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../features/authentication/domain/entities/user.dart';
+import '../theme/solar_app_theme.dart';
 
 // MARK: - Constants
 class _AppHeaderConstants {
   // Size constants
-  static const double toolbarHeightOffset = 8.0;
+  static const double toolbarHeightOffset = SolarSpacing.sm;
   static const double avatarRadius = 22.0;
   static const double iconSize = 22.0;
-  static const double iconPadding = 12.0;
-  static const double iconBorderRadius = 14.0;
+  static const double iconPadding = SolarSpacing.md;
+  static const double iconBorderRadius = SolarBorderRadius.md;
   static const double verifiedIconSize = 16.0;
   static const double onlineIndicatorSize = 6.0;
 
@@ -20,13 +21,13 @@ class _AppHeaderConstants {
   static const Duration snackBarDuration = Duration(seconds: 2);
 
   // Spacing constants
-  static const double searchIconRightSpacing = 8.0;
-  static const double notificationIconRightSpacing = 12.0;
-  static const double customActionLeftSpacing = 8.0;
-  static const double customActionRightSpacing = 4.0;
-  static const double userInfoSpacing = 12.0;
-  static const double verifiedIconSpacing = 4.0;
-  static const double onlineIndicatorSpacing = 6.0;
+  static const double searchIconRightSpacing = SolarSpacing.sm;
+  static const double notificationIconRightSpacing = SolarSpacing.md;
+  static const double customActionLeftSpacing = SolarSpacing.sm;
+  static const double customActionRightSpacing = SolarSpacing.xs;
+  static const double userInfoSpacing = SolarSpacing.md;
+  static const double verifiedIconSpacing = SolarSpacing.xs;
+  static const double onlineIndicatorSpacing = SolarSpacing.xs;
 
   // Numeric constants
   static const int maxNotificationCount = 99;
@@ -86,13 +87,10 @@ class AppHeader extends StatefulWidget implements PreferredSizeWidget {
   State<AppHeader> createState() => _AppHeaderState();
 
   @override
-  Size get preferredSize => const Size.fromHeight(
-    kToolbarHeight + _AppHeaderConstants.toolbarHeightOffset,
-  );
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight + _AppHeaderConstants.toolbarHeightOffset);
 }
 
-class _AppHeaderState extends State<AppHeader>
-    with SingleTickerProviderStateMixin {
+class _AppHeaderState extends State<AppHeader> with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
@@ -113,22 +111,17 @@ class _AppHeaderState extends State<AppHeader>
   // MARK: - Animation Setup
 
   void _initializeAnimations() {
-    _animationController = AnimationController(
-      duration: _AppHeaderConstants.animationDuration,
-      vsync: this,
-    );
+    _animationController = AnimationController(duration: _AppHeaderConstants.animationDuration, vsync: this);
 
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeOutCubic),
-    );
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeOutCubic));
 
-    _slideAnimation =
-        Tween<Offset>(begin: const Offset(0, -0.5), end: Offset.zero).animate(
-          CurvedAnimation(
-            parent: _animationController,
-            curve: Curves.easeOutCubic,
-          ),
-        );
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, -0.5),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeOutCubic));
   }
 
   @override
@@ -147,8 +140,7 @@ class _AppHeaderState extends State<AppHeader>
             systemOverlayStyle: _buildSystemOverlayStyle(context),
             title: _buildLeftSide(context),
             actions: _buildRightSide(context),
-            toolbarHeight:
-                kToolbarHeight + _AppHeaderConstants.toolbarHeightOffset,
+            toolbarHeight: kToolbarHeight + _AppHeaderConstants.toolbarHeightOffset,
           ),
         ),
       ),
@@ -191,22 +183,15 @@ class _AppHeaderState extends State<AppHeader>
 
   Widget _buildAvatarContent(BuildContext context) {
     // Create a unique hero tag using multiple identifiers to ensure uniqueness
-    final contextId =
-        widget.heroContext ??
-        widget.title?.replaceAll(' ', '_').toLowerCase() ??
-        'default';
-    final heroTag =
-        'user_avatar_${widget.user.id}_${contextId}_${context.hashCode}';
+    final contextId = widget.heroContext ?? widget.title?.replaceAll(' ', '_').toLowerCase() ?? 'default';
+    final heroTag = 'user_avatar_${widget.user.id}_${contextId}_${context.hashCode}';
 
     return Hero(
       tag: heroTag,
       child: Container(
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          border: Border.all(
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
-            width: 2,
-          ),
+          border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.2), width: 2),
         ),
         child: CircleAvatar(
           radius: _AppHeaderConstants.avatarRadius,
@@ -214,9 +199,7 @@ class _AppHeaderState extends State<AppHeader>
           backgroundImage: widget.user.profileImageUrl?.isNotEmpty == true
               ? NetworkImage(widget.user.profileImageUrl!)
               : null,
-          child: widget.user.profileImageUrl?.isEmpty != false
-              ? _buildAvatarInitials(context)
-              : null,
+          child: widget.user.profileImageUrl?.isEmpty != false ? _buildAvatarInitials(context) : null,
         ),
       ),
     );
@@ -238,11 +221,7 @@ class _AppHeaderState extends State<AppHeader>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        _buildUserNameRow(context),
-        const SizedBox(height: 3),
-        _buildSubtitleContent(context),
-      ],
+      children: [_buildUserNameRow(context), const SizedBox(height: 3), _buildSubtitleContent(context)],
     );
   }
 
@@ -290,9 +269,7 @@ class _AppHeaderState extends State<AppHeader>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: Theme.of(
-          context,
-        ).colorScheme.primaryContainer.withValues(alpha: 0.7),
+        color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.7),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
@@ -345,26 +322,21 @@ class _AppHeaderState extends State<AppHeader>
             duration: const Duration(milliseconds: 200),
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
-              color: _getRoleColor(
-                widget.user.roleName,
-              ).withValues(alpha: 0.15),
+              color: _getRoleColor(widget.user.roleName).withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: _getRoleColor(widget.user.roleName).withValues(
-                  alpha: _isElevatedRole(widget.user.roleName) ? 0.5 : 0.3,
-                ),
+                color: _getRoleColor(
+                  widget.user.roleName,
+                ).withValues(alpha: _isElevatedRole(widget.user.roleName) ? 0.5 : 0.3),
                 width: _isElevatedRole(widget.user.roleName) ? 1.5 : 1,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: _getRoleColor(widget.user.roleName).withValues(
-                    alpha: _isElevatedRole(widget.user.roleName) ? 0.15 : 0.1,
-                  ),
+                  color: _getRoleColor(
+                    widget.user.roleName,
+                  ).withValues(alpha: _isElevatedRole(widget.user.roleName) ? 0.15 : 0.1),
                   blurRadius: _isElevatedRole(widget.user.roleName) ? 3 : 2,
-                  offset: Offset(
-                    0,
-                    _isElevatedRole(widget.user.roleName) ? 1.5 : 1,
-                  ),
+                  offset: Offset(0, _isElevatedRole(widget.user.roleName) ? 1.5 : 1),
                 ),
               ],
             ),
@@ -374,10 +346,7 @@ class _AppHeaderState extends State<AppHeader>
                 Container(
                   width: 4,
                   height: 4,
-                  decoration: BoxDecoration(
-                    color: _getRoleColor(widget.user.roleName),
-                    shape: BoxShape.circle,
-                  ),
+                  decoration: BoxDecoration(color: _getRoleColor(widget.user.roleName), shape: BoxShape.circle),
                 ),
                 const SizedBox(width: 4),
                 Text(
@@ -405,9 +374,7 @@ class _AppHeaderState extends State<AppHeader>
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: _getStatusColor(
-                    widget.userStatus,
-                  ).withValues(alpha: 0.3),
+                  color: _getStatusColor(widget.userStatus).withValues(alpha: 0.3),
                   blurRadius: 3,
                   spreadRadius: 1,
                 ),
@@ -421,9 +388,7 @@ class _AppHeaderState extends State<AppHeader>
               _getStatusText(widget.userStatus),
               key: ValueKey(widget.userStatus),
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: _getStatusColor(
-                  widget.userStatus,
-                ).withValues(alpha: 0.8),
+                color: _getStatusColor(widget.userStatus).withValues(alpha: 0.8),
                 fontWeight: FontWeight.w600,
                 fontSize: 11,
               ),
@@ -454,9 +419,7 @@ class _AppHeaderState extends State<AppHeader>
 
   Widget _buildSearchIcon(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(
-        right: _AppHeaderConstants.searchIconRightSpacing,
-      ),
+      padding: const EdgeInsets.only(right: _AppHeaderConstants.searchIconRightSpacing),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -468,17 +431,13 @@ class _AppHeaderState extends State<AppHeader>
               _showSearchSnackBar(context);
             }
           },
-          borderRadius: BorderRadius.circular(
-            _AppHeaderConstants.iconBorderRadius,
-          ),
+          borderRadius: BorderRadius.circular(_AppHeaderConstants.iconBorderRadius),
           child: Container(
             padding: const EdgeInsets.all(_AppHeaderConstants.iconPadding),
             decoration: _buildIconDecoration(context),
             child: Icon(
               Icons.search_rounded,
-              color: Theme.of(
-                context,
-              ).colorScheme.onSurface.withValues(alpha: 0.8),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
               size: _AppHeaderConstants.iconSize,
             ),
           ),
@@ -489,25 +448,19 @@ class _AppHeaderState extends State<AppHeader>
 
   Widget _buildNotificationIcon(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(
-        right: _AppHeaderConstants.notificationIconRightSpacing,
-      ),
+      padding: const EdgeInsets.only(right: _AppHeaderConstants.notificationIconRightSpacing),
       child: TweenAnimationBuilder<double>(
         duration: _AppHeaderConstants.scaleAnimationDuration,
         tween: Tween(begin: 0.0, end: 1.0),
         curve: Curves.easeOutBack,
         builder: (context, value, child) {
           return Transform.scale(
-            scale:
-                _AppHeaderConstants.scaleAnimationStart +
-                (_AppHeaderConstants.scaleAnimationRange * value),
+            scale: _AppHeaderConstants.scaleAnimationStart + (_AppHeaderConstants.scaleAnimationRange * value),
             child: Stack(
               clipBehavior: Clip.none,
               children: [
                 _buildNotificationButton(context),
-                if (widget.showNotificationBadge &&
-                    widget.notificationCount > 0)
-                  _buildNotificationBadge(context),
+                if (widget.showNotificationBadge && widget.notificationCount > 0) _buildNotificationBadge(context),
               ],
             ),
           );
@@ -528,9 +481,7 @@ class _AppHeaderState extends State<AppHeader>
             _showNotificationSnackBar(context);
           }
         },
-        borderRadius: BorderRadius.circular(
-          _AppHeaderConstants.iconBorderRadius,
-        ),
+        borderRadius: BorderRadius.circular(_AppHeaderConstants.iconBorderRadius),
         child: Container(
           padding: const EdgeInsets.all(_AppHeaderConstants.iconPadding),
           decoration: _buildIconDecoration(context),
@@ -538,9 +489,7 @@ class _AppHeaderState extends State<AppHeader>
             widget.showNotificationBadge && widget.notificationCount > 0
                 ? Icons.notifications_active_rounded
                 : Icons.notifications_outlined,
-            color: Theme.of(
-              context,
-            ).colorScheme.onSurface.withValues(alpha: 0.8),
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
             size: _AppHeaderConstants.iconSize,
           ),
         ),
@@ -564,8 +513,7 @@ class _AppHeaderState extends State<AppHeader>
               decoration: _buildBadgeDecoration(context),
               constraints: const BoxConstraints(minWidth: 18, minHeight: 16),
               child: Text(
-                widget.notificationCount >
-                        _AppHeaderConstants.maxNotificationCount
+                widget.notificationCount > _AppHeaderConstants.maxNotificationCount
                     ? '${_AppHeaderConstants.maxNotificationCount}+'
                     : widget.notificationCount.toString(),
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -601,45 +549,19 @@ class _AppHeaderState extends State<AppHeader>
 
   BoxDecoration _buildHeaderDecoration(BuildContext context) {
     if (widget.showGradient) {
-      return BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            widget.backgroundColor ?? Theme.of(context).colorScheme.surface,
-            widget.backgroundColor?.withValues(alpha: 0.8) ??
-                Theme.of(context).colorScheme.surface.withValues(alpha: 0.95),
-          ],
-          stops: const [0.0, 1.0],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.08),
-            offset: const Offset(0, 2),
-            blurRadius: 12,
-            spreadRadius: 0,
-          ),
-          BoxShadow(
-            color: Theme.of(
-              context,
-            ).colorScheme.primary.withValues(alpha: 0.05),
-            offset: const Offset(0, 1),
-            blurRadius: 4,
-            spreadRadius: 0,
-          ),
+      return SolarDecorations.createGradientDecoration(
+        colors: [
+          widget.backgroundColor ?? context.colorScheme.surface,
+          widget.backgroundColor?.withValues(alpha: 0.8) ?? context.colorScheme.surface.withValues(alpha: 0.95),
         ],
+        borderRadius: 0,
+        elevation: 2,
       );
     } else {
-      return BoxDecoration(
-        color: widget.backgroundColor ?? Theme.of(context).colorScheme.surface,
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.05),
-            offset: const Offset(0, 1),
-            blurRadius: 4,
-            spreadRadius: 0,
-          ),
-        ],
+      return SolarDecorations.createCardDecoration(
+        color: widget.backgroundColor ?? context.colorScheme.surface,
+        elevation: 1,
+        borderRadius: 0,
       );
     }
   }
@@ -651,88 +573,63 @@ class _AppHeaderState extends State<AppHeader>
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: [
-          Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
-          Theme.of(context).colorScheme.secondary.withValues(alpha: 0.1),
-          Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.05),
+          context.colorScheme.primary.withValues(alpha: 0.15),
+          context.colorScheme.secondary.withValues(alpha: 0.1),
+          context.colorScheme.tertiary.withValues(alpha: 0.05),
         ],
         stops: const [0.0, 0.5, 1.0],
       ),
-      boxShadow: [
-        BoxShadow(
-          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
-          blurRadius: 16,
-          offset: const Offset(0, 4),
-          spreadRadius: 0,
-        ),
-      ],
+      boxShadow: SolarDecorations.createElevationShadow(SolarElevation.md),
     );
   }
 
   BoxDecoration _buildIconDecoration(BuildContext context) {
     return BoxDecoration(
-      borderRadius: BorderRadius.circular(_AppHeaderConstants.iconBorderRadius),
-      color: Theme.of(
-        context,
-      ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-      border: Border.all(
-        color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.1),
-      ),
+      borderRadius: BorderRadius.circular(SolarBorderRadius.md),
+      color: context.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+      border: Border.all(color: context.colorScheme.outline.withValues(alpha: 0.1)),
     );
   }
 
   BoxDecoration _buildBadgeDecoration(BuildContext context) {
     return BoxDecoration(
       gradient: LinearGradient(
-        colors: [
-          Theme.of(context).colorScheme.error,
-          Theme.of(context).colorScheme.error.withValues(alpha: 0.8),
-        ],
+        colors: [context.colorScheme.error, context.colorScheme.error.withValues(alpha: 0.8)],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ),
-      borderRadius: BorderRadius.circular(12),
-      border: Border.all(
-        color: Theme.of(context).colorScheme.surface,
-        width: 1.5,
-      ),
+      borderRadius: BorderRadius.circular(SolarBorderRadius.md),
+      border: Border.all(color: context.colorScheme.surface, width: 1.5),
       boxShadow: [
-        BoxShadow(
-          color: Theme.of(context).colorScheme.error.withValues(alpha: 0.3),
-          blurRadius: 6,
-          offset: const Offset(0, 2),
-        ),
+        BoxShadow(color: context.colorScheme.error.withValues(alpha: 0.3), blurRadius: 6, offset: const Offset(0, 2)),
       ],
     );
   }
 
   Color? _getAppBarBackgroundColor(BuildContext context) {
-    return widget.showGradient
-        ? Colors.transparent
-        : (widget.backgroundColor ?? Theme.of(context).colorScheme.surface);
+    return widget.showGradient ? Colors.transparent : (widget.backgroundColor ?? context.colorScheme.surface);
   }
 
   SystemUiOverlayStyle _buildSystemOverlayStyle(BuildContext context) {
     return SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Theme.of(context).brightness == Brightness.dark
-          ? Brightness.light
-          : Brightness.dark,
+      statusBarIconBrightness: context.isDarkMode ? Brightness.light : Brightness.dark,
     );
   }
 
   /// Get status color based on user status
   Color _getStatusColor(String status) {
-    const statusColors = {
-      'online': Colors.green,
-      'away': Colors.amber,
-      'busy': Colors.red,
-      'dnd': Colors.red,
-      'do not disturb': Colors.red,
-      'offline': Colors.grey,
+    // Using the new solar color scheme
+    final statusColors = {
+      'online': const Color(0xFF10B981), // energyHigh color
+      'away': const Color(0xFFF59E0B), // energyMedium color
+      'busy': const Color(0xFFEF4444), // energyLow color
+      'dnd': const Color(0xFFEF4444), // energyLow color
+      'do not disturb': const Color(0xFFEF4444), // energyLow color
+      'offline': const Color(0xFF6B7280), // statusDraft color
     };
 
-    final colorScheme = statusColors[status.toLowerCase()] ?? Colors.green;
-    return colorScheme.shade400;
+    return statusColors[status.toLowerCase()] ?? const Color(0xFF10B981);
   }
 
   /// Get status text based on user status
@@ -807,11 +704,7 @@ class _AppHeaderState extends State<AppHeader>
     // Extract name from email if no name is provided
     final emailParts = user.email.split('@');
     if (emailParts.isNotEmpty && emailParts[0].isNotEmpty) {
-      return emailParts[0]
-          .replaceAll(RegExp(r'[._]'), ' ')
-          .split(' ')
-          .map(_capitalizeWord)
-          .join(' ');
+      return emailParts[0].replaceAll(RegExp(r'[._]'), ' ').split(' ').map(_capitalizeWord).join(' ');
     }
     return 'User';
   }
@@ -867,83 +760,64 @@ class _AppHeaderState extends State<AppHeader>
 
   /// Get role color based on standardized categories
   Color _getRoleColor(String roleName) {
-    const roleColors = {
-      // Admin - Highest authority
-      'admin': Colors.red,
-      'administrator': Colors.red,
-
-      // Project Manager - Management roles
-      'manager': Colors.purple,
-      'project_manager': Colors.purple,
-      'site_supervisor': Colors.purple,
-      'supervisor': Colors.purple,
-
-      // User - Operational roles
-      'user': Colors.blue,
-      'member': Colors.blue,
-      'technician': Colors.blue,
-      'tech': Colors.blue,
-      'field_technician': Colors.blue,
-      'engineer': Colors.blue,
-      'developer': Colors.blue,
-      'dev': Colors.blue,
-      'contractor': Colors.blue,
-      'analyst': Colors.blue,
-      'qa': Colors.blue,
-      'quality_assurance': Colors.blue,
-      'finance': Colors.blue,
-      'accounting': Colors.blue,
-      'hr': Colors.blue,
-      'human_resources': Colors.blue,
-      'sales': Colors.blue,
-      'support': Colors.blue,
-
-      // Viewer - Read-only roles
-      'viewer': Colors.grey,
-      'guest': Colors.grey,
-      'client': Colors.grey,
-      'customer': Colors.grey,
+    // Using the new solar color scheme
+    final roleColors = {
+      // Admin - Highest authority (Solar Orange for attention)
+      'admin': const Color(0xFFEA580C), // solarOrange
+      'administrator': const Color(0xFFEA580C), // solarOrange
+      // Project Manager - Management roles (Solar Gold)
+      'manager': const Color(0xFFF59E0B), // solarGold
+      'project_manager': const Color(0xFFF59E0B), // solarGold
+      'site_supervisor': const Color(0xFFF59E0B), // solarGold
+      'supervisor': const Color(0xFFF59E0B), // solarGold
+      // User - Operational roles (Solar Blue - primary)
+      'user': const Color(0xFF2563EB), // solarBlue
+      'member': const Color(0xFF2563EB), // solarBlue
+      'technician': const Color(0xFF2563EB), // solarBlue
+      'tech': const Color(0xFF2563EB), // solarBlue
+      'field_technician': const Color(0xFF2563EB), // solarBlue
+      'engineer': const Color(0xFF2563EB), // solarBlue
+      'developer': const Color(0xFF2563EB), // solarBlue
+      'dev': const Color(0xFF2563EB), // solarBlue
+      'contractor': const Color(0xFF2563EB), // solarBlue
+      'analyst': const Color(0xFF2563EB), // solarBlue
+      'qa': const Color(0xFF2563EB), // solarBlue
+      'quality_assurance': const Color(0xFF2563EB), // solarBlue
+      'finance': const Color(0xFF059669), // solarGreen
+      'accounting': const Color(0xFF059669), // solarGreen
+      'hr': const Color(0xFF059669), // solarGreen
+      'human_resources': const Color(0xFF059669), // solarGreen
+      'sales': const Color(0xFF8B5CF6), // energyOptimal
+      'support': const Color(0xFF8B5CF6), // energyOptimal
+      // Viewer - Read-only roles (Gray)
+      'viewer': const Color(0xFF6B7280), // statusDraft
+      'guest': const Color(0xFF6B7280), // statusDraft
+      'client': const Color(0xFF6B7280), // statusDraft
+      'customer': const Color(0xFF6B7280), // statusDraft
     };
 
-    final colorScheme = roleColors[roleName.toLowerCase()] ?? Colors.blue;
-    return colorScheme.shade600;
+    return roleColors[roleName.toLowerCase()] ?? const Color(0xFF2563EB); // Default to solarBlue
   }
 
   // MARK: - Snackbar Helpers
 
   /// Show search functionality snackbar
   void _showSearchSnackBar(BuildContext context) {
-    _showSnackBar(
-      context,
-      icon: Icons.search_rounded,
-      message: 'Search functionality coming soon!',
-    );
+    _showSnackBar(context, icon: Icons.search_rounded, message: 'Search functionality coming soon!');
   }
 
   /// Show notification functionality snackbar
   void _showNotificationSnackBar(BuildContext context) {
-    _showSnackBar(
-      context,
-      icon: Icons.notifications_active_rounded,
-      message: 'Notifications feature coming soon!',
-    );
+    _showSnackBar(context, icon: Icons.notifications_active_rounded, message: 'Notifications feature coming soon!');
   }
 
   /// Generic snackbar helper
-  void _showSnackBar(
-    BuildContext context, {
-    required IconData icon,
-    required String message,
-  }) {
+  void _showSnackBar(BuildContext context, {required IconData icon, required String message}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
           children: [
-            Icon(
-              icon,
-              color: Theme.of(context).colorScheme.onInverseSurface,
-              size: 20,
-            ),
+            Icon(icon, color: Theme.of(context).colorScheme.onInverseSurface, size: 20),
             const SizedBox(width: 8),
             Text(message),
           ],

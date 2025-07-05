@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/ui/design_system/design_system.dart';
 import '../../domain/entities/daily_report.dart';
 
 /// Widget to display a daily report card in the list
@@ -12,116 +13,222 @@ class DailyReportCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final colorScheme = Theme.of(context).colorScheme;
 
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      elevation: 2,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header with project name and date
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Text(
-                      report.project?.projectName ?? 'Unknown Project',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Flexible(
-                    child: Text(
-                      _formatDate(report.reportDate),
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.primary,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 12),
-
-              // Technician name and hours worked
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.person_outline,
-                          size: 18,
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                            report.technician?.fullName ?? 'Unknown User',
-                            style: theme.textTheme.bodyMedium,
+    return Container(
+      margin: EdgeInsets.symmetric(vertical: AppDesignTokens.spacingXs),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(AppDesignTokens.radiusLg),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [colorScheme.surface, colorScheme.surfaceContainerLowest],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: colorScheme.shadow.withOpacity(0.08),
+            blurRadius: 12,
+            spreadRadius: 2,
+            offset: const Offset(0, 4),
+          ),
+          BoxShadow(
+            color: colorScheme.primary.withOpacity(0.05),
+            blurRadius: 20,
+            spreadRadius: 5,
+            offset: const Offset(0, 8),
+          ),
+        ],
+        border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.5), width: 1),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppDesignTokens.radiusLg),
+          splashColor: colorScheme.primary.withOpacity(0.1),
+          highlightColor: colorScheme.primary.withOpacity(0.05),
+          child: Container(
+            padding: EdgeInsets.all(AppDesignTokens.spacingLg),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header with project name and date with enhanced styling
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            report.project?.projectName ?? 'Unknown Project',
+                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: colorScheme.onSurface,
+                              letterSpacing: 0.3,
+                            ),
+                            maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
                           ),
-                        ),
-                      ],
+                          SizedBox(height: AppDesignTokens.spacingXs),
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: AppDesignTokens.spacingSm,
+                              vertical: AppDesignTokens.spacingXs,
+                            ),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [colorScheme.primary.withOpacity(0.1), colorScheme.primary.withOpacity(0.05)],
+                              ),
+                              borderRadius: BorderRadius.circular(AppDesignTokens.radiusSm),
+                              border: Border.all(color: colorScheme.primary.withOpacity(0.2), width: 1),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.calendar_today, size: AppDesignTokens.iconSm, color: colorScheme.primary),
+                                SizedBox(width: AppDesignTokens.spacingXs),
+                                Text(
+                                  _formatDate(report.reportDate),
+                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: colorScheme.primary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
+                    SizedBox(width: AppDesignTokens.spacingSm),
+                    _buildStatusChip(context),
+                  ],
+                ),
+
+                SizedBox(height: AppDesignTokens.spacingLg),
+
+                // Enhanced technician and hours section
+                Container(
+                  padding: EdgeInsets.all(AppDesignTokens.spacingMd),
+                  decoration: BoxDecoration(
+                    color: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(AppDesignTokens.radiusMd),
+                    border: Border.all(color: colorScheme.outline.withOpacity(0.1), width: 1),
                   ),
-                  const SizedBox(width: 8),
-                  _buildHoursWidget(context),
-                ],
-              ),
-
-              const SizedBox(height: 12),
-
-              // Status and photos row
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Flexible(flex: 0, child: _buildStatusChip(context)),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Icon(
-                          Icons.photo_library_outlined,
-                          size: 18,
-                          color: theme.colorScheme.onSurfaceVariant,
+                  child: Row(
+                    children: [
+                      // Technician info with avatar-style icon
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: EdgeInsets.all(AppDesignTokens.spacingXs),
+                              decoration: BoxDecoration(
+                                color: colorScheme.primary.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(AppDesignTokens.radiusSm),
+                              ),
+                              child: Icon(
+                                Icons.person_rounded,
+                                size: AppDesignTokens.iconMd,
+                                color: colorScheme.primary,
+                              ),
+                            ),
+                            SizedBox(width: AppDesignTokens.spacingSm),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Technician',
+                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: colorScheme.onSurfaceVariant,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  SizedBox(height: AppDesignTokens.spacingXxs),
+                                  Text(
+                                    report.technician?.fullName ?? 'Unknown User',
+                                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color: colorScheme.onSurface,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 4),
-                        Flexible(
-                          child: Text(
+                      ),
+                      SizedBox(width: AppDesignTokens.spacingMd),
+                      _buildHoursWidget(context),
+                    ],
+                  ),
+                ),
+
+                SizedBox(height: AppDesignTokens.spacingMd),
+
+                // Enhanced footer with photos and navigation
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Photos count with better styling
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: AppDesignTokens.spacingSm,
+                        vertical: AppDesignTokens.spacingXs,
+                      ),
+                      decoration: BoxDecoration(
+                        color: colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(AppDesignTokens.radiusSm),
+                        border: Border.all(color: colorScheme.outline.withOpacity(0.2), width: 1),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.photo_library_rounded, size: AppDesignTokens.iconSm, color: colorScheme.secondary),
+                          SizedBox(width: AppDesignTokens.spacingXs),
+                          Text(
                             '${report.photosCount} ${report.photosCount == 1 ? 'photo' : 'photos'}',
-                            style: theme.textTheme.bodySmall,
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
+                            style: Theme.of(
+                              context,
+                            ).textTheme.bodyMedium?.copyWith(color: colorScheme.onSurface, fontWeight: FontWeight.w500),
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        Icon(
-                          Icons.chevron_right,
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ],
+
+                    // Navigation hint
+                    Container(
+                      padding: EdgeInsets.all(AppDesignTokens.spacingXs),
+                      decoration: BoxDecoration(
+                        color: colorScheme.primary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(AppDesignTokens.radiusSm),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'View Details',
+                            style: Theme.of(
+                              context,
+                            ).textTheme.bodyMedium?.copyWith(color: colorScheme.primary, fontWeight: FontWeight.w600),
+                          ),
+                          SizedBox(width: AppDesignTokens.spacingXs),
+                          Icon(
+                            Icons.arrow_forward_ios_rounded,
+                            size: AppDesignTokens.iconSm,
+                            color: colorScheme.primary,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -133,6 +240,8 @@ class DailyReportCard extends StatelessWidget {
   }
 
   Widget _buildHoursWidget(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     // Calculate total hours from work progress items
     double totalHours = 0;
     for (final item in report.workProgressItems) {
@@ -140,27 +249,39 @@ class DailyReportCard extends StatelessWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: EdgeInsets.symmetric(horizontal: AppDesignTokens.spacingMd, vertical: AppDesignTokens.spacingSm),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.timer_outlined,
-            size: 16,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [colorScheme.secondary.withOpacity(0.1), colorScheme.secondary.withOpacity(0.05)],
+        ),
+        borderRadius: BorderRadius.circular(AppDesignTokens.radiusMd),
+        border: Border.all(color: colorScheme.secondary.withOpacity(0.3), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: colorScheme.secondary.withOpacity(0.1),
+            blurRadius: 8,
+            spreadRadius: 1,
+            offset: const Offset(0, 2),
           ),
-          const SizedBox(width: 4),
+        ],
+      ),
+      child: Column(
+        children: [
+          Icon(Icons.schedule_rounded, size: AppDesignTokens.iconMd, color: colorScheme.secondary),
+          SizedBox(height: AppDesignTokens.spacingXs),
           Text(
-            '${totalHours}h',
+            '${totalHours.toStringAsFixed(1)}h',
             style: Theme.of(
               context,
-            ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
-            overflow: TextOverflow.ellipsis,
-            maxLines: 1,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: colorScheme.secondary),
+          ),
+          Text(
+            'Hours',
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant, fontWeight: FontWeight.w500),
           ),
         ],
       ),
@@ -168,48 +289,65 @@ class DailyReportCard extends StatelessWidget {
   }
 
   Widget _buildStatusChip(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     Color color;
     IconData icon;
+    String label;
 
     switch (report.status) {
       case DailyReportStatus.draft:
-        color = Colors.grey;
-        icon = Icons.edit_note;
+        color = colorScheme.tertiary;
+        icon = Icons.edit_rounded;
+        label = 'DRAFT';
         break;
       case DailyReportStatus.submitted:
         color = Colors.blue;
-        icon = Icons.send;
+        icon = Icons.send_rounded;
+        label = 'SUBMITTED';
         break;
       case DailyReportStatus.approved:
         color = Colors.green;
-        icon = Icons.check_circle;
+        icon = Icons.check_circle_rounded;
+        label = 'APPROVED';
         break;
       case DailyReportStatus.rejected:
         color = Colors.red;
-        icon = Icons.cancel;
+        icon = Icons.cancel_rounded;
+        label = 'REJECTED';
         break;
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: EdgeInsets.symmetric(horizontal: AppDesignTokens.spacingMd, vertical: AppDesignTokens.spacingXs),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color, width: 1),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [color.withOpacity(0.15), color.withOpacity(0.1)],
+        ),
+        borderRadius: BorderRadius.circular(AppDesignTokens.radiusLg),
+        border: Border.all(color: color.withOpacity(0.4), width: 1.5),
+        boxShadow: [
+          BoxShadow(color: color.withOpacity(0.2), blurRadius: 8, spreadRadius: 1, offset: const Offset(0, 2)),
+        ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: color),
-          const SizedBox(width: 4),
-          Text(
-            report.status.name.toUpperCase(),
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: color,
-              fontWeight: FontWeight.bold,
+          Container(
+            padding: EdgeInsets.all(AppDesignTokens.spacingXxs),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(AppDesignTokens.radiusSm),
             ),
-            overflow: TextOverflow.ellipsis,
-            maxLines: 1,
+            child: Icon(icon, size: AppDesignTokens.iconSm, color: color),
+          ),
+          SizedBox(width: AppDesignTokens.spacingXs),
+          Text(
+            label,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: color, fontWeight: FontWeight.bold, letterSpacing: 0.5),
           ),
         ],
       ),

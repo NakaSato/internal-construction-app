@@ -53,7 +53,7 @@ class EnvironmentConfig {
     final fallbackUrl = switch (currentEnvironment) {
       Environment.development => const String.fromEnvironment(
         'DEV_API_URL',
-        defaultValue: 'http://localhost:5002',
+        defaultValue: 'http://localhost:8080',
       ),
       Environment.production => const String.fromEnvironment(
         'PROD_API_URL',

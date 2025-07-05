@@ -1,16 +1,14 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
+import '../../../../common/utils/error_extensions.dart';
 import '../../domain/entities/project_api_models.dart';
 import '../../domain/repositories/project_repository.dart';
 import '../datasources/project_api_service.dart';
 import '../models/project_response.dart';
 
 /// API implementation of the enhanced project repository
-@Injectable(
-  as: EnhancedProjectRepository,
-  env: [Environment.dev, Environment.prod],
-)
+@Injectable(as: EnhancedProjectRepository, env: [Environment.dev, Environment.prod])
 class ApiProjectRepository implements EnhancedProjectRepository {
   const ApiProjectRepository(this._apiService);
 
@@ -55,9 +53,35 @@ class ApiProjectRepository implements EnhancedProjectRepository {
     }
   }
 
+  /// Validates if the project ID format is correct (UUID)
+  /// Returns error message if invalid, null if valid
+  String? _validateProjectId(String id) {
+    if (id.isEmpty) {
+      return 'Project ID cannot be empty.';
+    }
+
+    if (id.length != 36) {
+      return 'Project ID must be 36 characters long (UUID format).';
+    }
+
+    final uuidRegex = RegExp(r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
+
+    if (!uuidRegex.hasMatch(id)) {
+      return 'Invalid project ID format. Expected format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx';
+    }
+
+    return null; // Valid
+  }
+
   @override
   Future<EnhancedProject> getProjectById(String id) async {
     try {
+      // Validate project ID format with descriptive error messages
+      final validationError = _validateProjectId(id);
+      if (validationError != null) {
+        throw ArgumentError(validationError);
+      }
+
       if (kDebugMode) {
         debugPrint('🔍 Loading project details for ID: $id');
       }
@@ -71,36 +95,46 @@ class ApiProjectRepository implements EnhancedProjectRepository {
       // Convert the single project response data directly to EnhancedProject
       return _convertSingleProjectToEnhanced(response.data);
     } on DioException catch (e, stackTrace) {
+      // Use the enhanced error handling
+      final errorResponse = ErrorResponse.fromDioException(e);
+
       if (kDebugMode) {
-        debugPrint('❌ DioException in getProjectById for ID $id: ${e.message}');
-        debugPrint('🔍 Response: ${e.response?.data}');
-        debugPrint('🔍 Status code: ${e.response?.statusCode}');
-        debugPrint('🔍 Stack trace: $stackTrace');
+        debugPrint('❌ DioException in getProjectById for ID $id:');
+        debugPrint('  📄 User message: ${errorResponse.message}');
+        debugPrint('  � Is retryable: ${errorResponse.isRetryable}');
+        debugPrint('  📊 Status code: ${errorResponse.statusCode}');
+        debugPrint('  🔍 Error code: ${errorResponse.errorCode}');
+        if (errorResponse.debugInfo != null) {
+          debugPrint('  � Debug info:\n${errorResponse.debugInfo}');
+        }
+        debugPrint('  🔍 Stack trace: $stackTrace');
       }
-      rethrow;
+
+      // Throw a more user-friendly error with the enhanced message
+      throw Exception(errorResponse.message);
+    } on ArgumentError catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ Invalid project ID format: $e');
+      }
+      throw Exception(e.message);
     } catch (e, stackTrace) {
       if (kDebugMode) {
         debugPrint('❌ General exception in getProjectById for ID $id: $e');
         debugPrint('🔍 Stack trace: $stackTrace');
       }
-      rethrow;
+      throw Exception('Failed to load project details. Please try again.');
     }
   }
 
   @override
-  Future<EnhancedProject> createProject(
-    Map<String, dynamic> projectData,
-  ) async {
+  Future<EnhancedProject> createProject(Map<String, dynamic> projectData) async {
     // For now, return a mock implementation
     // This will need to be implemented when the API has a create endpoint
     throw UnimplementedError('Create project API endpoint not yet implemented');
   }
 
   @override
-  Future<EnhancedProject> updateProject(
-    String id,
-    Map<String, dynamic> projectData,
-  ) async {
+  Future<EnhancedProject> updateProject(String id, Map<String, dynamic> projectData) async {
     // For now, return a mock implementation
     // This will need to be implemented when the API has an update endpoint
     throw UnimplementedError('Update project API endpoint not yet implemented');
@@ -114,28 +148,19 @@ class ApiProjectRepository implements EnhancedProjectRepository {
   }
 
   @override
-  Future<ProjectsResponse> getProjectsByManager(
-    String managerId,
-    ProjectsQuery query,
-  ) async {
+  Future<ProjectsResponse> getProjectsByManager(String managerId, ProjectsQuery query) async {
     final updatedQuery = query.copyWith(managerId: managerId);
     return getAllProjects(updatedQuery);
   }
 
   @override
-  Future<ProjectsResponse> getProjectsByStatus(
-    String status,
-    ProjectsQuery query,
-  ) async {
+  Future<ProjectsResponse> getProjectsByStatus(String status, ProjectsQuery query) async {
     final updatedQuery = query.copyWith(status: status);
     return getAllProjects(updatedQuery);
   }
 
   @override
-  Future<ProjectsResponse> searchProjects(
-    String searchQuery,
-    ProjectsQuery query,
-  ) async {
+  Future<ProjectsResponse> searchProjects(String searchQuery, ProjectsQuery query) async {
     final updatedQuery = query.copyWith(filter: searchQuery);
     return getAllProjects(updatedQuery);
   }
@@ -164,9 +189,7 @@ class ApiProjectRepository implements EnhancedProjectRepository {
     try {
       if (kDebugMode) {
         debugPrint('🔄 Converting ProjectResponse to ProjectsResponse');
-        debugPrint(
-          '📊 Response data items count: ${response.data.items.length}',
-        );
+        debugPrint('📊 Response data items count: ${response.data.items.length}');
       }
 
       // Extract project data from the API response with safety checks
@@ -188,10 +211,8 @@ class ApiProjectRepository implements EnhancedProjectRepository {
             startDate: item.startDate,
             estimatedEndDate: item.estimatedEndDate,
             actualEndDate: item.actualEndDate,
-            createdAt:
-                item.startDate, // Use startDate as fallback for createdAt
-            updatedAt:
-                DateTime.now(), // Use current time as fallback for updatedAt
+            createdAt: item.startDate, // Use startDate as fallback for createdAt
+            updatedAt: DateTime.now(), // Use current time as fallback for updatedAt
             projectManager: item.projectManager != null
                 ? ProjectManager(
                     userId: item.projectManager!.userId,
@@ -245,9 +266,7 @@ class ApiProjectRepository implements EnhancedProjectRepository {
   }
 
   // Helper method to convert single project response to domain model
-  EnhancedProject _convertSingleProjectToEnhanced(
-    Map<String, dynamic> projectData,
-  ) {
+  EnhancedProject _convertSingleProjectToEnhanced(Map<String, dynamic> projectData) {
     if (kDebugMode) {
       debugPrint('🔄 Converting single project data: ${projectData.keys}');
     }
@@ -259,32 +278,25 @@ class ApiProjectRepository implements EnhancedProjectRepository {
       clientInfo: projectData['clientInfo']?.toString() ?? '',
       status: projectData['status']?.toString() ?? 'planning',
       startDate: projectData['startDate'] != null
-          ? DateTime.tryParse(projectData['startDate'].toString()) ??
-                DateTime.now()
+          ? DateTime.tryParse(projectData['startDate'].toString()) ?? DateTime.now()
           : DateTime.now(),
       estimatedEndDate: projectData['estimatedEndDate'] != null
-          ? DateTime.tryParse(projectData['estimatedEndDate'].toString()) ??
-                DateTime.now()
+          ? DateTime.tryParse(projectData['estimatedEndDate'].toString()) ?? DateTime.now()
           : DateTime.now(),
       actualEndDate: projectData['actualEndDate'] != null
           ? DateTime.tryParse(projectData['actualEndDate'].toString())
           : null,
       createdAt: projectData['createdAt'] != null
-          ? DateTime.tryParse(projectData['createdAt'].toString()) ??
-                DateTime.now()
+          ? DateTime.tryParse(projectData['createdAt'].toString()) ?? DateTime.now()
           : DateTime.now(),
       updatedAt: projectData['updatedAt'] != null
-          ? DateTime.tryParse(projectData['updatedAt'].toString()) ??
-                DateTime.now()
+          ? DateTime.tryParse(projectData['updatedAt'].toString()) ?? DateTime.now()
           : DateTime.now(),
       projectManager: projectData['projectManager'] != null
-          ? ProjectManager.fromJson(
-              projectData['projectManager'] as Map<String, dynamic>,
-            )
+          ? ProjectManager.fromJson(projectData['projectManager'] as Map<String, dynamic>)
           : null,
       taskCount: (projectData['taskCount'] as num?)?.toInt() ?? 0,
-      completedTaskCount:
-          (projectData['completedTaskCount'] as num?)?.toInt() ?? 0,
+      completedTaskCount: (projectData['completedTaskCount'] as num?)?.toInt() ?? 0,
       team: projectData['team']?.toString(),
       connectionType: projectData['connectionType']?.toString(),
       connectionNotes: projectData['connectionNotes']?.toString(),

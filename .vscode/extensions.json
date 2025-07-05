@@ -1,0 +1,12 @@
+{
+  "recommendations": [
+    "dart-code.dart-code",
+    "dart-code.flutter",
+    "alexisvt.flutter-snippets",
+    "marcelovelasquez.flutter-tree"
+  ],
+  "unwantedRecommendations": [
+    "ms-vscode.cmake-tools",
+    "ms-vscode.cpptools-extension-pack"
+  ]
+}

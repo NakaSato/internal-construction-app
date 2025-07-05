@@ -325,7 +325,7 @@ Set up integration tests that verify the entire flow:
 ### Environment Configuration
 The API client is configured to use environment-based URLs:
 
-- **Development**: `http://localhost:5001` (local development server)
+- **Development**: `http://localhost:8080` (local development server)
 - **Production**: `https://solar-projects-api.azurewebsites.net` (Azure-hosted API)
 
 ### Authentication Token Management

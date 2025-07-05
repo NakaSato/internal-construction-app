@@ -42,93 +42,226 @@ class _DailyReportsFilterSheetState extends State<DailyReportsFilterSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Filter Reports',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              TextButton.icon(
-                onPressed: _resetFilters,
-                icon: const Icon(Icons.refresh),
-                label: const Text('Reset'),
-              ),
-            ],
-          ),
-          const Divider(),
-
-          // Project Filter
-          _buildSectionTitle('Project'),
-          _buildProjectDropdown(),
-          const SizedBox(height: 16),
-
-          // Technician Filter
-          _buildSectionTitle('Technician'),
-          _buildTechnicianDropdown(),
-          const SizedBox(height: 16),
-
-          // Date Range Filter
-          _buildSectionTitle('Date Range'),
-          Row(
-            children: [
-              Expanded(
-                child: _buildDateField(
-                  'Start Date',
-                  _startDate,
-                  (date) => setState(() => _startDate = date),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildDateField(
-                  'End Date',
-                  _endDate,
-                  (date) => setState(() => _endDate = date),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          // Status Filter
-          _buildSectionTitle('Status'),
-          _buildStatusSelector(),
-          const SizedBox(height: 24),
-
-          // Apply Button
-          ElevatedButton(
-            onPressed: _applyFilters,
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              foregroundColor: Theme.of(context).colorScheme.onPrimary,
-            ),
-            child: const Text('Apply Filters'),
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [colorScheme.surface, colorScheme.surfaceContainerLowest],
+        ),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        boxShadow: [
+          BoxShadow(
+            color: colorScheme.shadow.withOpacity(0.1),
+            blurRadius: 20,
+            spreadRadius: 5,
+            offset: const Offset(0, -4),
           ),
         ],
+        border: Border.all(
+          color: colorScheme.outlineVariant.withOpacity(0.5),
+          width: 1,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Modern header with drag handle
+            Column(
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: colorScheme.onSurfaceVariant.withOpacity(0.4),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Filter Reports',
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: colorScheme.onSurface,
+                            letterSpacing: 0.3,
+                          ),
+                    ),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: colorScheme.outline.withOpacity(0.2),
+                          width: 1,
+                        ),
+                      ),
+                      child: TextButton.icon(
+                        onPressed: _resetFilters,
+                        icon: Icon(
+                          Icons.refresh_rounded,
+                          color: colorScheme.primary,
+                          size: 18,
+                        ),
+                        label: Text(
+                          'Reset',
+                          style: TextStyle(
+                            color: colorScheme.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 28),
+
+            // Project Filter
+            _buildSectionTitle('Project'),
+            const SizedBox(height: 12),
+            _buildProjectDropdown(),
+            const SizedBox(height: 24),
+
+            // Technician Filter
+            _buildSectionTitle('Technician'),
+            const SizedBox(height: 12),
+            _buildTechnicianDropdown(),
+            const SizedBox(height: 24),
+
+            // Date Range Filter
+            _buildSectionTitle('Date Range'),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildDateField(
+                    'Start Date',
+                    _startDate,
+                    (date) => setState(() => _startDate = date),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildDateField(
+                    'End Date',
+                    _endDate,
+                    (date) => setState(() => _endDate = date),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+
+            // Status Filter
+            _buildSectionTitle('Status'),
+            const SizedBox(height: 12),
+            _buildStatusSelector(),
+            const SizedBox(height: 32),
+
+            // Modern Apply Button
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    colorScheme.primary,
+                    colorScheme.primary.withOpacity(0.8),
+                  ],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: colorScheme.primary.withOpacity(0.3),
+                    blurRadius: 12,
+                    spreadRadius: 2,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: ElevatedButton(
+                onPressed: _applyFilters,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                child: Text(
+                  'Apply Filters',
+                  style: TextStyle(
+                    color: colorScheme.onPrimary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildSectionTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-          color: Theme.of(context).colorScheme.primary,
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+          colors: [
+            colorScheme.primary.withOpacity(0.1),
+            colorScheme.primary.withOpacity(0.05),
+          ],
         ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: colorScheme.primary.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 4,
+            height: 20,
+            decoration: BoxDecoration(
+              color: colorScheme.primary,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            title,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: colorScheme.primary,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0.3,
+            ),
+          ),
+        ],
       ),
     );
   }

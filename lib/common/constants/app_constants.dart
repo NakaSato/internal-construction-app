@@ -10,7 +10,7 @@ class AppConstants {
   // API Configuration
   static const String baseUrl = String.fromEnvironment(
     'BASE_URL',
-    defaultValue: 'http://localhost:5002',
+    defaultValue: 'http://localhost:8080',
   );
 
   static const String apiVersion = 'v1';

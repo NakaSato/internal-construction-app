@@ -1,0 +1,95 @@
+{
+  "production_api": {
+    "base_url": "https://api-icms.gridtokenx.com",
+    "environment": "production"
+  },
+  "users": [
+    {
+      "role": "Admin",
+      "roleId": 1,
+      "username": "sysadmin",
+      "email": "sysadmin@gridtokenx.com",
+      "password": "Admin123!",
+      "fullName": "System Administrator",
+      "userId": "337342aa-6e95-4d75-8373-70d0d9804acb",
+      "isActive": true,
+      "permissions": [
+        "delete_projects",
+        "create_projects", 
+        "edit_projects",
+        "view_projects",
+        "manage_users",
+        "full_system_access"
+      ]
+    },
+    {
+      "role": "Manager", 
+      "roleId": 2,
+      "username": "projectmanager",
+      "email": "manager@gridtokenx.com",
+      "password": "Manager123!",
+      "fullName": "Project Manager",
+      "userId": "9aaa8e07-4e5b-4ad8-b184-0eb7839de43d",
+      "isActive": true,
+      "permissions": [
+        "create_projects",
+        "edit_projects", 
+        "view_projects",
+        "manage_project_tasks",
+        "assign_team_members"
+      ]
+    },
+    {
+      "role": "User",
+      "roleId": 3, 
+      "username": "testuser123",
+      "email": "testuser@example.com",
+      "password": "Password123!",
+      "fullName": "Test User",
+      "userId": "564cba64-9cba-48d5-aedf-d36a5754cd1a",
+      "isActive": true,
+      "permissions": [
+        "view_projects",
+        "view_assigned_tasks"
+      ]
+    }
+  ],
+  "api_endpoints": {
+    "auth": {
+      "register": "/api/v1/auth/register",
+      "login": "/api/v1/auth/login"
+    },
+    "projects": {
+      "list": "/api/v1/projects",
+      "get_by_id": "/api/v1/projects/{id}",
+      "create": "/api/v1/projects",
+      "update": "/api/v1/projects/{id}",
+      "delete": "/api/v1/projects/{id}"
+    },
+    "health": "/health"
+  },
+  "curl_examples": {
+    "login_admin": {
+      "description": "Login as admin user",
+      "command": "curl -X POST -H 'Content-Type: application/json' -d '{\"username\": \"sysadmin\", \"password\": \"Admin123!\"}' 'https://api-icms.gridtokenx.com/api/v1/auth/login'"
+    },
+    "login_manager": {
+      "description": "Login as manager user", 
+      "command": "curl -X POST -H 'Content-Type: application/json' -d '{\"username\": \"projectmanager\", \"password\": \"Manager123!\"}' 'https://api-icms.gridtokenx.com/api/v1/auth/login'"
+    },
+    "get_projects": {
+      "description": "Get all projects (requires auth token)",
+      "command": "curl -H 'Authorization: Bearer YOUR_TOKEN_HERE' 'https://api-icms.gridtokenx.com/api/v1/projects'"
+    },
+    "delete_project": {
+      "description": "Delete project (admin only)",
+      "command": "curl -X DELETE -H 'Authorization: Bearer ADMIN_TOKEN_HERE' 'https://api-icms.gridtokenx.com/api/v1/projects/PROJECT_ID'"
+    }
+  },
+  "notes": {
+    "password_requirements": "Password must contain at least one uppercase letter, one lowercase letter, one digit, and one special character",
+    "token_expiry": "JWT tokens have expiration time, use refresh token if needed",
+    "admin_privileges": "Only Admin role can delete projects",
+    "created_date": "2025-07-05"
+  }
+}
