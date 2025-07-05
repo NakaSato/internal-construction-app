@@ -1,9 +1,11 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:injectable/injectable.dart';
 import '../config/environment_config.dart';
 
 /// Enhanced API client with authentication, error handling, and logging
 /// All configuration now comes from .env file via EnvironmentConfig
+@LazySingleton()
 class ApiClient {
   late final Dio _dio;
   String? _authToken;

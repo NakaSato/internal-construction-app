@@ -1,12 +1,15 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:injectable/injectable.dart';
+import 'package:flutter/foundation.dart';
 import 'dart:async';
 
 import '../domain/entities/project_api_models.dart';
 import '../domain/repositories/project_repository.dart';
 import '../../../core/services/realtime_service.dart';
 import '../../../core/services/signalr_service.dart';
+import '../../../core/services/realtime_api_streams.dart';
+import '../../../core/di/injection.dart';
 
 /// Events for Enhanced Project BLoC
 abstract class EnhancedProjectEvent extends Equatable {
@@ -130,6 +133,67 @@ class InitializeRealTimeConnection extends EnhancedProjectEvent {
   const InitializeRealTimeConnection();
 }
 
+class RefreshProjectsWithCacheClear extends EnhancedProjectEvent {
+  const RefreshProjectsWithCacheClear({this.query, this.userRole});
+
+  final ProjectsQuery? query;
+  final String? userRole;
+
+  @override
+  List<Object?> get props => [query, userRole];
+}
+
+class StartLiveProjectUpdates extends EnhancedProjectEvent {
+  const StartLiveProjectUpdates({
+    this.query,
+    this.updateInterval = const Duration(seconds: 30),
+    this.includeDeltas = false,
+  });
+
+  final ProjectsQuery? query;
+  final Duration updateInterval;
+  final bool includeDeltas;
+
+  @override
+  List<Object?> get props => [query, updateInterval, includeDeltas];
+}
+
+class StopLiveProjectUpdates extends EnhancedProjectEvent {
+  const StopLiveProjectUpdates();
+}
+
+class LiveProjectUpdateReceived extends EnhancedProjectEvent {
+  const LiveProjectUpdateReceived({required this.projectsResponse});
+
+  final ProjectsResponse projectsResponse;
+
+  @override
+  List<Object?> get props => [projectsResponse];
+}
+
+// Real-time update events
+class ProjectRealtimeUpdateReceived extends EnhancedProjectEvent {
+  const ProjectRealtimeUpdateReceived({required this.update});
+
+  final RealtimeProjectUpdate update;
+
+  @override
+  List<Object?> get props => [update];
+}
+
+class StartProjectRealtimeUpdates extends EnhancedProjectEvent {
+  const StartProjectRealtimeUpdates({this.projectId});
+
+  final String? projectId;
+
+  @override
+  List<Object?> get props => [projectId];
+}
+
+class StopProjectRealtimeUpdates extends EnhancedProjectEvent {
+  const StopProjectRealtimeUpdates();
+}
+
 /// States for Enhanced Project BLoC
 abstract class EnhancedProjectState extends Equatable {
   const EnhancedProjectState();
@@ -212,6 +276,13 @@ class EnhancedProjectBloc extends Bloc<EnhancedProjectEvent, EnhancedProjectStat
     on<RealTimeProjectCreatedReceived>(_onRealTimeProjectCreatedReceived);
     on<RealTimeProjectDeletedReceived>(_onRealTimeProjectDeletedReceived);
     on<InitializeRealTimeConnection>(_onInitializeRealTimeConnection);
+    on<RefreshProjectsWithCacheClear>(_onRefreshProjectsWithCacheClear);
+    on<StartLiveProjectUpdates>(_onStartLiveProjectUpdates);
+    on<StopLiveProjectUpdates>(_onStopLiveProjectUpdates);
+    on<LiveProjectUpdateReceived>(_onLiveProjectUpdateReceived);
+    on<ProjectRealtimeUpdateReceived>(_onProjectRealtimeUpdateReceived);
+    on<StartProjectRealtimeUpdates>(_onStartProjectRealtimeUpdates);
+    on<StopProjectRealtimeUpdates>(_onStopProjectRealtimeUpdates);
 
     // Listen to real-time events
     _realtimeSubscription = _signalRService.eventStream.listen(_handleRealtimeEvent);
@@ -220,6 +291,7 @@ class EnhancedProjectBloc extends Bloc<EnhancedProjectEvent, EnhancedProjectStat
   final EnhancedProjectRepository _repository;
   final SignalRService _signalRService;
   StreamSubscription<RealtimeEvent>? _realtimeSubscription;
+  StreamSubscription<ProjectsResponse>? _liveUpdateSubscription;
 
   Future<void> _onLoadProjectsRequested(LoadProjectsRequested event, Emitter<EnhancedProjectState> emit) async {
     emit(const EnhancedProjectLoading());
@@ -478,10 +550,236 @@ class EnhancedProjectBloc extends Bloc<EnhancedProjectEvent, EnhancedProjectStat
     }
   }
 
+  Future<void> _onRefreshProjectsWithCacheClear(
+    RefreshProjectsWithCacheClear event,
+    Emitter<EnhancedProjectState> emit,
+  ) async {
+    emit(const EnhancedProjectLoading());
+
+    try {
+      // Clear the cache if needed
+      await _repository.clearProjectCache();
+
+      // Reload the projects
+      final projectsResponse = await _repository.getAllProjects(event.query ?? const ProjectsQuery());
+
+      emit(EnhancedProjectsLoaded(projectsResponse: projectsResponse));
+    } catch (e) {
+      emit(EnhancedProjectError(message: 'Failed to refresh projects', details: e.toString()));
+    }
+  }
+
+  Future<void> _onStartLiveProjectUpdates(StartLiveProjectUpdates event, Emitter<EnhancedProjectState> emit) async {
+    if (kDebugMode) {
+      debugPrint('🔴 Starting live project updates via repository stream');
+    }
+
+    try {
+      // Cancel any existing live update subscription
+      await _liveUpdateSubscription?.cancel();
+
+      // Start new live update stream from repository
+      _liveUpdateSubscription = _repository
+          .getLiveProjectUpdates(
+            event.query ?? const ProjectsQuery(),
+            updateInterval: event.updateInterval,
+            includeDeltas: event.includeDeltas,
+          )
+          .listen(
+            (projectsResponse) {
+              if (!isClosed) {
+                add(LiveProjectUpdateReceived(projectsResponse: projectsResponse));
+              }
+            },
+            onError: (error) {
+              if (!isClosed) {
+                add(
+                  LiveProjectUpdateReceived(
+                    projectsResponse: ProjectsResponse(
+                      items: [],
+                      totalCount: 0,
+                      totalPages: 0,
+                      pageNumber: 1,
+                      pageSize: 20,
+                      hasNextPage: false,
+                      hasPreviousPage: false,
+                      metadata: {},
+                    ),
+                  ),
+                );
+              }
+            },
+          );
+
+      if (kDebugMode) {
+        debugPrint('✅ Live project updates started successfully');
+      }
+    } catch (e) {
+      emit(EnhancedProjectError(message: 'Failed to start live project updates', details: e.toString()));
+    }
+  }
+
+  Future<void> _onStopLiveProjectUpdates(StopLiveProjectUpdates event, Emitter<EnhancedProjectState> emit) async {
+    if (kDebugMode) {
+      debugPrint('🛑 Stopping live project updates');
+    }
+
+    try {
+      // Cancel live update subscription
+      await _liveUpdateSubscription?.cancel();
+      _liveUpdateSubscription = null;
+
+      if (kDebugMode) {
+        debugPrint('✅ Live project updates stopped successfully');
+      }
+    } catch (e) {
+      emit(EnhancedProjectError(message: 'Failed to stop live project updates', details: e.toString()));
+    }
+  }
+
+  Future<void> _onLiveProjectUpdateReceived(LiveProjectUpdateReceived event, Emitter<EnhancedProjectState> emit) async {
+    // Emit the updated project data without showing loading state
+    // This maintains smooth real-time updates
+    emit(EnhancedProjectsLoaded(projectsResponse: event.projectsResponse));
+  }
+
+  // Real-time API update handlers
+  StreamSubscription<RealtimeProjectUpdate>? _realtimeApiSubscription;
+
+  Future<void> _onStartProjectRealtimeUpdates(
+    StartProjectRealtimeUpdates event,
+    Emitter<EnhancedProjectState> emit,
+  ) async {
+    try {
+      final realtimeStreams = getIt<RealtimeApiStreams>();
+      await realtimeStreams.initialize();
+
+      _realtimeApiSubscription = realtimeStreams.projectsStream.listen(
+        (update) => add(ProjectRealtimeUpdateReceived(update: update)),
+        onError: (error) {
+          if (kDebugMode) {
+            debugPrint('❌ Real-time project updates error: $error');
+          }
+        },
+      );
+
+      if (kDebugMode) {
+        debugPrint('✅ Started real-time project updates');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ Failed to start real-time project updates: $e');
+      }
+    }
+  }
+
+  Future<void> _onStopProjectRealtimeUpdates(
+    StopProjectRealtimeUpdates event,
+    Emitter<EnhancedProjectState> emit,
+  ) async {
+    _realtimeApiSubscription?.cancel();
+    _realtimeApiSubscription = null;
+
+    if (kDebugMode) {
+      debugPrint('🛑 Stopped real-time project updates');
+    }
+  }
+
+  Future<void> _onProjectRealtimeUpdateReceived(
+    ProjectRealtimeUpdateReceived event,
+    Emitter<EnhancedProjectState> emit,
+  ) async {
+    final update = event.update;
+    final currentState = state;
+
+    if (kDebugMode) {
+      debugPrint('📡 Received real-time project update: ${update.type} for ${update.projectId}');
+    }
+
+    switch (update.type) {
+      case 'update':
+        if (update.project != null) {
+          // Update project list if currently loaded
+          if (currentState is EnhancedProjectsLoaded) {
+            final updatedProjects = currentState.projectsResponse.items.map((project) {
+              return project.projectId == update.projectId ? update.project! : project;
+            }).toList();
+
+            final updatedResponse = ProjectsResponse(
+              items: updatedProjects,
+              totalCount: currentState.projectsResponse.totalCount,
+              totalPages: currentState.projectsResponse.totalPages,
+              pageNumber: currentState.projectsResponse.pageNumber,
+              pageSize: currentState.projectsResponse.pageSize,
+              hasNextPage: currentState.projectsResponse.hasNextPage,
+              hasPreviousPage: currentState.projectsResponse.hasPreviousPage,
+              metadata: currentState.projectsResponse.metadata,
+            );
+
+            emit(EnhancedProjectsLoaded(projectsResponse: updatedResponse));
+          }
+
+          // Update project details if currently showing this project
+          if (currentState is EnhancedProjectDetailsLoaded && currentState.project.projectId == update.projectId) {
+            emit(EnhancedProjectDetailsLoaded(project: update.project!));
+          }
+        }
+        break;
+
+      case 'create':
+        if (update.project != null && currentState is EnhancedProjectsLoaded) {
+          final updatedProjects = List<EnhancedProject>.from(currentState.projectsResponse.items)
+            ..insert(0, update.project!);
+
+          final updatedResponse = ProjectsResponse(
+            items: updatedProjects,
+            totalCount: currentState.projectsResponse.totalCount + 1,
+            totalPages: currentState.projectsResponse.totalPages,
+            pageNumber: currentState.projectsResponse.pageNumber,
+            pageSize: currentState.projectsResponse.pageSize,
+            hasNextPage: currentState.projectsResponse.hasNextPage,
+            hasPreviousPage: currentState.projectsResponse.hasPreviousPage,
+            metadata: currentState.projectsResponse.metadata,
+          );
+
+          emit(EnhancedProjectsLoaded(projectsResponse: updatedResponse));
+        }
+        break;
+
+      case 'delete':
+        if (currentState is EnhancedProjectsLoaded) {
+          final updatedProjects = currentState.projectsResponse.items
+              .where((project) => project.projectId != update.projectId)
+              .toList();
+
+          final updatedResponse = ProjectsResponse(
+            items: updatedProjects,
+            totalCount: currentState.projectsResponse.totalCount - 1,
+            totalPages: currentState.projectsResponse.totalPages,
+            pageNumber: currentState.projectsResponse.pageNumber,
+            pageSize: currentState.projectsResponse.pageSize,
+            hasNextPage: currentState.projectsResponse.hasNextPage,
+            hasPreviousPage: currentState.projectsResponse.hasPreviousPage,
+            metadata: currentState.projectsResponse.metadata,
+          );
+
+          emit(EnhancedProjectsLoaded(projectsResponse: updatedResponse));
+        }
+
+        // If currently viewing deleted project, navigate away
+        if (currentState is EnhancedProjectDetailsLoaded && currentState.project.projectId == update.projectId) {
+          emit(const EnhancedProjectError(message: 'Project was deleted'));
+        }
+        break;
+    }
+  }
+
   @override
   Future<void> close() {
     _realtimeSubscription?.cancel();
-    _realtimeService.dispose();
+    _realtimeApiSubscription?.cancel();
+    _liveUpdateSubscription?.cancel();
+    _signalRService.dispose();
     return super.close();
   }
 }

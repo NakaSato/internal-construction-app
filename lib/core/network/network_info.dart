@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:injectable/injectable.dart';
 
 /// Abstract interface for checking network connectivity
 abstract class NetworkInfo {
@@ -6,6 +7,7 @@ abstract class NetworkInfo {
 }
 
 /// Implementation of NetworkInfo that checks internet connectivity
+@Injectable(as: NetworkInfo)
 class NetworkInfoImpl implements NetworkInfo {
   @override
   Future<bool> get isConnected => _hasNetworkConnection();

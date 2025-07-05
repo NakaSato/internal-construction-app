@@ -128,7 +128,7 @@ class _DailyReportsScreenState extends State<DailyReportsScreen> {
   /// Silently refresh the reports list
   void _silentRefresh() {
     if (mounted) {
-      context.read<DailyReportsCubit>().loadDailyReports(showLoading: false);
+      context.read<DailyReportsCubit>().loadDailyReports();
     }
   }
 

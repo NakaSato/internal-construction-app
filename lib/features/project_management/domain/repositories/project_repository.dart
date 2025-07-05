@@ -43,10 +43,7 @@ abstract class EnhancedProjectRepository {
   /// - Status updates
   /// - Progress tracking
   /// - Team reassignments
-  Future<EnhancedProject> updateProject(
-    String id,
-    Map<String, dynamic> projectData,
-  );
+  Future<EnhancedProject> updateProject(String id, Map<String, dynamic> projectData);
 
   /// Delete a project
   ///
@@ -60,30 +57,21 @@ abstract class EnhancedProjectRepository {
   /// **🔒 Requires**: Any authenticated user
   ///
   /// Returns projects assigned to a specific manager
-  Future<ProjectsResponse> getProjectsByManager(
-    String managerId,
-    ProjectsQuery query,
-  );
+  Future<ProjectsResponse> getProjectsByManager(String managerId, ProjectsQuery query);
 
   /// Get projects filtered by status
   ///
   /// **🔒 Requires**: Any authenticated user
   ///
   /// Returns projects with specific status (Active, Completed, etc.)
-  Future<ProjectsResponse> getProjectsByStatus(
-    String status,
-    ProjectsQuery query,
-  );
+  Future<ProjectsResponse> getProjectsByStatus(String status, ProjectsQuery query);
 
   /// Search projects with text query
   ///
   /// **🔒 Requires**: Any authenticated user
   ///
   /// Searches projects by name, address, client info, or other text fields
-  Future<ProjectsResponse> searchProjects(
-    String searchQuery,
-    ProjectsQuery query,
-  );
+  Future<ProjectsResponse> searchProjects(String searchQuery, ProjectsQuery query);
 
   /// Get project statistics and analytics
   ///
@@ -103,4 +91,24 @@ abstract class EnhancedProjectRepository {
     double radiusKm,
     ProjectsQuery query,
   );
+
+  /// Clear project cache to ensure fresh data on next request
+  ///
+  /// **🔒 Requires**: Any authenticated user
+  ///
+  /// Forces the next API request to bypass any caching mechanisms
+  /// and fetch fresh data from the server
+  Future<void> clearProjectCache();
+
+  /// Get live updates for projects with real-time data refresh
+  ///
+  /// **🔒 Requires**: Any authenticated user
+  ///
+  /// Returns a stream of updated project data for real-time synchronization
+  /// This method is optimized for frequent updates and live data scenarios
+  Stream<ProjectsResponse> getLiveProjectUpdates(
+    ProjectsQuery query, {
+    Duration updateInterval = const Duration(seconds: 10),
+    bool includeDeltas = false,
+  });
 }

@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import 'package:injectable/injectable.dart';
 
 import '../../../../common/models/errors/exceptions.dart';
 import '../../../../common/models/errors/failures.dart';
@@ -9,14 +10,12 @@ import '../datasources/task_remote_datasource.dart';
 import '../models/task_model.dart';
 
 /// Implementation of [TaskRepository]
+@Injectable()
 class TaskRepositoryImpl implements TaskRepository {
   final TaskRemoteDataSource remoteDataSource;
   final NetworkInfo networkInfo;
 
-  TaskRepositoryImpl({
-    required this.remoteDataSource,
-    required this.networkInfo,
-  });
+  TaskRepositoryImpl({required this.remoteDataSource, required this.networkInfo});
 
   @override
   Future<Either<Failure, List<task_entity.Task>>> getTasks() async {
@@ -51,9 +50,7 @@ class TaskRepositoryImpl implements TaskRepository {
   }
 
   @override
-  Future<Either<Failure, List<task_entity.Task>>> getTasksByProject(
-    String projectId,
-  ) async {
+  Future<Either<Failure, List<task_entity.Task>>> getTasksByProject(String projectId) async {
     if (await networkInfo.isConnected) {
       try {
         final tasks = await remoteDataSource.getTasksByProject(projectId);
@@ -69,9 +66,7 @@ class TaskRepositoryImpl implements TaskRepository {
   }
 
   @override
-  Future<Either<Failure, List<task_entity.Task>>> getTasksByAssignee(
-    String assigneeId,
-  ) async {
+  Future<Either<Failure, List<task_entity.Task>>> getTasksByAssignee(String assigneeId) async {
     if (await networkInfo.isConnected) {
       try {
         final tasks = await remoteDataSource.getTasksByAssignee(assigneeId);
@@ -87,9 +82,7 @@ class TaskRepositoryImpl implements TaskRepository {
   }
 
   @override
-  Future<Either<Failure, task_entity.Task>> createTask(
-    task_entity.Task task,
-  ) async {
+  Future<Either<Failure, task_entity.Task>> createTask(task_entity.Task task) async {
     if (await networkInfo.isConnected) {
       try {
         final taskModel = TaskModel.fromEntity(task);
@@ -106,9 +99,7 @@ class TaskRepositoryImpl implements TaskRepository {
   }
 
   @override
-  Future<Either<Failure, task_entity.Task>> updateTask(
-    task_entity.Task task,
-  ) async {
+  Future<Either<Failure, task_entity.Task>> updateTask(task_entity.Task task) async {
     if (await networkInfo.isConnected) {
       try {
         final taskModel = TaskModel.fromEntity(task);
@@ -141,10 +132,7 @@ class TaskRepositoryImpl implements TaskRepository {
   }
 
   @override
-  Future<Either<Failure, task_entity.Task>> updateTaskStatus(
-    String id,
-    task_entity.TaskStatus status,
-  ) async {
+  Future<Either<Failure, task_entity.Task>> updateTaskStatus(String id, task_entity.TaskStatus status) async {
     try {
       final taskResult = await getTask(id);
       return taskResult.fold((failure) => Left(failure), (task) {
@@ -157,10 +145,7 @@ class TaskRepositoryImpl implements TaskRepository {
   }
 
   @override
-  Future<Either<Failure, task_entity.Task>> updateTaskCompletion(
-    String id,
-    int percentage,
-  ) async {
+  Future<Either<Failure, task_entity.Task>> updateTaskCompletion(String id, int percentage) async {
     try {
       final taskResult = await getTask(id);
       return taskResult.fold((failure) => Left(failure), (task) {

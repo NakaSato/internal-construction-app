@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/widgets/app_header.dart';
 import '../../../../core/services/universal_realtime_handler.dart';
+import '../../../../core/services/realtime_api_streams.dart';
 import '../../../authentication/application/auth_bloc.dart';
 import '../../../authentication/application/auth_state.dart';
 import '../../application/project_bloc.dart';
@@ -31,6 +32,11 @@ class _EnhancedProjectListScreenState extends State<EnhancedProjectListScreen> {
   late final UniversalRealtimeHandler _realtimeHandler;
   StreamSubscription? _authSubscription;
 
+  // Enhanced real-time system variables
+  StreamSubscription<RealtimeProjectUpdate>? _realtimeApiSubscription;
+  late final RealtimeApiStreams _realtimeApiStreams;
+  bool _isRealtimeConnected = false;
+
   // Live reload interval (30 seconds)
   static const Duration _refreshInterval = Duration(seconds: 30);
 
@@ -41,14 +47,32 @@ class _EnhancedProjectListScreenState extends State<EnhancedProjectListScreen> {
     // Initialize comprehensive real-time handler
     _realtimeHandler = getIt<UniversalRealtimeHandler>();
 
-    // Load initial projects
-    context.read<EnhancedProjectBloc>().add(const LoadProjectsRequested());
+    // Initialize enhanced real-time API streams
+    _realtimeApiStreams = getIt<RealtimeApiStreams>();
+
+    // Start with fresh API data by clearing cache first
+    _loadInitialProjectsWithFreshData();
 
     // Start live reload timer as fallback
     _startLiveReload();
 
-    // Initialize real-time updates based on authentication state
+    // Initialize both real-time systems based on authentication state
     _checkAuthAndInitializeRealtime();
+    _initializeEnhancedRealtime();
+  }
+
+  /// Load initial projects with fresh API data
+  void _loadInitialProjectsWithFreshData() {
+    // Clear any existing cache first
+    context.read<EnhancedProjectBloc>().add(RefreshProjectsWithCacheClear(query: _currentQuery));
+
+    // Then load fresh data from API
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (mounted) {
+        context.read<EnhancedProjectBloc>().add(const LoadProjectsRequested());
+        debugPrint('🚀 Project List: Initial load with fresh API data');
+      }
+    });
   }
 
   /// Check authentication state and initialize real-time updates if authenticated
@@ -162,11 +186,103 @@ class _EnhancedProjectListScreenState extends State<EnhancedProjectListScreen> {
     }
   }
 
+  /// Initialize enhanced real-time API system
+  Future<void> _initializeEnhancedRealtime() async {
+    try {
+      // Initialize connection
+      await _realtimeApiStreams.initialize();
+
+      setState(() {
+        _isRealtimeConnected = _realtimeApiStreams.isConnected;
+      });
+
+      // Start enhanced real-time updates through BLoC
+      context.read<EnhancedProjectBloc>().add(const StartProjectRealtimeUpdates());
+
+      // Subscribe for UI feedback and live connection status
+      _realtimeApiSubscription = _realtimeApiStreams.projectsStream.listen(
+        (update) {
+          debugPrint('📡 Enhanced real-time project update: ${update.type}');
+
+          // Show user-friendly notifications for real-time updates
+          if (mounted) {
+            _showRealtimeUpdateNotification(update);
+          }
+        },
+        onError: (error) {
+          debugPrint('❌ Enhanced real-time error: $error');
+          setState(() {
+            _isRealtimeConnected = false;
+          });
+        },
+      );
+
+      debugPrint('✅ Enhanced real-time system initialized for project list');
+    } catch (e) {
+      debugPrint('❌ Failed to initialize enhanced real-time: $e');
+      setState(() {
+        _isRealtimeConnected = false;
+      });
+    }
+  }
+
+  /// Show user-friendly notifications for real-time updates
+  void _showRealtimeUpdateNotification(RealtimeProjectUpdate update) {
+    String message;
+    Color backgroundColor;
+    IconData icon;
+
+    switch (update.type) {
+      case 'create':
+        message = 'New project added';
+        backgroundColor = Colors.green;
+        icon = Icons.add_circle;
+        break;
+      case 'update':
+        message = 'Project updated';
+        backgroundColor = Colors.blue;
+        icon = Icons.update;
+        break;
+      case 'delete':
+        message = 'Project removed';
+        backgroundColor = Colors.orange;
+        icon = Icons.remove_circle;
+        break;
+      default:
+        message = 'Project data changed';
+        backgroundColor = Colors.grey;
+        icon = Icons.sync;
+    }
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(icon, color: Colors.white, size: 20),
+              const SizedBox(width: 8),
+              Text(message),
+            ],
+          ),
+          backgroundColor: backgroundColor,
+          duration: const Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.only(bottom: 80, left: 16, right: 16),
+        ),
+      );
+    }
+  }
+
   @override
   void dispose() {
     _searchController.dispose();
     _stopLiveReload();
+    _stopLiveApiUpdates();
     _authSubscription?.cancel();
+
+    // Stop enhanced real-time updates
+    context.read<EnhancedProjectBloc>().add(const StopProjectRealtimeUpdates());
+    _realtimeApiSubscription?.cancel();
 
     // Note: Real-time handlers are automatically cleaned up when the BLoC is disposed
     // The UniversalRealtimeHandler is a singleton and will manage its own lifecycle
@@ -197,12 +313,28 @@ class _EnhancedProjectListScreenState extends State<EnhancedProjectListScreen> {
 
     if (_isLiveReloadEnabled) {
       _startLiveReload();
+      _startLiveApiUpdates();
     } else {
       _stopLiveReload();
+      _stopLiveApiUpdates();
     }
   }
 
-  /// Silent refresh that doesn't show loading indicators
+  /// Start live API updates using the repository stream
+  void _startLiveApiUpdates() {
+    if (_isLiveReloadEnabled) {
+      context.read<EnhancedProjectBloc>().add(
+        StartLiveProjectUpdates(query: _currentQuery, updateInterval: _refreshInterval, includeDeltas: true),
+      );
+    }
+  }
+
+  /// Stop live API updates
+  void _stopLiveApiUpdates() {
+    context.read<EnhancedProjectBloc>().add(const StopLiveProjectUpdates());
+  }
+
+  /// Silent refresh that makes fresh API calls without showing loading indicators
   void _silentRefresh() {
     if (!mounted) return;
 
@@ -210,12 +342,22 @@ class _EnhancedProjectListScreenState extends State<EnhancedProjectListScreen> {
       _isSilentRefreshing = true;
     });
 
-    final searchTerm = _searchController.text.trim();
-    if (searchTerm.isNotEmpty) {
-      context.read<EnhancedProjectBloc>().add(SearchProjectsRequested(searchTerm: searchTerm, filters: _currentQuery));
-    } else {
-      context.read<EnhancedProjectBloc>().add(LoadProjectsRequested(query: _currentQuery));
-    }
+    // Always clear cache for silent refresh to ensure fresh data
+    context.read<EnhancedProjectBloc>().add(RefreshProjectsWithCacheClear(query: _currentQuery));
+
+    // Make fresh API request after cache clear
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (!mounted) return;
+
+      final searchTerm = _searchController.text.trim();
+      if (searchTerm.isNotEmpty) {
+        context.read<EnhancedProjectBloc>().add(
+          SearchProjectsRequested(searchTerm: searchTerm, filters: _currentQuery),
+        );
+      } else {
+        context.read<EnhancedProjectBloc>().add(LoadProjectsRequested(query: _currentQuery));
+      }
+    });
 
     // Hide the refresh indicator after 2 seconds
     Timer(const Duration(seconds: 2), () {
@@ -225,6 +367,8 @@ class _EnhancedProjectListScreenState extends State<EnhancedProjectListScreen> {
         });
       }
     });
+
+    debugPrint('🔄 Project List: Silent refresh with fresh API data initiated');
   }
 
   void _onSearchChanged(String searchTerm) {
@@ -260,18 +404,52 @@ class _EnhancedProjectListScreenState extends State<EnhancedProjectListScreen> {
     );
   }
 
-  void _onRefresh() {
+  /// Enhanced refresh that clears cache and makes fresh API requests
+  Future<void> _onRefresh() async {
+    // Stop any ongoing real-time updates temporarily during refresh
+    _stopLiveApiUpdates();
+
     // Restart the live reload timer
     if (_isLiveReloadEnabled) {
       _stopLiveReload();
       _startLiveReload();
     }
 
-    final searchTerm = _searchController.text.trim();
-    if (searchTerm.isNotEmpty) {
-      context.read<EnhancedProjectBloc>().add(SearchProjectsRequested(searchTerm: searchTerm, filters: _currentQuery));
-    } else {
-      context.read<EnhancedProjectBloc>().add(LoadProjectsRequested(query: _currentQuery));
+    // Force cache clear and make fresh API requests
+    try {
+      final searchTerm = _searchController.text.trim();
+
+      // Always clear cache first to ensure fresh data
+      context.read<EnhancedProjectBloc>().add(RefreshProjectsWithCacheClear(query: _currentQuery));
+
+      // Wait a bit for cache to clear, then make the fresh request
+      await Future.delayed(const Duration(milliseconds: 150));
+
+      if (mounted) {
+        if (searchTerm.isNotEmpty) {
+          // Perform search with fresh data from API
+          context.read<EnhancedProjectBloc>().add(
+            SearchProjectsRequested(searchTerm: searchTerm, filters: _currentQuery),
+          );
+        } else {
+          // Load all projects with fresh data from API
+          context.read<EnhancedProjectBloc>().add(LoadProjectsRequested(query: _currentQuery));
+        }
+      }
+
+      // Restart live updates after refresh
+      if (_isLiveReloadEnabled && mounted) {
+        _startLiveApiUpdates();
+      }
+
+      debugPrint('✅ Project List: Refresh completed with fresh API data');
+    } catch (e) {
+      debugPrint('❌ Project List: Error during refresh: $e');
+
+      // Restart live updates even if refresh failed
+      if (_isLiveReloadEnabled && mounted) {
+        _startLiveApiUpdates();
+      }
     }
   }
 
@@ -312,15 +490,60 @@ class _EnhancedProjectListScreenState extends State<EnhancedProjectListScreen> {
             },
           ),
 
-          // Search and Filter Bar
+          // Search and Filter Bar with Real-time Status
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.surface,
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2))],
+              boxShadow: [
+                BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4, offset: const Offset(0, 2)),
+              ],
             ),
             child: Column(
               children: [
+                // Real-time connection status
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: _isRealtimeConnected
+                        ? Colors.green.withValues(alpha: 0.1)
+                        : Colors.grey.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: _isRealtimeConnected ? Colors.green : Colors.grey, width: 1),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        _isRealtimeConnected ? Icons.wifi : Icons.wifi_off,
+                        color: _isRealtimeConnected ? Colors.green : Colors.grey,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        _isRealtimeConnected ? 'Live Updates Active' : 'Real-time Offline',
+                        style: TextStyle(
+                          color: _isRealtimeConnected ? Colors.green.shade700 : Colors.grey.shade600,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      if (_isSilentRefreshing) ...[
+                        const SizedBox(width: 8),
+                        SizedBox(
+                          width: 12,
+                          height: 12,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: _isRealtimeConnected ? Colors.green : Colors.grey,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+
                 // Project Count Badge and Live Reload Status Row
                 BlocBuilder<EnhancedProjectBloc, EnhancedProjectState>(
                   builder: (context, projectState) {
@@ -529,7 +752,9 @@ class _EnhancedProjectListScreenState extends State<EnhancedProjectListScreen> {
             margin: const EdgeInsets.only(bottom: 32),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 2))],
+              boxShadow: [
+                BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 8, offset: const Offset(0, 2)),
+              ],
             ),
             child: EnhancedProjectCard(project: project, onTap: () => context.push('/projects/${project.projectId}')),
           );

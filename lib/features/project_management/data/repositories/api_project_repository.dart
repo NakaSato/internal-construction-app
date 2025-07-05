@@ -8,22 +8,35 @@ import '../datasources/project_api_service.dart';
 import '../models/project_response.dart';
 
 /// API implementation of the enhanced project repository
-@Injectable(as: EnhancedProjectRepository, env: [Environment.dev, Environment.prod])
+@Injectable()
 class ApiProjectRepository implements EnhancedProjectRepository {
-  const ApiProjectRepository(this._apiService);
+  ApiProjectRepository(this._apiService);
 
   final ProjectApiService _apiService;
+
+  // Cache control flag - when true, next requests will bypass cache
+  bool _bypassCache = false;
 
   @override
   Future<ProjectsResponse> getAllProjects(ProjectsQuery query) async {
     if (kDebugMode) {
       debugPrint('🚀 ApiProjectRepository.getAllProjects called');
       debugPrint('📝 Query parameters: ${query.toQueryParameters()}');
+      if (_bypassCache) {
+        debugPrint('🗑️ Cache bypass requested - will add cache-busting parameter');
+      }
     }
 
     try {
+      // Add cache-busting parameter if cache bypass is requested
+      final queryParams = query.toQueryParameters();
+      if (_bypassCache) {
+        queryParams['_cacheBuster'] = DateTime.now().millisecondsSinceEpoch.toString();
+        _resetCacheBypass(); // Reset flag after use
+      }
+
       // Convert ProjectsQuery to API response format
-      final response = await _apiService.getProjects(query.toQueryParameters());
+      final response = await _apiService.getProjects(queryParams);
 
       if (kDebugMode) {
         debugPrint('✅ API call successful');
@@ -89,11 +102,42 @@ class ApiProjectRepository implements EnhancedProjectRepository {
       final response = await _apiService.getProject(id);
 
       if (kDebugMode) {
-        debugPrint('✅ Received project detail response: ${response.data}');
+        debugPrint('✅ Received project detail response: success=${response.success}, message=${response.message}');
+      }
+
+      // Check if the response was successful
+      if (!response.success || response.data == null) {
+        final errorMessage = response.errors.isNotEmpty
+            ? response.errors.join(', ')
+            : response.message.isNotEmpty
+            ? response.message
+            : 'Failed to retrieve project details';
+
+        if (kDebugMode) {
+          debugPrint('❌ API returned unsuccessful response: $errorMessage');
+        }
+
+        // Check if it's a null reference error that we can handle with fallback
+        if (response.errors.any((error) => error.contains('Object reference not set to an instance of an object'))) {
+          if (kDebugMode) {
+            debugPrint('🔄 Server null reference error detected, trying fallback approach...');
+          }
+
+          try {
+            return await _getProjectByIdFallback(id);
+          } catch (fallbackError) {
+            if (kDebugMode) {
+              debugPrint('❌ Fallback also failed: $fallbackError');
+            }
+            throw Exception('Project data is temporarily unavailable. Please try again or contact support.');
+          }
+        }
+
+        throw Exception('Failed to load project details: $errorMessage');
       }
 
       // Convert the single project response data directly to EnhancedProject
-      return _convertSingleProjectToEnhanced(response.data);
+      return _convertSingleProjectToEnhanced(response.data!);
     } on DioException catch (e, stackTrace) {
       // Use the enhanced error handling
       final errorResponse = ErrorResponse.fromDioException(e);
@@ -128,7 +172,7 @@ class ApiProjectRepository implements EnhancedProjectRepository {
               if (kDebugMode) {
                 debugPrint('🔄 Server error detected, trying fallback approach...');
               }
-              
+
               try {
                 return await _getProjectByIdFallback(id);
               } catch (fallbackError) {
@@ -388,7 +432,7 @@ class ApiProjectRepository implements EnhancedProjectRepository {
       for (int page = 2; page <= projectsResponse.totalPages; page++) {
         final pageQuery = ProjectsQuery(pageNumber: page, pageSize: projectsResponse.pageSize);
         final pageResponse = await getAllProjects(pageQuery);
-        
+
         for (final project in pageResponse.items) {
           if (project.projectId == id) {
             if (kDebugMode) {
@@ -402,5 +446,107 @@ class ApiProjectRepository implements EnhancedProjectRepository {
 
     // If still not found, throw an error
     throw Exception('Project with ID $id not found in fallback search');
+  }
+
+  @override
+  Future<void> clearProjectCache() async {
+    if (kDebugMode) {
+      debugPrint('🗑️ ApiProjectRepository: Clearing project cache');
+    }
+
+    // Set flag to bypass cache on next request
+    _bypassCache = true;
+  }
+
+  @override
+  Stream<ProjectsResponse> getLiveProjectUpdates(
+    ProjectsQuery query, {
+    Duration updateInterval = const Duration(seconds: 10),
+    bool includeDeltas = false,
+  }) async* {
+    if (kDebugMode) {
+      debugPrint('🔴 Starting live project updates with ${updateInterval.inSeconds}s interval');
+    }
+
+    ProjectsResponse? lastResponse;
+    DateTime? lastUpdate;
+
+    while (true) {
+      try {
+        // Add live update specific query parameters
+        final liveQuery = query.copyWith();
+        final queryParams = liveQuery.toQueryParameters();
+
+        // Add parameters for live updates
+        queryParams['_live'] = 'true';
+        queryParams['_timestamp'] = DateTime.now().millisecondsSinceEpoch.toString();
+
+        if (includeDeltas && lastUpdate != null) {
+          queryParams['_since'] = lastUpdate.millisecondsSinceEpoch.toString();
+        }
+
+        if (kDebugMode) {
+          debugPrint('🔄 Fetching live project update...');
+        }
+
+        // Fetch fresh data
+        final response = await _apiService.getProjects(queryParams);
+        final projectsResponse = _convertToProjectsResponse(response);
+
+        // Update last fetch time
+        lastUpdate = DateTime.now();
+
+        // Only yield if there are changes (optimization)
+        if (lastResponse == null || !_areResponsesEqual(lastResponse, projectsResponse)) {
+          if (kDebugMode) {
+            debugPrint('✅ Live update: Changes detected, yielding new data');
+            debugPrint('📊 Projects count: ${projectsResponse.items.length}');
+          }
+
+          lastResponse = projectsResponse;
+          yield projectsResponse;
+        } else if (kDebugMode) {
+          debugPrint('⚪ Live update: No changes detected');
+        }
+
+        // Wait for next update
+        await Future.delayed(updateInterval);
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('❌ Live update error: $e');
+        }
+
+        // On error, wait a bit longer before retry
+        await Future.delayed(Duration(seconds: updateInterval.inSeconds * 2));
+      }
+    }
+  }
+
+  /// Helper method to compare responses for changes
+  bool _areResponsesEqual(ProjectsResponse a, ProjectsResponse b) {
+    if (a.totalCount != b.totalCount || a.items.length != b.items.length) {
+      return false;
+    }
+
+    // Quick comparison by project IDs, status, and task completion
+    for (int i = 0; i < a.items.length; i++) {
+      final itemA = a.items[i];
+      final itemB = b.items[i];
+
+      if (itemA.projectId != itemB.projectId ||
+          itemA.status != itemB.status ||
+          itemA.taskCount != itemB.taskCount ||
+          itemA.completedTaskCount != itemB.completedTaskCount ||
+          itemA.updatedAt != itemB.updatedAt) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  /// Reset cache bypass flag after use
+  void _resetCacheBypass() {
+    _bypassCache = false;
   }
 }

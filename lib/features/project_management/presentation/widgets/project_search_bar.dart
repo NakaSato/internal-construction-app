@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
+import '../../../../core/services/realtime_api_streams.dart';
+import '../../../../core/di/injection.dart';
 import '../../domain/entities/project_api_models.dart';
 
-/// Search bar widget for projects with filter functionality
+/// Search bar widget for projects with filter functionality and real-time updates
 class ProjectSearchBar extends StatefulWidget {
   const ProjectSearchBar({
     super.key,
@@ -14,6 +17,7 @@ class ProjectSearchBar extends StatefulWidget {
     this.activeFilterCount = 0,
     this.currentQuery,
     this.onQueryChanged,
+    this.onRealtimeUpdate, // New callback for real-time updates
   });
 
   final TextEditingController controller;
@@ -25,6 +29,8 @@ class ProjectSearchBar extends StatefulWidget {
   final int activeFilterCount;
   final ProjectsQuery? currentQuery;
   final ValueChanged<ProjectsQuery>? onQueryChanged;
+  final ValueChanged<RealtimeProjectUpdate>? onRealtimeUpdate;
+  final VoidCallback? onRealtimeUpdate; // Callback for real-time updates
 
   @override
   State<ProjectSearchBar> createState() => _ProjectSearchBarState();

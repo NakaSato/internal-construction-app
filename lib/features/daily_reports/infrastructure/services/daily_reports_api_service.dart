@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:injectable/injectable.dart';
 import '../../../../core/api/api_config.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/models/api_response.dart';
@@ -226,6 +227,7 @@ class UpdateDailyReportRequest extends Equatable {
 }
 
 /// API service class for daily report operations
+@Injectable()
 class DailyReportsApiService {
   const DailyReportsApiService(this._apiClient);
 
