@@ -123,9 +123,20 @@ class ApiProjectRepository implements EnhancedProjectRepository {
           if (errors.isNotEmpty) {
             final firstError = errors.first.toString();
 
-            // Provide user-friendly messages for common server errors
+            // If it's a server error (null reference), try fallback approach
             if (firstError.contains('Object reference not set to an instance of an object')) {
-              userFriendlyMessage = 'This project data is incomplete or corrupted. Please contact support.';
+              if (kDebugMode) {
+                debugPrint('🔄 Server error detected, trying fallback approach...');
+              }
+              
+              try {
+                return await _getProjectByIdFallback(id);
+              } catch (fallbackError) {
+                if (kDebugMode) {
+                  debugPrint('❌ Fallback also failed: $fallbackError');
+                }
+                userFriendlyMessage = 'Project data is temporarily unavailable. Please try again or contact support.';
+              }
             } else if (firstError.contains('not found')) {
               userFriendlyMessage = 'Project not found. It may have been deleted or moved.';
             } else if (firstError.contains('access') || firstError.contains('permission')) {
@@ -344,5 +355,52 @@ class ApiProjectRepository implements EnhancedProjectRepository {
       pqmValue: (projectData['pqmValue'] as num?)?.toDouble(),
       locationCoordinates: null, // Would need proper parsing for this
     );
+  }
+
+  /// Fallback method to get project by ID from the list endpoint
+  /// This is used when the individual project endpoint has server issues
+  Future<EnhancedProject> _getProjectByIdFallback(String id) async {
+    if (kDebugMode) {
+      debugPrint('🔄 Using fallback approach: searching for project $id in list');
+    }
+
+    // Get all projects and find the one with matching ID
+    final query = ProjectsQuery();
+    final projectsResponse = await getAllProjects(query);
+
+    // Search through first page
+    for (final project in projectsResponse.items) {
+      if (project.projectId == id) {
+        if (kDebugMode) {
+          debugPrint('✅ Found project $id in list fallback');
+        }
+        return project;
+      }
+    }
+
+    // If not found in first page, try searching with larger page size or all pages
+    if (projectsResponse.totalPages > 1) {
+      if (kDebugMode) {
+        debugPrint('🔍 Project not found in first page, searching all pages...');
+      }
+
+      // Search through all pages
+      for (int page = 2; page <= projectsResponse.totalPages; page++) {
+        final pageQuery = ProjectsQuery(pageNumber: page, pageSize: projectsResponse.pageSize);
+        final pageResponse = await getAllProjects(pageQuery);
+        
+        for (final project in pageResponse.items) {
+          if (project.projectId == id) {
+            if (kDebugMode) {
+              debugPrint('✅ Found project $id in page $page fallback');
+            }
+            return project;
+          }
+        }
+      }
+    }
+
+    // If still not found, throw an error
+    throw Exception('Project with ID $id not found in fallback search');
   }
 }

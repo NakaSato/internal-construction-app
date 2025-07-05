@@ -8,8 +8,16 @@ import '../../domain/entities/daily_report.dart';
 class DailyReportCard extends StatelessWidget {
   final DailyReport report;
   final VoidCallback onTap;
+  final bool isSelected;
+  final bool isSelectionMode;
 
-  const DailyReportCard({super.key, required this.report, required this.onTap});
+  const DailyReportCard({
+    super.key,
+    required this.report,
+    required this.onTap,
+    this.isSelected = false,
+    this.isSelectionMode = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +30,9 @@ class DailyReportCard extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [colorScheme.surface, colorScheme.surfaceContainerLowest],
+          colors: isSelected
+              ? [colorScheme.primaryContainer.withOpacity(0.3), colorScheme.primaryContainer.withOpacity(0.1)]
+              : [colorScheme.surface, colorScheme.surfaceContainerLowest],
         ),
         boxShadow: [
           BoxShadow(
@@ -32,13 +42,16 @@ class DailyReportCard extends StatelessWidget {
             offset: const Offset(0, 4),
           ),
           BoxShadow(
-            color: colorScheme.primary.withOpacity(0.05),
+            color: (isSelected ? colorScheme.primary : colorScheme.primary).withOpacity(0.05),
             blurRadius: 20,
             spreadRadius: 5,
             offset: const Offset(0, 8),
           ),
         ],
-        border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.5), width: 1),
+        border: Border.all(
+          color: isSelected ? colorScheme.primary.withOpacity(0.5) : colorScheme.outlineVariant.withOpacity(0.5),
+          width: isSelected ? 2 : 1,
+        ),
       ),
       child: Material(
         color: Colors.transparent,

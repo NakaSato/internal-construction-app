@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import '../../../../core/api/api_config.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/models/api_response.dart';
 import 'package:equatable/equatable.dart';
@@ -53,13 +54,9 @@ class CalendarEventDto extends Equatable {
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
       location: json['location'] as String?,
-      participants: (json['participants'] as List<dynamic>?)
-          ?.map((e) => e as String)
-          .toList(),
+      participants: (json['participants'] as List<dynamic>?)?.map((e) => e as String).toList(),
       isAllDay: json['is_all_day'] as bool?,
-      reminders: (json['reminders'] as List<dynamic>?)
-          ?.map((e) => e as int)
-          .toList(),
+      reminders: (json['reminders'] as List<dynamic>?)?.map((e) => e as int).toList(),
       recurrence: json['recurrence'] as String?,
       priority: json['priority'] as String?,
       status: json['status'] as String?,
@@ -255,26 +252,19 @@ class CalendarApiService {
     try {
       final queryParams = <String, dynamic>{};
       if (projectId != null) queryParams['project_id'] = projectId;
-      if (startDate != null)
-        queryParams['start_date'] = startDate.toIso8601String();
+      if (startDate != null) queryParams['start_date'] = startDate.toIso8601String();
       if (endDate != null) queryParams['end_date'] = endDate.toIso8601String();
       if (eventType != null) queryParams['event_type'] = eventType;
       if (status != null) queryParams['status'] = status;
       if (page != null) queryParams['page'] = page;
       if (limit != null) queryParams['limit'] = limit;
 
-      final response = await _apiClient.get(
-        ApiConfig.calendarPath,
-        queryParameters: queryParams,
-      );
+      final response = await _apiClient.get(ApiConfig.calendarEvents, queryParameters: queryParams);
 
       return ApiResponse.fromJson(
         response.data as Map<String, dynamic>,
-        (json) => (json as List<dynamic>)
-            .map(
-              (item) => CalendarEventDto.fromJson(item as Map<String, dynamic>),
-            )
-            .toList(),
+        (json) =>
+            (json as List<dynamic>).map((item) => CalendarEventDto.fromJson(item as Map<String, dynamic>)).toList(),
       );
     } catch (e) {
       return _handleError<List<CalendarEventDto>>(e);
@@ -284,9 +274,7 @@ class CalendarApiService {
   /// Get a specific calendar event by ID
   Future<ApiResponse<CalendarEventDto>> getCalendarEvent(String eventId) async {
     try {
-      final response = await _apiClient.get(
-        '${ApiConfig.calendarPath}/$eventId',
-      );
+      final response = await _apiClient.get('${ApiConfig.calendarEvents}/$eventId');
 
       return ApiResponse.fromJson(
         response.data as Map<String, dynamic>,
@@ -298,14 +286,9 @@ class CalendarApiService {
   }
 
   /// Create a new calendar event
-  Future<ApiResponse<CalendarEventDto>> createCalendarEvent(
-    CreateCalendarEventRequest request,
-  ) async {
+  Future<ApiResponse<CalendarEventDto>> createCalendarEvent(CreateCalendarEventRequest request) async {
     try {
-      final response = await _apiClient.post(
-        ApiConfig.calendarPath,
-        data: request.toJson(),
-      );
+      final response = await _apiClient.post(ApiConfig.calendarEvents, data: request.toJson());
 
       return ApiResponse.fromJson(
         response.data as Map<String, dynamic>,
@@ -317,15 +300,9 @@ class CalendarApiService {
   }
 
   /// Update an existing calendar event
-  Future<ApiResponse<CalendarEventDto>> updateCalendarEvent(
-    String eventId,
-    UpdateCalendarEventRequest request,
-  ) async {
+  Future<ApiResponse<CalendarEventDto>> updateCalendarEvent(String eventId, UpdateCalendarEventRequest request) async {
     try {
-      final response = await _apiClient.put(
-        '${ApiConfig.calendarPath}/$eventId',
-        data: request.toJson(),
-      );
+      final response = await _apiClient.put('${ApiConfig.calendarEvents}/$eventId', data: request.toJson());
 
       return ApiResponse.fromJson(
         response.data as Map<String, dynamic>,
@@ -339,7 +316,7 @@ class CalendarApiService {
   /// Delete a calendar event
   Future<ApiResponse<void>> deleteCalendarEvent(String eventId) async {
     try {
-      await _apiClient.delete('${ApiConfig.calendarPath}/$eventId');
+      await _apiClient.delete('${ApiConfig.calendarEvents}/$eventId');
       return const ApiResponse(success: true, data: null);
     } catch (e) {
       return _handleError<void>(e);
@@ -354,22 +331,15 @@ class CalendarApiService {
   }) async {
     try {
       final queryParams = <String, dynamic>{};
-      if (startDate != null)
-        queryParams['start_date'] = startDate.toIso8601String();
+      if (startDate != null) queryParams['start_date'] = startDate.toIso8601String();
       if (endDate != null) queryParams['end_date'] = endDate.toIso8601String();
 
-      final response = await _apiClient.get(
-        '${ApiConfig.projectsPath}/$projectId/calendar',
-        queryParameters: queryParams,
-      );
+      final response = await _apiClient.get('${ApiConfig.projects}/$projectId/calendar', queryParameters: queryParams);
 
       return ApiResponse.fromJson(
         response.data as Map<String, dynamic>,
-        (json) => (json as List<dynamic>)
-            .map(
-              (item) => CalendarEventDto.fromJson(item as Map<String, dynamic>),
-            )
-            .toList(),
+        (json) =>
+            (json as List<dynamic>).map((item) => CalendarEventDto.fromJson(item as Map<String, dynamic>)).toList(),
       );
     } catch (e) {
       return _handleError<List<CalendarEventDto>>(e);
@@ -390,9 +360,7 @@ class CalendarApiService {
   }
 
   /// Get upcoming calendar events
-  Future<ApiResponse<List<CalendarEventDto>>> getUpcomingEvents({
-    int days = 7,
-  }) async {
+  Future<ApiResponse<List<CalendarEventDto>>> getUpcomingEvents({int days = 7}) async {
     try {
       final now = DateTime.now();
       final futureDate = now.add(Duration(days: days));
@@ -404,15 +372,9 @@ class CalendarApiService {
   }
 
   /// Update event status
-  Future<ApiResponse<CalendarEventDto>> updateEventStatus(
-    String eventId,
-    String status,
-  ) async {
+  Future<ApiResponse<CalendarEventDto>> updateEventStatus(String eventId, String status) async {
     try {
-      final response = await _apiClient.patch(
-        '${ApiConfig.calendarPath}/$eventId/status',
-        data: {'status': status},
-      );
+      final response = await _apiClient.patch('${ApiConfig.calendarEvents}/$eventId/status', data: {'status': status});
 
       return ApiResponse.fromJson(
         response.data as Map<String, dynamic>,
@@ -432,8 +394,7 @@ class CalendarApiService {
         case DioExceptionType.connectionTimeout:
         case DioExceptionType.sendTimeout:
         case DioExceptionType.receiveTimeout:
-          message =
-              'Connection timeout. Please check your internet connection.';
+          message = 'Connection timeout. Please check your internet connection.';
           break;
         case DioExceptionType.badResponse:
           final statusCode = error.response?.statusCode;
@@ -442,14 +403,12 @@ class CalendarApiService {
           if (statusCode == 401) {
             message = 'Authentication required. Please log in again.';
           } else if (statusCode == 403) {
-            message =
-                'Access denied. You don\'t have permission to perform this action.';
+            message = 'Access denied. You don\'t have permission to perform this action.';
           } else if (statusCode == 404) {
             message = 'Calendar event not found.';
           } else if (statusCode == 422) {
             message = 'Invalid event data provided.';
-          } else if (responseData is Map &&
-              responseData.containsKey('message')) {
+          } else if (responseData is Map && responseData.containsKey('message')) {
             message = responseData['message'].toString();
           } else {
             message = 'Server error (${statusCode ?? 'unknown'})';

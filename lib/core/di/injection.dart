@@ -3,13 +3,13 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:injectable/injectable.dart';
 import 'injection.config.dart';
-import '../api/api_config.dart';
 import '../config/environment_config.dart' as app_env;
 import '../../features/project_management/domain/repositories/project_repository.dart';
 import '../../features/authorization/config/authorization_di.dart';
 import '../../features/calendar_management/config/mock_calendar_management_di.dart';
 import '../../features/daily_reports/config/daily_reports_di.dart';
 import '../../features/work_calendar/config/mock_work_calendar_di.dart';
+import '../../features/wbs/config/wbs_di.dart';
 import 'api_services_registration.dart';
 
 final GetIt getIt = GetIt.instance;
@@ -23,6 +23,7 @@ String _getInjectableEnvironment() {
   final injectableEnv = switch (appEnv) {
     app_env.Environment.development => Environment.dev,
     app_env.Environment.production => Environment.prod,
+    app_env.Environment.local => Environment.dev, // Map local to dev
   };
 
   print('🔧 DI Environment mapping: $appEnv -> $injectableEnv');
@@ -34,8 +35,10 @@ Future<void> initializeDependencies() async {
   // Load environment variables from .env file
   await dotenv.load(fileName: ".env");
 
-  // Initialize API environment configuration
-  ApiConfig.initializeEnvironment();
+  // Print environment configuration for debugging
+  if (app_env.EnvironmentConfig.debugMode) {
+    app_env.EnvironmentConfig.printAllConfig();
+  }
 
   // Configure the Injectable system
   configureDependencies();
@@ -59,6 +62,9 @@ Future<void> initializeDependencies() async {
 
   // Configure daily reports dependencies
   configureDailyReportsDependencies();
+
+  // Configure WBS dependencies
+  WbsDI.configure(getIt);
 
   // Register API services
   ApiServicesRegistration.registerApiServices(getIt);
@@ -89,5 +95,5 @@ abstract class ExternalDependenciesModule {
   FlutterSecureStorage get secureStorage => const FlutterSecureStorage();
 
   @lazySingleton
-  String get baseUrl => dotenv.env['API_BASE_URL'] ?? 'https://api-icms.gridtokenx.com';
+  String get baseUrl => app_env.EnvironmentConfig.apiBaseUrl;
 }

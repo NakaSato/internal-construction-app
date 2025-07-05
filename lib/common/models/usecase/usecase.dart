@@ -1,6 +1,6 @@
 import 'package:dartz/dartz.dart';
 
-import '../errors/failures.dart';
+import '../../../core/errors/failures.dart';
 
 /// Abstract class for all use cases in the application
 ///

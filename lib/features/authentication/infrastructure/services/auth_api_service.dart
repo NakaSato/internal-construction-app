@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import '../../../../core/api/api_config.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/models/api_response.dart';
 import '../../domain/entities/user.dart';
@@ -11,20 +12,14 @@ class AuthApiService {
   AuthApiService(this._apiClient);
 
   /// User login with enhanced error handling
-  Future<ApiResponse<LoginResponse>> login({
-    required String username,
-    required String password,
-  }) async {
+  Future<ApiResponse<LoginResponse>> login({required String username, required String password}) async {
     try {
       final response = await _apiClient.dio.post(
-        ApiConfig.loginPath,
+        ApiConfig.authLogin,
         data: {'username': username, 'password': password},
       );
 
-      return ApiResponse.fromJson(
-        response.data,
-        (json) => LoginResponse.fromJson(json as Map<String, dynamic>),
-      );
+      return ApiResponse.fromJson(response.data, (json) => LoginResponse.fromJson(json as Map<String, dynamic>));
     } on DioException catch (e) {
       return _handleAuthError<LoginResponse>(e);
     }
@@ -40,20 +35,11 @@ class AuthApiService {
   }) async {
     try {
       final response = await _apiClient.dio.post(
-        ApiConfig.registerPath,
-        data: {
-          'username': username,
-          'email': email,
-          'password': password,
-          'fullName': fullName,
-          'roleId': roleId,
-        },
+        ApiConfig.authRegister,
+        data: {'username': username, 'email': email, 'password': password, 'fullName': fullName, 'roleId': roleId},
       );
 
-      return ApiResponse.fromJson(
-        response.data,
-        (json) => User.fromJson(json as Map<String, dynamic>),
-      );
+      return ApiResponse.fromJson(response.data, (json) => User.fromJson(json as Map<String, dynamic>));
     } on DioException catch (e) {
       return _handleAuthError<User>(e);
     }
@@ -63,7 +49,7 @@ class AuthApiService {
   Future<ApiResponse<String>> refreshToken(String refreshToken) async {
     try {
       final response = await _apiClient.dio.post(
-        ApiConfig.refreshPath,
+        ApiConfig.authRefresh,
         data: refreshToken,
         options: Options(headers: {'Content-Type': 'application/json'}),
       );
@@ -77,7 +63,7 @@ class AuthApiService {
   /// User logout
   Future<ApiResponse<bool>> logout() async {
     try {
-      final response = await _apiClient.dio.post(ApiConfig.logoutPath);
+      final response = await _apiClient.dio.post(ApiConfig.authLogout);
 
       return ApiResponse.fromJson(response.data, (json) => json as bool);
     } on DioException catch (e) {

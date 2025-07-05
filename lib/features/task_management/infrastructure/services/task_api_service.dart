@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import '../../../../core/api/api_config.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/models/api_response.dart';
 import 'package:equatable/equatable.dart';
@@ -50,18 +51,12 @@ class TaskDto extends Equatable {
       assigneeId: json['assignee_id'] as String,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
-      dueDate: json['due_date'] != null
-          ? DateTime.parse(json['due_date'] as String)
-          : null,
-      completedAt: json['completed_at'] != null
-          ? DateTime.parse(json['completed_at'] as String)
-          : null,
+      dueDate: json['due_date'] != null ? DateTime.parse(json['due_date'] as String) : null,
+      completedAt: json['completed_at'] != null ? DateTime.parse(json['completed_at'] as String) : null,
       estimatedHours: (json['estimated_hours'] as num?)?.toDouble(),
       actualHours: (json['actual_hours'] as num?)?.toDouble(),
       tags: (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList(),
-      dependencies: (json['dependencies'] as List<dynamic>?)
-          ?.map((e) => e as String)
-          .toList(),
+      dependencies: (json['dependencies'] as List<dynamic>?)?.map((e) => e as String).toList(),
     );
   }
 
@@ -237,16 +232,11 @@ class TaskApiService {
       if (page != null) queryParams['page'] = page;
       if (limit != null) queryParams['limit'] = limit;
 
-      final response = await _apiClient.get(
-        ApiConfig.tasksPath,
-        queryParameters: queryParams,
-      );
+      final response = await _apiClient.get(ApiConfig.workCalendarTasks, queryParameters: queryParams);
 
       return ApiResponse.fromJson(
         response.data as Map<String, dynamic>,
-        (json) => (json as List<dynamic>)
-            .map((item) => TaskDto.fromJson(item as Map<String, dynamic>))
-            .toList(),
+        (json) => (json as List<dynamic>).map((item) => TaskDto.fromJson(item as Map<String, dynamic>)).toList(),
       );
     } catch (e) {
       return _handleError<List<TaskDto>>(e);
@@ -256,7 +246,7 @@ class TaskApiService {
   /// Get a specific task by ID
   Future<ApiResponse<TaskDto>> getTask(String taskId) async {
     try {
-      final response = await _apiClient.get('${ApiConfig.tasksPath}/$taskId');
+      final response = await _apiClient.get('${ApiConfig.workCalendarTasks}/$taskId');
 
       return ApiResponse.fromJson(
         response.data as Map<String, dynamic>,
@@ -270,10 +260,7 @@ class TaskApiService {
   /// Create a new task
   Future<ApiResponse<TaskDto>> createTask(CreateTaskRequest request) async {
     try {
-      final response = await _apiClient.post(
-        ApiConfig.tasksPath,
-        data: request.toJson(),
-      );
+      final response = await _apiClient.post(ApiConfig.workCalendarTasks, data: request.toJson());
 
       return ApiResponse.fromJson(
         response.data as Map<String, dynamic>,
@@ -285,15 +272,9 @@ class TaskApiService {
   }
 
   /// Update an existing task
-  Future<ApiResponse<TaskDto>> updateTask(
-    String taskId,
-    UpdateTaskRequest request,
-  ) async {
+  Future<ApiResponse<TaskDto>> updateTask(String taskId, UpdateTaskRequest request) async {
     try {
-      final response = await _apiClient.put(
-        '${ApiConfig.tasksPath}/$taskId',
-        data: request.toJson(),
-      );
+      final response = await _apiClient.put('${ApiConfig.workCalendarTasks}/$taskId', data: request.toJson());
 
       return ApiResponse.fromJson(
         response.data as Map<String, dynamic>,
@@ -307,7 +288,7 @@ class TaskApiService {
   /// Delete a task
   Future<ApiResponse<void>> deleteTask(String taskId) async {
     try {
-      await _apiClient.delete('${ApiConfig.tasksPath}/$taskId');
+      await _apiClient.delete('${ApiConfig.workCalendarTasks}/$taskId');
       return const ApiResponse(success: true, data: null);
     } catch (e) {
       return _handleError<void>(e);
@@ -317,9 +298,7 @@ class TaskApiService {
   /// Complete a task
   Future<ApiResponse<TaskDto>> completeTask(String taskId) async {
     try {
-      final response = await _apiClient.patch(
-        '${ApiConfig.tasksPath}/$taskId/complete',
-      );
+      final response = await _apiClient.patch('${ApiConfig.workCalendarTasks}/$taskId/complete');
 
       return ApiResponse.fromJson(
         response.data as Map<String, dynamic>,
@@ -333,15 +312,11 @@ class TaskApiService {
   /// Get tasks by project
   Future<ApiResponse<List<TaskDto>>> getTasksByProject(String projectId) async {
     try {
-      final response = await _apiClient.get(
-        '${ApiConfig.projectsPath}/$projectId/tasks',
-      );
+      final response = await _apiClient.get('${ApiConfig.projects}/$projectId/tasks');
 
       return ApiResponse.fromJson(
         response.data as Map<String, dynamic>,
-        (json) => (json as List<dynamic>)
-            .map((item) => TaskDto.fromJson(item as Map<String, dynamic>))
-            .toList(),
+        (json) => (json as List<dynamic>).map((item) => TaskDto.fromJson(item as Map<String, dynamic>)).toList(),
       );
     } catch (e) {
       return _handleError<List<TaskDto>>(e);
@@ -349,19 +324,13 @@ class TaskApiService {
   }
 
   /// Get tasks assigned to a user
-  Future<ApiResponse<List<TaskDto>>> getTasksByAssignee(
-    String assigneeId,
-  ) async {
+  Future<ApiResponse<List<TaskDto>>> getTasksByAssignee(String assigneeId) async {
     try {
-      final response = await _apiClient.get(
-        '${ApiConfig.usersPath}/$assigneeId/tasks',
-      );
+      final response = await _apiClient.get('${ApiConfig.userPermissions}/$assigneeId/tasks');
 
       return ApiResponse.fromJson(
         response.data as Map<String, dynamic>,
-        (json) => (json as List<dynamic>)
-            .map((item) => TaskDto.fromJson(item as Map<String, dynamic>))
-            .toList(),
+        (json) => (json as List<dynamic>).map((item) => TaskDto.fromJson(item as Map<String, dynamic>)).toList(),
       );
     } catch (e) {
       return _handleError<List<TaskDto>>(e);
@@ -369,13 +338,10 @@ class TaskApiService {
   }
 
   /// Update task status
-  Future<ApiResponse<TaskDto>> updateTaskStatus(
-    String taskId,
-    String status,
-  ) async {
+  Future<ApiResponse<TaskDto>> updateTaskStatus(String taskId, String status) async {
     try {
       final response = await _apiClient.patch(
-        '${ApiConfig.tasksPath}/$taskId/status',
+        '${ApiConfig.workCalendarTasks}/$taskId/status',
         data: {'status': status},
       );
 
@@ -397,8 +363,7 @@ class TaskApiService {
         case DioExceptionType.connectionTimeout:
         case DioExceptionType.sendTimeout:
         case DioExceptionType.receiveTimeout:
-          message =
-              'Connection timeout. Please check your internet connection.';
+          message = 'Connection timeout. Please check your internet connection.';
           break;
         case DioExceptionType.badResponse:
           final statusCode = error.response?.statusCode;
@@ -407,14 +372,12 @@ class TaskApiService {
           if (statusCode == 401) {
             message = 'Authentication required. Please log in again.';
           } else if (statusCode == 403) {
-            message =
-                'Access denied. You don\'t have permission to perform this action.';
+            message = 'Access denied. You don\'t have permission to perform this action.';
           } else if (statusCode == 404) {
             message = 'Task not found.';
           } else if (statusCode == 422) {
             message = 'Invalid task data provided.';
-          } else if (responseData is Map &&
-              responseData.containsKey('message')) {
+          } else if (responseData is Map && responseData.containsKey('message')) {
             message = responseData['message'].toString();
           } else {
             message = 'Server error (${statusCode ?? 'unknown'})';

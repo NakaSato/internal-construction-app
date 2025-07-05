@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter/services.dart';
 
 import '../../application/cubits/daily_reports_cubit.dart';
 import '../../application/states/daily_reports_state.dart';
 import '../../domain/entities/daily_report.dart';
 import '../widgets/daily_report_card.dart';
 import '../widgets/daily_reports_filter_sheet.dart';
+import '../widgets/daily_reports_analytics_widget.dart';
+import '../widgets/daily_reports_bulk_actions_widget.dart';
+import '../widgets/daily_reports_search_widget.dart';
 import 'create_daily_report_screen.dart';
 import 'daily_report_details_screen.dart';
 
@@ -19,6 +23,10 @@ class DailyReportsScreen extends StatefulWidget {
 
 class _DailyReportsScreenState extends State<DailyReportsScreen> {
   final _scrollController = ScrollController();
+  final _searchQuery = ValueNotifier<String>('');
+  final _selectedReports = ValueNotifier<List<DailyReport>>([]);
+  bool _isSelectionMode = false;
+  bool _showAnalytics = true;
 
   @override
   void initState() {
@@ -33,6 +41,8 @@ class _DailyReportsScreenState extends State<DailyReportsScreen> {
   void dispose() {
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
+    _searchQuery.dispose();
+    _selectedReports.dispose();
     super.dispose();
   }
 
@@ -67,10 +77,7 @@ class _DailyReportsScreenState extends State<DailyReportsScreen> {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                colorScheme.primary.withOpacity(0.9),
-                colorScheme.primary,
-              ],
+              colors: [colorScheme.primary.withOpacity(0.9), colorScheme.primary],
             ),
           ),
         ),
@@ -84,16 +91,27 @@ class _DailyReportsScreenState extends State<DailyReportsScreen> {
         ),
         iconTheme: IconThemeData(color: colorScheme.onPrimary),
         actions: [
+          // Analytics toggle button
+          Container(
+            margin: const EdgeInsets.only(right: 8),
+            decoration: BoxDecoration(
+              color: colorScheme.onPrimary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: colorScheme.onPrimary.withOpacity(0.2), width: 1),
+            ),
+            child: IconButton(
+              onPressed: () => setState(() => _showAnalytics = !_showAnalytics),
+              icon: Icon(_showAnalytics ? Icons.analytics : Icons.analytics_outlined, color: colorScheme.onPrimary),
+              tooltip: _showAnalytics ? 'Hide Analytics' : 'Show Analytics',
+            ),
+          ),
           // Styled filter button
           Container(
             margin: const EdgeInsets.only(right: 12),
             decoration: BoxDecoration(
               color: colorScheme.onPrimary.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: colorScheme.onPrimary.withOpacity(0.2),
-                width: 1,
-              ),
+              border: Border.all(color: colorScheme.onPrimary.withOpacity(0.2), width: 1),
             ),
             child: IconButton(
               onPressed: _showFilterSheet,
@@ -127,11 +145,7 @@ class _DailyReportsScreenState extends State<DailyReportsScreen> {
           backgroundColor: Colors.transparent,
           elevation: 0,
           onPressed: () => _navigateToCreateReport(context),
-          child: Icon(
-            Icons.add_rounded,
-            color: colorScheme.onPrimary,
-            size: 28,
-          ),
+          child: Icon(Icons.add_rounded, color: colorScheme.onPrimary, size: 28),
         ),
       ),
 
@@ -143,17 +157,64 @@ class _DailyReportsScreenState extends State<DailyReportsScreen> {
             colors: [colorScheme.surface, colorScheme.surfaceContainerLowest],
           ),
         ),
-        child: BlocBuilder<DailyReportsCubit, DailyReportsState>(
-          builder: (context, state) {
-            if (state is DailyReportsInitial || state is DailyReportsLoading) {
-              return _buildLoadingView();
-            } else if (state is DailyReportsError) {
-              return _buildErrorView(state.message);
-            } else if (state is DailyReportsLoaded) {
-              return _buildReportsList(state);
-            }
-            return const Center(child: Text('Unexpected state'));
-          },
+        child: Column(
+          children: [
+            // Search widget
+            DailyReportsSearchWidget(
+              onSearchChanged: (query) {
+                _searchQuery.value = query;
+                _performSearch(query);
+              },
+              onAdvancedSearch: (filters) {
+                context.read<DailyReportsCubit>().applyFilters(filters);
+              },
+              onClearSearch: () {
+                _searchQuery.value = '';
+                context.read<DailyReportsCubit>().loadDailyReports();
+              },
+            ),
+
+            // Analytics widget (conditional)
+            if (_showAnalytics)
+              DailyReportsAnalyticsWidget(
+                onRefresh: () {
+                  context.read<DailyReportsCubit>().refreshDailyReports();
+                },
+              ),
+
+            // Bulk actions widget (conditional)
+            ValueListenableBuilder<List<DailyReport>>(
+              valueListenable: _selectedReports,
+              builder: (context, selectedReports, _) {
+                return DailyReportsBulkActionsWidget(
+                  selectedReports: selectedReports,
+                  onBulkApprove: _handleBulkApprove,
+                  onBulkReject: _handleBulkReject,
+                  onBulkDelete: _handleBulkDelete,
+                  onClearSelection: () {
+                    _selectedReports.value = [];
+                    setState(() => _isSelectionMode = false);
+                  },
+                );
+              },
+            ),
+
+            // Main content
+            Expanded(
+              child: BlocBuilder<DailyReportsCubit, DailyReportsState>(
+                builder: (context, state) {
+                  if (state is DailyReportsInitial || state is DailyReportsLoading) {
+                    return _buildLoadingView();
+                  } else if (state is DailyReportsError) {
+                    return _buildErrorView(state.message);
+                  } else if (state is DailyReportsLoaded) {
+                    return _buildReportsList(state);
+                  }
+                  return const Center(child: Text('Unexpected state'));
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -189,26 +250,21 @@ class _DailyReportsScreenState extends State<DailyReportsScreen> {
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      colorScheme.primary,
-                    ),
+                    valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
                     strokeWidth: 3,
                   ),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   'Loading Reports...',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: colorScheme.onSurface,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleMedium?.copyWith(color: colorScheme.onSurface, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'Please wait while we fetch your daily reports',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant),
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -241,10 +297,7 @@ class _DailyReportsScreenState extends State<DailyReportsScreen> {
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.outlineVariant,
-                  width: 1,
-                ),
+                border: Border.all(color: Theme.of(context).colorScheme.outlineVariant, width: 1),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -253,18 +306,16 @@ class _DailyReportsScreenState extends State<DailyReportsScreen> {
                     width: 20,
                     height: 20,
                     child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        Theme.of(context).colorScheme.primary,
-                      ),
+                      valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
                       strokeWidth: 2,
                     ),
                   ),
                   const SizedBox(width: 12),
                   Text(
                     'Loading more reports...',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
                   ),
                 ],
               ),
@@ -275,9 +326,28 @@ class _DailyReportsScreenState extends State<DailyReportsScreen> {
           final report = state.reports[index];
           return Padding(
             padding: const EdgeInsets.only(bottom: 12),
-            child: DailyReportCard(
-              report: report,
-              onTap: () => _navigateToReportDetails(context, report),
+            child: ValueListenableBuilder<List<DailyReport>>(
+              valueListenable: _selectedReports,
+              builder: (context, selectedReports, _) {
+                return GestureDetector(
+                  onLongPress: () {
+                    _toggleReportSelection(report);
+                    HapticFeedback.mediumImpact();
+                  },
+                  child: DailyReportCard(
+                    report: report,
+                    onTap: () {
+                      if (_isSelectionMode) {
+                        _toggleReportSelection(report);
+                      } else {
+                        _navigateToReportDetails(context, report);
+                      }
+                    },
+                    isSelected: selectedReports.contains(report),
+                    isSelectionMode: _isSelectionMode,
+                  ),
+                );
+              },
             ),
           );
         },
@@ -301,16 +371,10 @@ class _DailyReportsScreenState extends State<DailyReportsScreen> {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [
-                    colorScheme.primary.withOpacity(0.1),
-                    colorScheme.primary.withOpacity(0.05),
-                  ],
+                  colors: [colorScheme.primary.withOpacity(0.1), colorScheme.primary.withOpacity(0.05)],
                 ),
                 borderRadius: BorderRadius.circular(32),
-                border: Border.all(
-                  color: colorScheme.primary.withOpacity(0.2),
-                  width: 2,
-                ),
+                border: Border.all(color: colorScheme.primary.withOpacity(0.2), width: 2),
                 boxShadow: [
                   BoxShadow(
                     color: colorScheme.primary.withOpacity(0.1),
@@ -320,11 +384,7 @@ class _DailyReportsScreenState extends State<DailyReportsScreen> {
                   ),
                 ],
               ),
-              child: Icon(
-                Icons.description_outlined,
-                size: 64,
-                color: colorScheme.primary.withOpacity(0.7),
-              ),
+              child: Icon(Icons.description_outlined, size: 64, color: colorScheme.primary.withOpacity(0.7)),
             ),
 
             const SizedBox(height: 32),
@@ -343,10 +403,7 @@ class _DailyReportsScreenState extends State<DailyReportsScreen> {
 
             Text(
               'Start tracking your daily work progress\nby creating your first report',
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-                height: 1.5,
-              ),
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: colorScheme.onSurfaceVariant, height: 1.5),
               textAlign: TextAlign.center,
             ),
 
@@ -359,10 +416,7 @@ class _DailyReportsScreenState extends State<DailyReportsScreen> {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [
-                    colorScheme.primary,
-                    colorScheme.primary.withOpacity(0.8),
-                  ],
+                  colors: [colorScheme.primary, colorScheme.primary.withOpacity(0.8)],
                 ),
                 boxShadow: [
                   BoxShadow(
@@ -378,22 +432,13 @@ class _DailyReportsScreenState extends State<DailyReportsScreen> {
                 icon: Icon(Icons.add_rounded, color: colorScheme.onPrimary),
                 label: Text(
                   'Create New Report',
-                  style: TextStyle(
-                    color: colorScheme.onPrimary,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
-                  ),
+                  style: TextStyle(color: colorScheme.onPrimary, fontWeight: FontWeight.w600, fontSize: 16),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.transparent,
                   shadowColor: Colors.transparent,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 32,
-                    vertical: 16,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),
               ),
             ),
@@ -419,16 +464,10 @@ class _DailyReportsScreenState extends State<DailyReportsScreen> {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [
-                    colorScheme.error.withOpacity(0.1),
-                    colorScheme.error.withOpacity(0.05),
-                  ],
+                  colors: [colorScheme.error.withOpacity(0.1), colorScheme.error.withOpacity(0.05)],
                 ),
                 borderRadius: BorderRadius.circular(32),
-                border: Border.all(
-                  color: colorScheme.error.withOpacity(0.2),
-                  width: 2,
-                ),
+                border: Border.all(color: colorScheme.error.withOpacity(0.2), width: 2),
                 boxShadow: [
                   BoxShadow(
                     color: colorScheme.error.withOpacity(0.1),
@@ -438,11 +477,7 @@ class _DailyReportsScreenState extends State<DailyReportsScreen> {
                   ),
                 ],
               ),
-              child: Icon(
-                Icons.error_outline_rounded,
-                size: 64,
-                color: colorScheme.error.withOpacity(0.7),
-              ),
+              child: Icon(Icons.error_outline_rounded, size: 64, color: colorScheme.error.withOpacity(0.7)),
             ),
 
             const SizedBox(height: 32),
@@ -461,10 +496,7 @@ class _DailyReportsScreenState extends State<DailyReportsScreen> {
             Text(
               message,
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-                height: 1.5,
-              ),
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: colorScheme.onSurfaceVariant, height: 1.5),
             ),
 
             const SizedBox(height: 40),
@@ -476,10 +508,7 @@ class _DailyReportsScreenState extends State<DailyReportsScreen> {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [
-                    colorScheme.primary,
-                    colorScheme.primary.withOpacity(0.8),
-                  ],
+                  colors: [colorScheme.primary, colorScheme.primary.withOpacity(0.8)],
                 ),
                 boxShadow: [
                   BoxShadow(
@@ -497,22 +526,13 @@ class _DailyReportsScreenState extends State<DailyReportsScreen> {
                 icon: Icon(Icons.refresh_rounded, color: colorScheme.onPrimary),
                 label: Text(
                   'Try Again',
-                  style: TextStyle(
-                    color: colorScheme.onPrimary,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
-                  ),
+                  style: TextStyle(color: colorScheme.onPrimary, fontWeight: FontWeight.w600, fontSize: 16),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.transparent,
                   shadowColor: Colors.transparent,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 32,
-                    vertical: 16,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),
               ),
             ),
@@ -546,9 +566,7 @@ class _DailyReportsScreenState extends State<DailyReportsScreen> {
       backgroundColor: Colors.transparent,
       builder: (context) {
         return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-          ),
+          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
           child: DraggableScrollableSheet(
             initialChildSize: 0.6,
             minChildSize: 0.4,
@@ -575,10 +593,8 @@ class _DailyReportsScreenState extends State<DailyReportsScreen> {
   void _navigateToCreateReport(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => BlocProvider.value(
-          value: context.read<DailyReportsCubit>(),
-          child: const CreateDailyReportScreen(),
-        ),
+        builder: (_) =>
+            BlocProvider.value(value: context.read<DailyReportsCubit>(), child: const CreateDailyReportScreen()),
       ),
     );
   }
@@ -590,6 +606,114 @@ class _DailyReportsScreenState extends State<DailyReportsScreen> {
           value: context.read<DailyReportsCubit>(),
           child: DailyReportDetailsScreen(reportId: report.reportId),
         ),
+      ),
+    );
+  }
+
+  // Enhanced functionality methods
+  void _performSearch(String query) {
+    if (query.trim().isEmpty) {
+      context.read<DailyReportsCubit>().loadDailyReports();
+    } else {
+      // TODO: Implement search functionality in cubit
+      // For now, we'll reload with default filters
+      // This can be enhanced when search is implemented in the cubit
+      context.read<DailyReportsCubit>().loadDailyReports();
+    }
+  }
+
+  void _toggleReportSelection(DailyReport report) {
+    final currentSelected = List<DailyReport>.from(_selectedReports.value);
+
+    if (currentSelected.contains(report)) {
+      currentSelected.remove(report);
+    } else {
+      currentSelected.add(report);
+    }
+
+    _selectedReports.value = currentSelected;
+
+    // Update selection mode based on whether we have selected reports
+    setState(() {
+      _isSelectionMode = currentSelected.isNotEmpty;
+    });
+  }
+
+  void _handleBulkApprove(List<String> reportIds) async {
+    try {
+      // TODO: Implement bulk approve using ApiConfig.dailyReportsBulkApprove
+      // For now, show feedback
+      _showSuccessMessage('${reportIds.length} report${reportIds.length != 1 ? 's' : ''} approved successfully');
+
+      // Clear selection and refresh
+      _selectedReports.value = [];
+      setState(() => _isSelectionMode = false);
+      context.read<DailyReportsCubit>().refreshDailyReports();
+    } catch (e) {
+      _showErrorMessage('Failed to approve reports: $e');
+    }
+  }
+
+  void _handleBulkReject(List<String> reportIds) async {
+    try {
+      // TODO: Implement bulk reject using ApiConfig.dailyReportsBulkReject
+      // For now, show feedback
+      _showSuccessMessage('${reportIds.length} report${reportIds.length != 1 ? 's' : ''} rejected successfully');
+
+      // Clear selection and refresh
+      _selectedReports.value = [];
+      setState(() => _isSelectionMode = false);
+      context.read<DailyReportsCubit>().refreshDailyReports();
+    } catch (e) {
+      _showErrorMessage('Failed to reject reports: $e');
+    }
+  }
+
+  void _handleBulkDelete(List<String> reportIds) async {
+    try {
+      // TODO: Implement bulk delete functionality
+      // For now, show feedback
+      _showSuccessMessage('${reportIds.length} report${reportIds.length != 1 ? 's' : ''} deleted successfully');
+
+      // Clear selection and refresh
+      _selectedReports.value = [];
+      setState(() => _isSelectionMode = false);
+      context.read<DailyReportsCubit>().refreshDailyReports();
+    } catch (e) {
+      _showErrorMessage('Failed to delete reports: $e');
+    }
+  }
+
+  void _showSuccessMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(Icons.check_circle_outline, color: Theme.of(context).colorScheme.onPrimary),
+            const SizedBox(width: 8),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: Colors.green,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  void _showErrorMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(Icons.error_outline, color: Theme.of(context).colorScheme.onError),
+            const SizedBox(width: 8),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: Theme.of(context).colorScheme.error,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 4),
       ),
     );
   }

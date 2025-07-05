@@ -1,16 +1,12 @@
 import 'package:flutter/material.dart';
-import '../../core/api/api_config.dart';
+import '../config/environment_config.dart';
 
 /// Widget for selecting API environment during development
 /// Should only be shown in debug mode or development builds
 class ApiEnvironmentSelector extends StatefulWidget {
-  const ApiEnvironmentSelector({
-    super.key,
-    this.onEnvironmentChanged,
-    this.showInProduction = false,
-  });
+  const ApiEnvironmentSelector({super.key, this.onEnvironmentChanged, this.showInProduction = false});
 
-  final void Function(ApiEnvironment)? onEnvironmentChanged;
+  final void Function(Environment)? onEnvironmentChanged;
   final bool showInProduction;
 
   @override
@@ -21,7 +17,7 @@ class _ApiEnvironmentSelectorState extends State<ApiEnvironmentSelector> {
   @override
   Widget build(BuildContext context) {
     // Don't show in production unless explicitly allowed
-    if (ApiConfig.isProduction && !widget.showInProduction) {
+    if (EnvironmentConfig.isProduction && !widget.showInProduction) {
       return const SizedBox.shrink();
     }
 
@@ -35,115 +31,84 @@ class _ApiEnvironmentSelectorState extends State<ApiEnvironmentSelector> {
           children: [
             Row(
               children: [
-                Icon(
-                  Icons.settings_outlined,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
+                Icon(Icons.settings_outlined, color: Theme.of(context).colorScheme.primary),
                 const SizedBox(width: 8),
                 Text(
                   'API Environment',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-
-            // Environment selector
-            DropdownButtonFormField<ApiEnvironment>(
-              value: ApiConfig.currentEnvironment,
-              decoration: InputDecoration(
-                labelText: 'Select Environment',
-                border: const OutlineInputBorder(),
-                prefixIcon: Icon(
-                  _getEnvironmentIcon(ApiConfig.currentEnvironment),
-                  color: _getEnvironmentColor(ApiConfig.currentEnvironment),
-                ),
-              ),
-              items: ApiConfig.availableEnvironments.map((environment) {
-                return DropdownMenuItem(
-                  value: environment,
-                  child: Row(
-                    children: [
-                      Icon(
-                        _getEnvironmentIcon(environment),
-                        size: 16,
-                        color: _getEnvironmentColor(environment),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(ApiConfig.environmentDisplayNames[environment]!),
-                    ],
-                  ),
-                );
-              }).toList(),
-              onChanged: (environment) {
-                if (environment != null) {
-                  setState(() {
-                    ApiConfig.setEnvironment(environment);
-                  });
-                  widget.onEnvironmentChanged?.call(environment);
-
-                  // Show confirmation
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'Environment changed to ${ApiConfig.environmentName}',
-                      ),
-                      backgroundColor: _getEnvironmentColor(environment),
-                    ),
-                  );
-                }
-              },
-            ),
-
             const SizedBox(height: 12),
-
-            // Current URL display
+            Text(
+              'Current Environment: ${_getEnvironmentDisplayName(EnvironmentConfig.currentEnvironment)}',
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+            ),
+            const SizedBox(height: 8),
             Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: Theme.of(
-                  context,
-                ).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                color: _getEnvironmentColor(EnvironmentConfig.currentEnvironment).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
-                ),
+                border: Border.all(color: _getEnvironmentColor(EnvironmentConfig.currentEnvironment).withOpacity(0.3)),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    'Current URL:',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                  Icon(
+                    _getEnvironmentIcon(EnvironmentConfig.currentEnvironment),
+                    size: 16,
+                    color: _getEnvironmentColor(EnvironmentConfig.currentEnvironment),
                   ),
-                  const SizedBox(height: 4),
-                  SelectableText(
-                    ApiConfig.configuredBaseUrl,
+                  const SizedBox(width: 8),
+                  Text(
+                    _getEnvironmentDisplayName(EnvironmentConfig.currentEnvironment),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontFamily: 'monospace',
-                      color: Theme.of(context).colorScheme.primary,
+                      color: _getEnvironmentColor(EnvironmentConfig.currentEnvironment),
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
               ),
             ),
-
-            // Debug info
-            if (!ApiConfig.isProduction) ...[
-              const SizedBox(height: 8),
-              Text(
-                'Debug Mode: Environment switching enabled',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  fontStyle: FontStyle.italic,
-                ),
+            const SizedBox(height: 16),
+            const Divider(),
+            const SizedBox(height: 8),
+            Text(
+              'API Base URL:',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+            ),
+            const SizedBox(height: 4),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(6),
               ),
+              child: Text(
+                EnvironmentConfig.apiBaseUrl,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(fontFamily: 'monospace'),
+              ),
+            ),
+            if (!EnvironmentConfig.isProduction) ...[
+              const SizedBox(height: 16),
+              Text(
+                'Environment Details:',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+              ),
+              const SizedBox(height: 8),
+              _buildInfoChip('Debug Mode', EnvironmentConfig.debugMode.toString()),
+              const SizedBox(height: 4),
+              _buildInfoChip('Development', EnvironmentConfig.isDevelopment.toString()),
+              const SizedBox(height: 4),
+              _buildInfoChip('Local', EnvironmentConfig.isLocal.toString()),
             ],
           ],
         ),
@@ -151,62 +116,81 @@ class _ApiEnvironmentSelectorState extends State<ApiEnvironmentSelector> {
     );
   }
 
-  IconData _getEnvironmentIcon(ApiEnvironment environment) {
-    switch (environment) {
-      case ApiEnvironment.development:
-        return Icons.code;
-      case ApiEnvironment.production:
-        return Icons.public;
-      case ApiEnvironment.local:
-        return Icons.computer;
-    }
+  Widget _buildInfoChip(String label, String value) {
+    return Row(
+      children: [
+        Text(
+          '$label: ',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Text(
+            value,
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.w500),
+          ),
+        ),
+      ],
+    );
   }
 
-  Color _getEnvironmentColor(ApiEnvironment environment) {
-    switch (environment) {
-      case ApiEnvironment.development:
-        return Colors.orange;
-      case ApiEnvironment.production:
-        return Colors.green;
-      case ApiEnvironment.local:
-        return Colors.purple;
-    }
+  String _getEnvironmentDisplayName(Environment environment) {
+    return switch (environment) {
+      Environment.development => 'Development',
+      Environment.production => 'Production',
+      Environment.local => 'Local',
+    };
+  }
+
+  IconData _getEnvironmentIcon(Environment environment) {
+    return switch (environment) {
+      Environment.development => Icons.code,
+      Environment.production => Icons.cloud,
+      Environment.local => Icons.computer,
+    };
+  }
+
+  Color _getEnvironmentColor(Environment environment) {
+    return switch (environment) {
+      Environment.development => Colors.orange,
+      Environment.production => Colors.green,
+      Environment.local => Colors.blue,
+    };
   }
 }
 
-/// Simple environment indicator widget for app bar or status display
-class ApiEnvironmentIndicator extends StatelessWidget {
-  const ApiEnvironmentIndicator({super.key, this.showInProduction = false});
+/// Simplified environment indicator for debug builds
+class EnvironmentIndicator extends StatelessWidget {
+  const EnvironmentIndicator({super.key, this.showInProduction = false});
 
   final bool showInProduction;
 
   @override
   Widget build(BuildContext context) {
     // Don't show in production unless explicitly allowed
-    if (ApiConfig.isProduction && !showInProduction) {
+    if (EnvironmentConfig.isProduction && !showInProduction) {
       return const SizedBox.shrink();
     }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: _getEnvironmentColor().withOpacity(0.2),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _getEnvironmentColor(), width: 1),
-      ),
+      decoration: BoxDecoration(color: _getEnvironmentColor().withOpacity(0.2), borderRadius: BorderRadius.circular(4)),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(_getEnvironmentIcon(), size: 12, color: _getEnvironmentColor()),
           const SizedBox(width: 4),
           Text(
-            ApiConfig.environmentName.toUpperCase(),
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.bold,
-              color: _getEnvironmentColor(),
-              letterSpacing: 0.5,
-            ),
+            EnvironmentConfig.currentEnvironment.name.toUpperCase(),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: _getEnvironmentColor(), fontWeight: FontWeight.bold, fontSize: 10),
           ),
         ],
       ),
@@ -214,24 +198,18 @@ class ApiEnvironmentIndicator extends StatelessWidget {
   }
 
   IconData _getEnvironmentIcon() {
-    switch (ApiConfig.currentEnvironment) {
-      case ApiEnvironment.development:
-        return Icons.code;
-      case ApiEnvironment.production:
-        return Icons.public;
-      case ApiEnvironment.local:
-        return Icons.computer;
-    }
+    return switch (EnvironmentConfig.currentEnvironment) {
+      Environment.development => Icons.code,
+      Environment.production => Icons.cloud,
+      Environment.local => Icons.computer,
+    };
   }
 
   Color _getEnvironmentColor() {
-    switch (ApiConfig.currentEnvironment) {
-      case ApiEnvironment.development:
-        return Colors.orange;
-      case ApiEnvironment.production:
-        return Colors.green;
-      case ApiEnvironment.local:
-        return Colors.purple;
-    }
+    return switch (EnvironmentConfig.currentEnvironment) {
+      Environment.development => Colors.orange,
+      Environment.production => Colors.green,
+      Environment.local => Colors.blue,
+    };
   }
 }

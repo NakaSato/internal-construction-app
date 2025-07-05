@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import '../../../../core/api/api_config.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/models/api_response.dart';
 import 'package:equatable/equatable.dart';
@@ -58,9 +59,7 @@ class DailyReportDto extends Equatable {
       safety: json['safety'] as String?,
       weather: json['weather'] as String?,
       notes: json['notes'] as String?,
-      images: (json['images'] as List<dynamic>?)
-          ?.map((e) => e as String)
-          .toList(),
+      images: (json['images'] as List<dynamic>?)?.map((e) => e as String).toList(),
     );
   }
 
@@ -245,24 +244,16 @@ class DailyReportsApiService {
       final queryParams = <String, dynamic>{};
       if (projectId != null) queryParams['project_id'] = projectId;
       if (userId != null) queryParams['user_id'] = userId;
-      if (startDate != null)
-        queryParams['start_date'] = startDate.toIso8601String();
+      if (startDate != null) queryParams['start_date'] = startDate.toIso8601String();
       if (endDate != null) queryParams['end_date'] = endDate.toIso8601String();
       if (page != null) queryParams['page'] = page;
       if (limit != null) queryParams['limit'] = limit;
 
-      final response = await _apiClient.get(
-        ApiConfig.dailyReportsPath,
-        queryParameters: queryParams,
-      );
+      final response = await _apiClient.get(ApiConfig.dailyReports, queryParameters: queryParams);
 
       return ApiResponse.fromJson(
         response.data as Map<String, dynamic>,
-        (json) => (json as List<dynamic>)
-            .map(
-              (item) => DailyReportDto.fromJson(item as Map<String, dynamic>),
-            )
-            .toList(),
+        (json) => (json as List<dynamic>).map((item) => DailyReportDto.fromJson(item as Map<String, dynamic>)).toList(),
       );
     } catch (e) {
       return _handleError<List<DailyReportDto>>(e);
@@ -272,9 +263,7 @@ class DailyReportsApiService {
   /// Get a specific daily report by ID
   Future<ApiResponse<DailyReportDto>> getDailyReport(String reportId) async {
     try {
-      final response = await _apiClient.get(
-        '${ApiConfig.dailyReportsPath}/$reportId',
-      );
+      final response = await _apiClient.get('${ApiConfig.dailyReports}/$reportId');
 
       return ApiResponse.fromJson(
         response.data as Map<String, dynamic>,
@@ -286,14 +275,9 @@ class DailyReportsApiService {
   }
 
   /// Create a new daily report
-  Future<ApiResponse<DailyReportDto>> createDailyReport(
-    CreateDailyReportRequest request,
-  ) async {
+  Future<ApiResponse<DailyReportDto>> createDailyReport(CreateDailyReportRequest request) async {
     try {
-      final response = await _apiClient.post(
-        ApiConfig.dailyReportsPath,
-        data: request.toJson(),
-      );
+      final response = await _apiClient.post(ApiConfig.dailyReports, data: request.toJson());
 
       return ApiResponse.fromJson(
         response.data as Map<String, dynamic>,
@@ -305,15 +289,9 @@ class DailyReportsApiService {
   }
 
   /// Update an existing daily report
-  Future<ApiResponse<DailyReportDto>> updateDailyReport(
-    String reportId,
-    UpdateDailyReportRequest request,
-  ) async {
+  Future<ApiResponse<DailyReportDto>> updateDailyReport(String reportId, UpdateDailyReportRequest request) async {
     try {
-      final response = await _apiClient.put(
-        '${ApiConfig.dailyReportsPath}/$reportId',
-        data: request.toJson(),
-      );
+      final response = await _apiClient.put('${ApiConfig.dailyReports}/$reportId', data: request.toJson());
 
       return ApiResponse.fromJson(
         response.data as Map<String, dynamic>,
@@ -327,7 +305,7 @@ class DailyReportsApiService {
   /// Delete a daily report
   Future<ApiResponse<void>> deleteDailyReport(String reportId) async {
     try {
-      await _apiClient.delete('${ApiConfig.dailyReportsPath}/$reportId');
+      await _apiClient.delete('${ApiConfig.dailyReports}/$reportId');
       return const ApiResponse(success: true, data: null);
     } catch (e) {
       return _handleError<void>(e);
@@ -342,22 +320,17 @@ class DailyReportsApiService {
   }) async {
     try {
       final queryParams = <String, dynamic>{};
-      if (startDate != null)
-        queryParams['start_date'] = startDate.toIso8601String();
+      if (startDate != null) queryParams['start_date'] = startDate.toIso8601String();
       if (endDate != null) queryParams['end_date'] = endDate.toIso8601String();
 
       final response = await _apiClient.get(
-        '${ApiConfig.projectsPath}/$projectId/daily-reports',
+        '${ApiConfig.projects}/$projectId/daily-reports',
         queryParameters: queryParams,
       );
 
       return ApiResponse.fromJson(
         response.data as Map<String, dynamic>,
-        (json) => (json as List<dynamic>)
-            .map(
-              (item) => DailyReportDto.fromJson(item as Map<String, dynamic>),
-            )
-            .toList(),
+        (json) => (json as List<dynamic>).map((item) => DailyReportDto.fromJson(item as Map<String, dynamic>)).toList(),
       );
     } catch (e) {
       return _handleError<List<DailyReportDto>>(e);
@@ -372,22 +345,17 @@ class DailyReportsApiService {
   }) async {
     try {
       final queryParams = <String, dynamic>{};
-      if (startDate != null)
-        queryParams['start_date'] = startDate.toIso8601String();
+      if (startDate != null) queryParams['start_date'] = startDate.toIso8601String();
       if (endDate != null) queryParams['end_date'] = endDate.toIso8601String();
 
       final response = await _apiClient.get(
-        '${ApiConfig.usersPath}/$userId/daily-reports',
+        '${ApiConfig.userPermissions}/$userId/daily-reports',
         queryParameters: queryParams,
       );
 
       return ApiResponse.fromJson(
         response.data as Map<String, dynamic>,
-        (json) => (json as List<dynamic>)
-            .map(
-              (item) => DailyReportDto.fromJson(item as Map<String, dynamic>),
-            )
-            .toList(),
+        (json) => (json as List<dynamic>).map((item) => DailyReportDto.fromJson(item as Map<String, dynamic>)).toList(),
       );
     } catch (e) {
       return _handleError<List<DailyReportDto>>(e);
@@ -395,21 +363,13 @@ class DailyReportsApiService {
   }
 
   /// Get daily reports for a specific date
-  Future<ApiResponse<List<DailyReportDto>>> getDailyReportsByDate(
-    DateTime date,
-  ) async {
+  Future<ApiResponse<List<DailyReportDto>>> getDailyReportsByDate(DateTime date) async {
     try {
-      final response = await _apiClient.get(
-        '${ApiConfig.dailyReportsPath}/date/${date.toIso8601String().split('T')[0]}',
-      );
+      final response = await _apiClient.get('${ApiConfig.dailyReports}/date/${date.toIso8601String().split('T')[0]}');
 
       return ApiResponse.fromJson(
         response.data as Map<String, dynamic>,
-        (json) => (json as List<dynamic>)
-            .map(
-              (item) => DailyReportDto.fromJson(item as Map<String, dynamic>),
-            )
-            .toList(),
+        (json) => (json as List<dynamic>).map((item) => DailyReportDto.fromJson(item as Map<String, dynamic>)).toList(),
       );
     } catch (e) {
       return _handleError<List<DailyReportDto>>(e);
@@ -425,8 +385,7 @@ class DailyReportsApiService {
         case DioExceptionType.connectionTimeout:
         case DioExceptionType.sendTimeout:
         case DioExceptionType.receiveTimeout:
-          message =
-              'Connection timeout. Please check your internet connection.';
+          message = 'Connection timeout. Please check your internet connection.';
           break;
         case DioExceptionType.badResponse:
           final statusCode = error.response?.statusCode;
@@ -435,14 +394,12 @@ class DailyReportsApiService {
           if (statusCode == 401) {
             message = 'Authentication required. Please log in again.';
           } else if (statusCode == 403) {
-            message =
-                'Access denied. You don\'t have permission to perform this action.';
+            message = 'Access denied. You don\'t have permission to perform this action.';
           } else if (statusCode == 404) {
             message = 'Daily report not found.';
           } else if (statusCode == 422) {
             message = 'Invalid report data provided.';
-          } else if (responseData is Map &&
-              responseData.containsKey('message')) {
+          } else if (responseData is Map && responseData.containsKey('message')) {
             message = responseData['message'].toString();
           } else {
             message = 'Server error (${statusCode ?? 'unknown'})';

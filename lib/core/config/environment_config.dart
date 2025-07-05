@@ -1,80 +1,193 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-/// Environment configuration for different build environments
-enum Environment { development, production }
+/// Centralized environment configuration reading from .env file only
+/// All app configuration is managed through the .env file
+enum Environment { development, production, local }
 
 class EnvironmentConfig {
-  /// Gets the current environment from .env file or falls back to development
+  // Private constructor to prevent instantiation
+  EnvironmentConfig._();
+
+  // =============================================================================
+  // ENVIRONMENT DETECTION
+  // =============================================================================
+
+  /// Gets the current environment from .env file
   static Environment get currentEnvironment {
     final envString = dotenv.env['API_ENVIRONMENT']?.toLowerCase();
 
-    // Log the environment mapping in debug mode
     if (kDebugMode) {
-      debugPrint('🌍 Environment Mapping:');
-      debugPrint(
-        '  - API_ENVIRONMENT from .env: ${dotenv.env['API_ENVIRONMENT'] ?? 'NOT SET'}',
-      );
-      debugPrint('  - Normalized value: ${envString ?? 'null'}');
+      debugPrint('🌍 Environment Configuration:');
+      debugPrint('  - API_ENVIRONMENT: ${dotenv.env['API_ENVIRONMENT'] ?? 'NOT SET'}');
+      debugPrint('  - Normalized: ${envString ?? 'null'}');
     }
 
     final environment = switch (envString) {
       'production' || 'prod' => Environment.production,
-      'development' || 'dev' || 'local' => Environment.development,
-      _ => Environment.development,
+      'development' || 'dev' => Environment.development,
+      'local' => Environment.local,
+      _ => Environment.development, // Default fallback
     };
 
     if (kDebugMode) {
-      debugPrint('  - Mapped to: $environment');
-      debugPrint(
-        '  - Using ${environment == Environment.development ? 'DEVELOPMENT' : 'PRODUCTION'} configuration',
-      );
+      debugPrint('  - Resolved to: $environment');
     }
 
     return environment;
   }
 
-  static bool get isDevelopment =>
-      currentEnvironment == Environment.development;
+  static bool get isDevelopment => currentEnvironment == Environment.development;
   static bool get isProduction => currentEnvironment == Environment.production;
+  static bool get isLocal => currentEnvironment == Environment.local;
 
-  // API Configuration - Now reads from .env file
+  // =============================================================================
+  // API CONFIGURATION
+  // =============================================================================
+
+  /// Primary API base URL from .env
   static String get apiBaseUrl {
-    // First try to get from .env file
-    final envUrl = dotenv.env['API_BASE_URL'];
-    if (envUrl != null && envUrl.isNotEmpty) {
-      if (kDebugMode) {
-        debugPrint('🌐 Using API_BASE_URL from .env: $envUrl');
-      }
-      return envUrl;
-    }
-
-    // Fallback to compile-time environment variables
-    final fallbackUrl = switch (currentEnvironment) {
-      Environment.development => const String.fromEnvironment(
-        'DEV_API_URL',
-        defaultValue: 'http://localhost:8080',
-      ),
-      Environment.production => const String.fromEnvironment(
-        'PROD_API_URL',
-        defaultValue: 'https://api.example.com',
-      ),
-    };
+    final url = dotenv.env['API_BASE_URL'] ?? _getEnvironmentSpecificUrl();
 
     if (kDebugMode) {
-      debugPrint(
-        '🌐 Using fallback API URL for ${currentEnvironment.name}: $fallbackUrl',
-      );
+      debugPrint('🌐 API Configuration:');
+      debugPrint('  - Base URL: $url');
     }
 
-    return fallbackUrl;
+    return url;
   }
 
-  // Feature Flags
-  static bool get enableDebugMode => isDevelopment;
-  static bool get enableAnalytics => isProduction;
-  static bool get enableCrashReporting => !isDevelopment;
+  /// Get environment-specific URL as fallback
+  static String _getEnvironmentSpecificUrl() {
+    return switch (currentEnvironment) {
+      Environment.production => dotenv.env['API_BASE_URL_PRODUCTION'] ?? 'https://api-icms.gridtokenx.com',
+      Environment.development => dotenv.env['API_BASE_URL_DEVELOPMENT'] ?? 'http://localhost:5001',
+      Environment.local => dotenv.env['API_BASE_URL_LOCAL'] ?? 'http://localhost:5001',
+    };
+  }
 
-  // Private constructor to prevent instantiation
-  EnvironmentConfig._();
+  /// API timeout configurations
+  static int get connectTimeoutMs => int.tryParse(dotenv.env['API_CONNECT_TIMEOUT'] ?? '') ?? 30000;
+  static int get receiveTimeoutMs => int.tryParse(dotenv.env['API_RECEIVE_TIMEOUT'] ?? '') ?? 30000;
+  static int get sendTimeoutMs => int.tryParse(dotenv.env['API_SEND_TIMEOUT'] ?? '') ?? 30000;
+
+  // =============================================================================
+  // AUTHENTICATION CONFIGURATION
+  // =============================================================================
+
+  static int get jwtExpiryBufferMinutes => int.tryParse(dotenv.env['JWT_EXPIRY_BUFFER_MINUTES'] ?? '') ?? 5;
+  static bool get authTokenRefreshEnabled => _getBoolValue('AUTH_TOKEN_REFRESH_ENABLED', true);
+
+  // =============================================================================
+  // DEBUG & DEVELOPMENT CONFIGURATION
+  // =============================================================================
+
+  static bool get debugMode => _getBoolValue('DEBUG_MODE', kDebugMode);
+  static String get logLevel => dotenv.env['LOG_LEVEL'] ?? 'debug';
+  static bool get enableApiLogging => _getBoolValue('ENABLE_API_LOGGING', kDebugMode);
+  static bool get enableNetworkLogging => _getBoolValue('ENABLE_NETWORK_LOGGING', kDebugMode);
+
+  // =============================================================================
+  // FEATURE FLAGS
+  // =============================================================================
+
+  static bool get enableMockData => _getBoolValue('ENABLE_MOCK_DATA', false);
+  static bool get enableOfflineMode => _getBoolValue('ENABLE_OFFLINE_MODE', false);
+  static bool get enableAnalytics => _getBoolValue('ENABLE_ANALYTICS', isProduction);
+  static bool get enableCrashReporting => _getBoolValue('ENABLE_CRASH_REPORTING', isProduction);
+
+  // =============================================================================
+  // UI/UX CONFIGURATION
+  // =============================================================================
+
+  static String get defaultTheme => dotenv.env['DEFAULT_THEME'] ?? 'light';
+  static bool get enableDarkMode => _getBoolValue('ENABLE_DARK_MODE', true);
+  static bool get enableSystemTheme => _getBoolValue('ENABLE_SYSTEM_THEME', true);
+  static bool get enableAnimations => _getBoolValue('ENABLE_ANIMATIONS', true);
+  static int get animationDurationMs => int.tryParse(dotenv.env['ANIMATION_DURATION_MS'] ?? '') ?? 300;
+
+  // =============================================================================
+  // DOCUMENTATION & SUPPORT URLS
+  // =============================================================================
+
+  static String get swaggerUrl => dotenv.env['SWAGGER_URL'] ?? 'http://localhost:5001/swagger/v1/swagger.json';
+  static String get apiDocsUrl => dotenv.env['API_DOCS_URL'] ?? 'https://api-icms.gridtokenx.com/swagger';
+  static String get supportEmail => dotenv.env['SUPPORT_EMAIL'] ?? 'support@gridtokenx.com';
+  static String get termsUrl => dotenv.env['TERMS_URL'] ?? 'https://gridtokenx.com/terms';
+  static String get privacyUrl => dotenv.env['PRIVACY_URL'] ?? 'https://gridtokenx.com/privacy';
+
+  // =============================================================================
+  // UTILITY METHODS
+  // =============================================================================
+
+  /// Helper method to parse boolean values from .env
+  static bool _getBoolValue(String key, bool defaultValue) {
+    final value = dotenv.env[key]?.toLowerCase();
+    return switch (value) {
+      'true' || '1' || 'yes' || 'on' => true,
+      'false' || '0' || 'no' || 'off' => false,
+      _ => defaultValue,
+    };
+  }
+
+  /// Get all configuration as a map for debugging
+  static Map<String, dynamic> getAllConfig() {
+    return {
+      'environment': {
+        'current': currentEnvironment.name,
+        'isDevelopment': isDevelopment,
+        'isProduction': isProduction,
+        'isLocal': isLocal,
+      },
+      'api': {
+        'baseUrl': apiBaseUrl,
+        'connectTimeoutMs': connectTimeoutMs,
+        'receiveTimeoutMs': receiveTimeoutMs,
+        'sendTimeoutMs': sendTimeoutMs,
+      },
+      'auth': {'jwtExpiryBufferMinutes': jwtExpiryBufferMinutes, 'tokenRefreshEnabled': authTokenRefreshEnabled},
+      'debug': {
+        'debugMode': debugMode,
+        'logLevel': logLevel,
+        'enableApiLogging': enableApiLogging,
+        'enableNetworkLogging': enableNetworkLogging,
+      },
+      'features': {
+        'enableMockData': enableMockData,
+        'enableOfflineMode': enableOfflineMode,
+        'enableAnalytics': enableAnalytics,
+        'enableCrashReporting': enableCrashReporting,
+      },
+      'ui': {
+        'defaultTheme': defaultTheme,
+        'enableDarkMode': enableDarkMode,
+        'enableSystemTheme': enableSystemTheme,
+        'enableAnimations': enableAnimations,
+        'animationDurationMs': animationDurationMs,
+      },
+      'urls': {
+        'swagger': swaggerUrl,
+        'apiDocs': apiDocsUrl,
+        'support': supportEmail,
+        'terms': termsUrl,
+        'privacy': privacyUrl,
+      },
+    };
+  }
+
+  /// Print all configuration for debugging
+  static void printAllConfig() {
+    if (!kDebugMode) return;
+
+    debugPrint('📋 Complete Environment Configuration:');
+    final config = getAllConfig();
+    config.forEach((category, values) {
+      debugPrint('  $category:');
+      if (values is Map<String, dynamic>) {
+        values.forEach((key, value) {
+          debugPrint('    $key: $value');
+        });
+      }
+    });
+  }
 }

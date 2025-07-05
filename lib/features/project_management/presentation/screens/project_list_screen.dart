@@ -200,10 +200,22 @@ class _EnhancedProjectListScreenState extends State<EnhancedProjectListScreen> {
                   );
                 }
 
-                return AppHeader(
-                  title: 'Project Management',
-                  subtitle: 'Manage solar installation projects',
-                  user: user,
+                return BlocBuilder<EnhancedProjectBloc, EnhancedProjectState>(
+                  builder: (context, projectState) {
+                    String subtitle = 'Manage solar installation projects';
+                    
+                    // Add project count to subtitle if available
+                    if (projectState is EnhancedProjectsLoaded) {
+                      final count = projectState.projectsResponse.totalCount;
+                      subtitle = 'Manage solar installation projects • $count project${count != 1 ? 's' : ''}';
+                    }
+                    
+                    return AppHeader(
+                      title: 'Project Management',
+                      subtitle: subtitle,
+                      user: user,
+                    );
+                  },
                 );
               },
             ),
@@ -223,81 +235,133 @@ class _EnhancedProjectListScreenState extends State<EnhancedProjectListScreen> {
               ),
               child: Column(
                 children: [
-                  // Live Reload Status Bar
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    margin: const EdgeInsets.only(bottom: 12),
-                    decoration: BoxDecoration(
-                      color: _isLiveReloadEnabled 
-                        ? Theme.of(context).colorScheme.primaryContainer
-                        : Theme.of(context).colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: _isLiveReloadEnabled
-                          ? Theme.of(context).colorScheme.primary
-                          : Theme.of(context).colorScheme.outline,
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          _isLiveReloadEnabled ? Icons.wifi : Icons.wifi_off,
-                          size: 16,
-                          color: _isLiveReloadEnabled
-                            ? Theme.of(context).colorScheme.primary
-                            : Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          _isLiveReloadEnabled ? 'Live Updates: ON' : 'Live Updates: OFF',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: _isLiveReloadEnabled
-                              ? Theme.of(context).colorScheme.primary
-                              : Theme.of(context).colorScheme.onSurfaceVariant,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        if (_isSilentRefreshing) ...[
-                          const SizedBox(width: 8),
-                          SizedBox(
-                            width: 12,
-                            height: 12,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Theme.of(context).colorScheme.primary,
+                  // Project Count Badge and Live Reload Status Row
+                  BlocBuilder<EnhancedProjectBloc, EnhancedProjectState>(
+                    builder: (context, projectState) {
+                      return Row(
+                        children: [
+                          // Project Count Badge
+                          if (projectState is EnhancedProjectsLoaded) ...[
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.primaryContainer,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  width: 1,
+                                ),
                               ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.folder_outlined,
+                                    size: 16,
+                                    color: Theme.of(context).colorScheme.primary,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    '${projectState.projectsResponse.totalCount}',
+                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: Theme.of(context).colorScheme.primary,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    projectState.projectsResponse.totalCount == 1 ? 'project' : 'projects',
+                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: Theme.of(context).colorScheme.primary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                          ],
+                          
+                          // Live Reload Status Badge
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: _isLiveReloadEnabled 
+                                ? Theme.of(context).colorScheme.secondaryContainer
+                                : Theme.of(context).colorScheme.surfaceContainerHighest,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: _isLiveReloadEnabled
+                                  ? Theme.of(context).colorScheme.secondary
+                                  : Theme.of(context).colorScheme.outline,
+                                width: 1,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  _isLiveReloadEnabled ? Icons.wifi : Icons.wifi_off,
+                                  size: 16,
+                                  color: _isLiveReloadEnabled
+                                    ? Theme.of(context).colorScheme.secondary
+                                    : Theme.of(context).colorScheme.onSurfaceVariant,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  _isLiveReloadEnabled ? 'Live Updates: ON' : 'Live Updates: OFF',
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: _isLiveReloadEnabled
+                                      ? Theme.of(context).colorScheme.secondary
+                                      : Theme.of(context).colorScheme.onSurfaceVariant,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                if (_isSilentRefreshing) ...[
+                                  const SizedBox(width: 8),
+                                  SizedBox(
+                                    width: 12,
+                                    height: 12,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Theme.of(context).colorScheme.secondary,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                                const SizedBox(width: 8),
+                                GestureDetector(
+                                  onTap: _toggleLiveReload,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: _isLiveReloadEnabled
+                                        ? Theme.of(context).colorScheme.secondary
+                                        : Theme.of(context).colorScheme.outline,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Text(
+                                      _isLiveReloadEnabled ? 'ON' : 'OFF',
+                                      style: TextStyle(
+                                        color: _isLiveReloadEnabled
+                                          ? Theme.of(context).colorScheme.onSecondary
+                                          : Theme.of(context).colorScheme.surface,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
-                        const SizedBox(width: 8),
-                        GestureDetector(
-                          onTap: _toggleLiveReload,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: _isLiveReloadEnabled
-                                ? Theme.of(context).colorScheme.primary
-                                : Theme.of(context).colorScheme.outline,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              _isLiveReloadEnabled ? 'ON' : 'OFF',
-                              style: TextStyle(
-                                color: _isLiveReloadEnabled
-                                  ? Theme.of(context).colorScheme.onPrimary
-                                  : Theme.of(context).colorScheme.surface,
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
+                  
+                  const SizedBox(height: 12),
                   
                   ProjectSearchBar(
                     controller: _searchController,

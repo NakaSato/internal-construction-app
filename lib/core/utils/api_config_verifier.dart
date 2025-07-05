@@ -12,21 +12,15 @@ class ApiConfigVerifier {
 
       // Check .env file loading
       debugPrint('📁 .env file status:');
-      debugPrint(
-        '  - API_BASE_URL: ${dotenv.env['API_BASE_URL'] ?? 'NOT SET'}',
-      );
+      debugPrint('  - API_BASE_URL: ${dotenv.env['API_BASE_URL'] ?? 'NOT SET'}');
       debugPrint('  - DEBUG_MODE: ${dotenv.env['DEBUG_MODE'] ?? 'NOT SET'}');
 
       // Check EnvironmentConfig
       debugPrint('\n🌍 Environment Configuration:');
-      debugPrint(
-        '  - Current Environment: ${EnvironmentConfig.currentEnvironment}',
-      );
+      debugPrint('  - Current Environment: ${EnvironmentConfig.currentEnvironment}');
       debugPrint('  - Is Development: ${EnvironmentConfig.isDevelopment}');
       debugPrint('  - API Base URL: ${EnvironmentConfig.apiBaseUrl}');
-      debugPrint(
-        '  - Debug Mode Enabled: ${EnvironmentConfig.enableDebugMode}',
-      );
+      debugPrint('  - Debug Mode Enabled: ${EnvironmentConfig.debugMode}');
 
       // Validate URL format
       final apiUrl = EnvironmentConfig.apiBaseUrl;
@@ -47,7 +41,7 @@ class ApiConfigVerifier {
       'envFileLoaded': dotenv.isEveryDefined(['API_BASE_URL']),
       'apiBaseUrl': EnvironmentConfig.apiBaseUrl,
       'environment': EnvironmentConfig.currentEnvironment.toString(),
-      'debugMode': EnvironmentConfig.enableDebugMode,
+      'debugMode': EnvironmentConfig.debugMode,
       'isCorrectHost': EnvironmentConfig.apiBaseUrl.contains('localhost:8080'),
     };
   }

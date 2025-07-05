@@ -1,44 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-
-/// Configuration class for API client settings
-class ApiConfig {
-  static const String baseUrl = 'https://api-icms.gridtokenx.com';
-  static const String apiVersion = 'api/v1';
-  static const Duration connectTimeout = Duration(seconds: 30);
-  static const Duration receiveTimeout = Duration(seconds: 30);
-  static const Duration sendTimeout = Duration(seconds: 30);
-
-  // Authentication endpoints
-  static const String authPath = '/Auth';
-  static const String loginPath = '/Auth/login';
-  static const String registerPath = '/Auth/register';
-  static const String refreshPath = '/Auth/refresh';
-  static const String logoutPath = '/Auth/logout';
-
-  // Core feature endpoints
-  static const String projectsPath = '/Projects';
-  static const String usersPath = '/users';
-  static const String tasksPath = '/tasks';
-  static const String calendarPath = '/Calendar';
-  static const String dailyReportsPath = '/daily-reports';
-  static const String weeklyReportsPath = '/weekly-reports';
-  static const String weeklyRequestsPath = '/weekly-requests';
-  static const String workRequestsPath = '/work-requests';
-  static const String resourcesPath = '/resources';
-  static const String masterPlansPath = '/master-plans';
-  static const String phasesPath = '/phases';
-  static const String imagesPath = '/images';
-  static const String documentsPath = '/documents';
-  static const String notificationsPath = '/notifications';
-  static const String dashboardPath = '/dashboard';
-
-  // Health and debug endpoints
-  static const String healthPath = '/Health';
-  static const String debugPath = '/api/Debug';
-}
+import '../config/environment_config.dart';
 
 /// Enhanced API client with authentication, error handling, and logging
+/// All configuration now comes from .env file via EnvironmentConfig
 class ApiClient {
   late final Dio _dio;
   String? _authToken;
@@ -46,10 +11,10 @@ class ApiClient {
   ApiClient({String? baseUrl, String? authToken}) {
     _dio = Dio(
       BaseOptions(
-        baseUrl: baseUrl ?? ApiConfig.baseUrl,
-        connectTimeout: ApiConfig.connectTimeout,
-        receiveTimeout: ApiConfig.receiveTimeout,
-        sendTimeout: ApiConfig.sendTimeout,
+        baseUrl: baseUrl ?? EnvironmentConfig.apiBaseUrl,
+        connectTimeout: Duration(milliseconds: EnvironmentConfig.connectTimeoutMs),
+        receiveTimeout: Duration(milliseconds: EnvironmentConfig.receiveTimeoutMs),
+        sendTimeout: Duration(milliseconds: EnvironmentConfig.sendTimeoutMs),
         headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
       ),
     );

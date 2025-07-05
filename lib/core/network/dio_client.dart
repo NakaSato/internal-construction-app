@@ -18,14 +18,11 @@ abstract class NetworkModule {
       connectTimeout: AppConstants.apiTimeout,
       receiveTimeout: AppConstants.apiTimeout,
       sendTimeout: AppConstants.apiTimeout,
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
+      headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
     );
 
     // Add interceptors
-    if (EnvironmentConfig.enableDebugMode) {
+    if (EnvironmentConfig.debugMode) {
       dio.interceptors.add(
         LogInterceptor(
           requestBody: false, // Disable request body logging
@@ -35,8 +32,7 @@ abstract class NetworkModule {
           error: true, // Keep error logging
           logPrint: (object) {
             // Only log errors and critical information
-            if (object.toString().contains('ERROR') ||
-                object.toString().contains('DioException')) {
+            if (object.toString().contains('ERROR') || object.toString().contains('DioException')) {
               debugPrint(object.toString());
             }
           },
@@ -61,10 +57,7 @@ class AuthInterceptor extends Interceptor {
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
   @override
-  void onRequest(
-    RequestOptions options,
-    RequestInterceptorHandler handler,
-  ) async {
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
     // Skip auth for login/register endpoints
     if (options.path.contains('/auth/login') ||
         options.path.contains('/auth/register') ||
@@ -85,8 +78,7 @@ class AuthInterceptor extends Interceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
     // Handle token refresh on 401 errors
-    if (err.response?.statusCode == 401 &&
-        !err.requestOptions.path.contains('/auth/')) {
+    if (err.response?.statusCode == 401 && !err.requestOptions.path.contains('/auth/')) {
       try {
         final refreshToken = await _secureStorage.read(key: _refreshTokenKey);
         if (refreshToken != null) {
@@ -95,8 +87,7 @@ class AuthInterceptor extends Interceptor {
           if (refreshResponse != null) {
             // Update token and retry request
             await _secureStorage.write(key: _tokenKey, value: refreshResponse);
-            err.requestOptions.headers['Authorization'] =
-                'Bearer $refreshResponse';
+            err.requestOptions.headers['Authorization'] = 'Bearer $refreshResponse';
 
             // Retry the original request
             final response = await Dio().fetch(err.requestOptions);

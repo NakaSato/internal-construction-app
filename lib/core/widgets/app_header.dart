@@ -19,6 +19,8 @@ class _AppHeaderConstants {
   static const Duration badgeAnimationDuration = Duration(milliseconds: 600);
   static const Duration scaleAnimationDuration = Duration(milliseconds: 400);
   static const Duration snackBarDuration = Duration(seconds: 2);
+  static const Duration pulseAnimationDuration = Duration(milliseconds: 1500);
+  static const Duration notificationIconAnimationDuration = Duration(milliseconds: 300);
 
   // Spacing constants
   static const double searchIconRightSpacing = SolarSpacing.sm;
@@ -70,7 +72,7 @@ class AppHeader extends StatefulWidget implements PreferredSizeWidget {
     this.notificationCount = 0,
     this.backgroundColor,
     this.centerTitle = false,
-    this.showSearchIcon = true,
+    this.showSearchIcon = false,
     this.showNotificationIcon = true,
     this.onSearchTap,
     this.subtitle,
@@ -191,7 +193,7 @@ class _AppHeaderState extends State<AppHeader> with SingleTickerProviderStateMix
       child: Container(
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.2), width: 2),
+          border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2), width: 2),
         ),
         child: CircleAvatar(
           radius: _AppHeaderConstants.avatarRadius,
@@ -460,7 +462,11 @@ class _AppHeaderState extends State<AppHeader> with SingleTickerProviderStateMix
               clipBehavior: Clip.none,
               children: [
                 _buildNotificationButton(context),
-                if (widget.showNotificationBadge && widget.notificationCount > 0) _buildNotificationBadge(context),
+                if (widget.showNotificationBadge && widget.notificationCount > 0) 
+                  _buildNotificationBadge(context),
+                // Add pulse animation for active notifications
+                if (widget.showNotificationBadge && widget.notificationCount > 0)
+                  _buildNotificationPulse(context),
               ],
             ),
           );
@@ -470,6 +476,8 @@ class _AppHeaderState extends State<AppHeader> with SingleTickerProviderStateMix
   }
 
   Widget _buildNotificationButton(BuildContext context) {
+    final hasNotifications = widget.showNotificationBadge && widget.notificationCount > 0;
+    
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -482,25 +490,69 @@ class _AppHeaderState extends State<AppHeader> with SingleTickerProviderStateMix
           }
         },
         borderRadius: BorderRadius.circular(_AppHeaderConstants.iconBorderRadius),
-        child: Container(
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.all(_AppHeaderConstants.iconPadding),
-          decoration: _buildIconDecoration(context),
-          child: Icon(
-            widget.showNotificationBadge && widget.notificationCount > 0
-                ? Icons.notifications_active_rounded
-                : Icons.notifications_outlined,
-            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
-            size: _AppHeaderConstants.iconSize,
+          decoration: _buildNotificationIconDecoration(context, hasNotifications),
+          child: AnimatedSwitcher(
+            duration: _AppHeaderConstants.notificationIconAnimationDuration,
+            transitionBuilder: (child, animation) => ScaleTransition(
+              scale: animation,
+              child: child,
+            ),
+            child: Icon(
+              hasNotifications
+                  ? Icons.notifications_active_rounded
+                  : Icons.notifications_outlined,
+              key: ValueKey(hasNotifications),
+              color: hasNotifications 
+                  ? Theme.of(context).colorScheme.primary
+                  : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
+              size: _AppHeaderConstants.iconSize,
+            ),
           ),
         ),
       ),
     );
   }
 
+  /// Build notification pulse animation for active notifications
+  Widget _buildNotificationPulse(BuildContext context) {
+    return Positioned.fill(
+      child: TweenAnimationBuilder<double>(
+        duration: _AppHeaderConstants.pulseAnimationDuration,
+        tween: Tween(begin: 0.0, end: 1.0),
+        curve: Curves.easeOut,
+        builder: (context, pulseValue, child) {
+          return Transform.scale(
+            scale: 1.0 + (pulseValue * 0.3),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(_AppHeaderConstants.iconBorderRadius),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.primary.withValues(
+                    alpha: (1.0 - pulseValue) * 0.4,
+                  ),
+                  width: 2,
+                ),
+              ),
+            ),
+          );
+        },
+        onEnd: () {
+          // Restart the animation for continuous pulse
+          if (mounted && widget.showNotificationBadge && widget.notificationCount > 0) {
+            setState(() {});
+          }
+        },
+      ),
+    );
+  }
+
   Widget _buildNotificationBadge(BuildContext context) {
     return Positioned(
-      right: 6,
-      top: 6,
+      right: 4,
+      top: 4,
       child: TweenAnimationBuilder<double>(
         duration: _AppHeaderConstants.badgeAnimationDuration,
         tween: Tween(begin: 0.0, end: 1.0),
@@ -509,18 +561,19 @@ class _AppHeaderState extends State<AppHeader> with SingleTickerProviderStateMix
           return Transform.scale(
             scale: badgeValue,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
               decoration: _buildBadgeDecoration(context),
-              constraints: const BoxConstraints(minWidth: 18, minHeight: 16),
+              constraints: const BoxConstraints(minWidth: 20, minHeight: 18),
               child: Text(
                 widget.notificationCount > _AppHeaderConstants.maxNotificationCount
                     ? '${_AppHeaderConstants.maxNotificationCount}+'
                     : widget.notificationCount.toString(),
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Theme.of(context).colorScheme.onError,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w800,
-                  height: 1.2,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w900,
+                  height: 1.0,
+                  letterSpacing: 0.2,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -591,17 +644,60 @@ class _AppHeaderState extends State<AppHeader> with SingleTickerProviderStateMix
     );
   }
 
+  /// Build enhanced notification icon decoration
+  BoxDecoration _buildNotificationIconDecoration(BuildContext context, bool hasNotifications) {
+    if (hasNotifications) {
+      return BoxDecoration(
+        borderRadius: BorderRadius.circular(SolarBorderRadius.md),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            context.colorScheme.primary.withValues(alpha: 0.15),
+            context.colorScheme.primaryContainer.withValues(alpha: 0.1),
+          ],
+        ),
+        border: Border.all(
+          color: context.colorScheme.primary.withValues(alpha: 0.3),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: context.colorScheme.primary.withValues(alpha: 0.2),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      );
+    } else {
+      return _buildIconDecoration(context);
+    }
+  }
+
   BoxDecoration _buildBadgeDecoration(BuildContext context) {
     return BoxDecoration(
       gradient: LinearGradient(
-        colors: [context.colorScheme.error, context.colorScheme.error.withValues(alpha: 0.8)],
+        colors: [
+          context.colorScheme.error,
+          context.colorScheme.error.withValues(alpha: 0.9)
+        ],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ),
-      borderRadius: BorderRadius.circular(SolarBorderRadius.md),
-      border: Border.all(color: context.colorScheme.surface, width: 1.5),
+      borderRadius: BorderRadius.circular(SolarBorderRadius.lg),
+      border: Border.all(color: context.colorScheme.surface, width: 2),
       boxShadow: [
-        BoxShadow(color: context.colorScheme.error.withValues(alpha: 0.3), blurRadius: 6, offset: const Offset(0, 2)),
+        BoxShadow(
+          color: context.colorScheme.error.withValues(alpha: 0.4),
+          blurRadius: 8,
+          offset: const Offset(0, 3),
+          spreadRadius: 1,
+        ),
+        BoxShadow(
+          color: context.colorScheme.error.withValues(alpha: 0.2),
+          blurRadius: 4,
+          offset: const Offset(0, 1),
+        ),
       ],
     );
   }
@@ -808,7 +904,17 @@ class _AppHeaderState extends State<AppHeader> with SingleTickerProviderStateMix
 
   /// Show notification functionality snackbar
   void _showNotificationSnackBar(BuildContext context) {
-    _showSnackBar(context, icon: Icons.notifications_active_rounded, message: 'Notifications feature coming soon!');
+    final message = widget.showNotificationBadge && widget.notificationCount > 0
+        ? 'You have ${widget.notificationCount} notification${widget.notificationCount > 1 ? 's' : ''}'
+        : 'No new notifications';
+    
+    _showSnackBar(
+      context, 
+      icon: widget.showNotificationBadge && widget.notificationCount > 0
+          ? Icons.notifications_active_rounded 
+          : Icons.notifications_outlined, 
+      message: message,
+    );
   }
 
   /// Generic snackbar helper

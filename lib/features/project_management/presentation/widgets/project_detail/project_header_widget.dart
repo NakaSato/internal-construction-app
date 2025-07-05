@@ -352,14 +352,14 @@ class ProjectHeaderWidget extends StatelessWidget {
     final remainingPart = parts.length > 1 ? parts.sublist(1).join(' ') : '';
     
     // Display project number and title with improved alignment
-    return Wrap(
-      crossAxisAlignment: WrapCrossAlignment.center,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Project number/ID part - if exists
         if (firstPart.isNotEmpty && _isProjectId(firstPart))
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            margin: const EdgeInsets.only(right: 8, bottom: 4),
+            margin: const EdgeInsets.only(bottom: 8),
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(6),
@@ -387,31 +387,29 @@ class ProjectHeaderWidget extends StatelessWidget {
           ),
         
         // Project title with better spacing
-        Flexible(
-          child: Text(
-            _isProjectId(firstPart) ? remainingPart : projectName,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 0.3,
-              height: 1.3,
-              shadows: [
-                const Shadow(
-                  offset: Offset(0, 2),
-                  blurRadius: 8.0,
-                  color: Color.fromARGB(180, 0, 0, 0),
-                ),
-                Shadow(
-                  offset: const Offset(0, 1),
-                  blurRadius: 4.0,
-                  color: Colors.black.withValues(alpha: 0.6),
-                ),
-              ],
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
+        Text(
+          _isProjectId(firstPart) ? remainingPart : projectName,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.3,
+            height: 1.3,
+            shadows: [
+              const Shadow(
+                offset: Offset(0, 2),
+                blurRadius: 8.0,
+                color: Color.fromARGB(180, 0, 0, 0),
+              ),
+              Shadow(
+                offset: const Offset(0, 1),
+                blurRadius: 4.0,
+                color: Colors.black.withValues(alpha: 0.6),
+              ),
+            ],
           ),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
         ),
       ],
     );
@@ -548,7 +546,7 @@ class ProjectHeaderWidget extends StatelessWidget {
         ),
         const SizedBox(width: 12),
         // Progress bar
-        Expanded(
+        Flexible(
           child: Container(
             height: 6,
             decoration: BoxDecoration(
@@ -575,68 +573,6 @@ class ProjectHeaderWidget extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildProgressIndicator(BuildContext context, Project project) {
-    final theme = Theme.of(context);
-    final progress = project.progressPercentage ?? 0.0;
-    
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.2),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.pie_chart_outline,
-                color: theme.colorScheme.secondary,
-                size: 16,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                '${progress.toStringAsFixed(1)}%',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 17,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 0.5,
-                  shadows: [
-                    Shadow(
-                      offset: const Offset(0, 1),
-                      blurRadius: 4.0,
-                      color: Colors.black.withValues(alpha: 0.6),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          SizedBox(
-            width: 60,
-            height: 4,
-            child: LinearProgressIndicator(
-              value: progress / 100,
-              backgroundColor: Colors.white.withValues(alpha: 0.3),
-              valueColor: AlwaysStoppedAnimation<Color>(
-                theme.colorScheme.secondary,
-              ),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -679,7 +615,7 @@ class ProjectHeaderWidget extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 10),
-        Expanded(
+        Flexible(
           child: Text(
             text,
             style: TextStyle(

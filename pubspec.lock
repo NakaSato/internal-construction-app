@@ -13,10 +13,10 @@ packages:
     dependency: transitive
     description:
       name: analyzer
-      sha256: f6154230675c44a191f2e20d16eeceb4aa18b30ca732db4efaf94c6a7d43cfa6
+      sha256: "01949bf52ad33f0e0f74f881fbaac4f348c556531951d92c8d16f1262aa19ff8"
       url: "https://pub.dev"
     source: hosted
-    version: "7.5.2"
+    version: "7.5.4"
   args:
     dependency: transitive
     description:
@@ -964,10 +964,10 @@ packages:
     dependency: "direct main"
     description:
       name: retrofit
-      sha256: c6cc9ad3374e6d07008343140a67afffaaa34cdf6bf08d4847d91417a99dcf45
+      sha256: f56124c1bda4eec3a68548957aa1a0d3f6cd728511e81d4215a4167de7197fdd
       url: "https://pub.dev"
     source: hosted
-    version: "4.4.2"
+    version: "4.5.0"
   retrofit_generator:
     dependency: "direct dev"
     description:
@@ -1201,10 +1201,10 @@ packages:
     dependency: transitive
     description:
       name: test_api
-      sha256: fb31f383e2ee25fbbfe06b40fe21e1e458d14080e3c67e7ba0acfde4df4e0bbd
+      sha256: "522f00f556e73044315fa4585ec3270f1808a4b186c936e612cab0b565ff1e00"
       url: "https://pub.dev"
     source: hosted
-    version: "0.7.4"
+    version: "0.7.6"
   timezone:
     dependency: transitive
     description:

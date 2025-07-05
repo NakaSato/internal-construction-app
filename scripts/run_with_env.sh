@@ -66,7 +66,7 @@ show_usage() {
     echo "  $0                           # Run with current environment"
     echo "  $0 dev                       # Switch to development and run"
     echo "  $0 production                # Switch to production and run"
-    echo "  $0 local http://localhost:8080  # Switch to local with custom URL"
+    echo "  $0 local http://localhost:5001  # Switch to local with custom URL"
     echo ""
 }
 
@@ -81,7 +81,7 @@ case $1 in
         run_flutter
         ;;
     "local")
-        local_url=${2:-"http://localhost:8080"}
+        local_url=${2:-"http://localhost:5001"}
         update_env "local" "$local_url"
         run_flutter
         ;;
