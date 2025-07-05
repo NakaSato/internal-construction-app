@@ -110,8 +110,44 @@ class ApiProjectRepository implements EnhancedProjectRepository {
         debugPrint('  🔍 Stack trace: $stackTrace');
       }
 
+      // Extract more specific error messages from the API response
+      String userFriendlyMessage = errorResponse.message;
+
+      // Check for specific API error patterns
+      if (e.response?.data is Map<String, dynamic>) {
+        final responseData = e.response!.data as Map<String, dynamic>;
+
+        // Look for errors array with specific messages
+        if (responseData.containsKey('errors') && responseData['errors'] is List) {
+          final errors = responseData['errors'] as List;
+          if (errors.isNotEmpty) {
+            final firstError = errors.first.toString();
+
+            // Provide user-friendly messages for common server errors
+            if (firstError.contains('Object reference not set to an instance of an object')) {
+              userFriendlyMessage = 'This project data is incomplete or corrupted. Please contact support.';
+            } else if (firstError.contains('not found')) {
+              userFriendlyMessage = 'Project not found. It may have been deleted or moved.';
+            } else if (firstError.contains('access') || firstError.contains('permission')) {
+              userFriendlyMessage = 'You don\'t have permission to view this project.';
+            } else {
+              // Use the actual error message if it's user-friendly
+              userFriendlyMessage = firstError;
+            }
+          }
+        }
+
+        // Also check the main message field
+        if (responseData.containsKey('message') && responseData['message'] is String) {
+          final apiMessage = responseData['message'] as String;
+          if (apiMessage != 'Operation failed' && apiMessage.isNotEmpty) {
+            userFriendlyMessage = apiMessage;
+          }
+        }
+      }
+
       // Throw a more user-friendly error with the enhanced message
-      throw Exception(errorResponse.message);
+      throw Exception(userFriendlyMessage);
     } on ArgumentError catch (e) {
       if (kDebugMode) {
         debugPrint('❌ Invalid project ID format: $e');
