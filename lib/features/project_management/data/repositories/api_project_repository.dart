@@ -233,9 +233,32 @@ class ApiProjectRepository implements EnhancedProjectRepository {
 
   @override
   Future<void> deleteProject(String id) async {
-    // For now, return a mock implementation
-    // This will need to be implemented when the API has a delete endpoint
-    throw UnimplementedError('Delete project API endpoint not yet implemented');
+    if (kDebugMode) {
+      debugPrint('🗑️ ApiProjectRepository.deleteProject called with ID: $id');
+    }
+
+    try {
+      await _apiService.deleteProject(id);
+
+      if (kDebugMode) {
+        debugPrint('✅ Project deleted successfully: $id');
+      }
+    } on DioException catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ DioException in deleteProject:');
+        debugPrint('  Status Code: ${e.response?.statusCode}');
+        debugPrint('  Request URL: ${e.requestOptions.uri}');
+        debugPrint('  Error Message: ${e.message}');
+        debugPrint('  Response Data: ${e.response?.data}');
+      }
+      rethrow;
+    } catch (e, stackTrace) {
+      if (kDebugMode) {
+        debugPrint('❌ General exception in deleteProject: $e');
+        debugPrint('🔍 Stack trace: $stackTrace');
+      }
+      rethrow;
+    }
   }
 
   @override

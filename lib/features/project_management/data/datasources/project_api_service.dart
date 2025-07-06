@@ -20,4 +20,8 @@ abstract class ProjectApiService {
   /// Get a single project by ID
   @GET('/api/v1/projects/{id}')
   Future<SingleProjectResponse> getProject(@Path('id') String projectId);
+
+  /// Delete a project by ID
+  @DELETE('/api/v1/projects/{id}')
+  Future<void> deleteProject(@Path('id') String projectId);
 }

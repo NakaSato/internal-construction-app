@@ -34,14 +34,11 @@ enum UserRole {
   final String value;
 
   static UserRole fromString(String role) {
-    return UserRole.values.firstWhere(
-      (r) => r.value == role.toUpperCase(),
-      orElse: () => UserRole.user,
-    );
+    return UserRole.values.firstWhere((r) => r.value == role.toUpperCase(), orElse: () => UserRole.user);
   }
 
   bool get hasFullAccess => this == UserRole.admin || this == UserRole.manager;
   bool get isFieldUser => this == UserRole.user;
 
-  int get tabCount => hasFullAccess ? 7 : 4;
+  int get tabCount => hasFullAccess ? 8 : 5; // Updated to include WBS tab
 }

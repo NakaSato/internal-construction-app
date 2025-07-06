@@ -17,7 +17,7 @@ class ProjectSearchBar extends StatefulWidget {
     this.activeFilterCount = 0,
     this.currentQuery,
     this.onQueryChanged,
-    this.onRealtimeUpdate, // New callback for real-time updates
+    this.onRealtimeUpdate,
   });
 
   final TextEditingController controller;
@@ -30,7 +30,6 @@ class ProjectSearchBar extends StatefulWidget {
   final ProjectsQuery? currentQuery;
   final ValueChanged<ProjectsQuery>? onQueryChanged;
   final ValueChanged<RealtimeProjectUpdate>? onRealtimeUpdate;
-  final VoidCallback? onRealtimeUpdate; // Callback for real-time updates
 
   @override
   State<ProjectSearchBar> createState() => _ProjectSearchBarState();
@@ -39,6 +38,13 @@ class ProjectSearchBar extends StatefulWidget {
 class _ProjectSearchBarState extends State<ProjectSearchBar> {
   String _searchMode = 'all'; // 'all', 'name', 'client', 'address', 'capacity'
 
+  // Real-time update state
+  StreamSubscription<RealtimeProjectUpdate>? _realtimeSubscription;
+  late final RealtimeApiStreams _realtimeStreams;
+  bool _isRealtimeConnected = false;
+  bool _hasRecentUpdate = false;
+  Timer? _updateIndicatorTimer;
+
   final List<Map<String, dynamic>> _searchModes = [
     {'key': 'all', 'label': 'All Fields', 'icon': Icons.search},
     {'key': 'name', 'label': 'Project Name', 'icon': Icons.business},
@@ -46,6 +52,72 @@ class _ProjectSearchBarState extends State<ProjectSearchBar> {
     {'key': 'address', 'label': 'Address', 'icon': Icons.location_on},
     {'key': 'capacity', 'label': 'Capacity (kW)', 'icon': Icons.bolt},
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeRealtimeUpdates();
+  }
+
+  @override
+  void dispose() {
+    _realtimeSubscription?.cancel();
+    _updateIndicatorTimer?.cancel();
+    super.dispose();
+  }
+
+  void _initializeRealtimeUpdates() {
+    try {
+      // Initialize real-time streams
+      _realtimeStreams = getIt<RealtimeApiStreams>();
+
+      // Subscribe to project updates using the correct stream name
+      _realtimeSubscription = _realtimeStreams.projectsStream.listen(
+        (update) {
+          if (mounted) {
+            setState(() {
+              _hasRecentUpdate = true;
+              _isRealtimeConnected = true;
+            });
+
+            // Call parent callback if provided
+            if (widget.onRealtimeUpdate != null) {
+              widget.onRealtimeUpdate!(update);
+            }
+
+            // Clear update indicator after 3 seconds
+            _updateIndicatorTimer?.cancel();
+            _updateIndicatorTimer = Timer(const Duration(seconds: 3), () {
+              if (mounted) {
+                setState(() {
+                  _hasRecentUpdate = false;
+                });
+              }
+            });
+          }
+        },
+        onError: (error) {
+          if (mounted) {
+            setState(() {
+              _isRealtimeConnected = false;
+            });
+          }
+          debugPrint('Real-time projects stream error: $error');
+        },
+      );
+
+      // Set initial connection state
+      setState(() {
+        _isRealtimeConnected = true;
+      });
+    } catch (e) {
+      // Graceful fallback if real-time services are not available
+      debugPrint('Real-time updates not available: $e');
+      setState(() {
+        _isRealtimeConnected = false;
+      });
+    }
+  }
 
   String _getSearchHint() {
     switch (_searchMode) {
@@ -85,10 +157,7 @@ class _ProjectSearchBarState extends State<ProjectSearchBar> {
             newQuery = query.copyWith(minCapacity: null, maxCapacity: null);
           } else {
             final capacityFilter = _parseCapacityFilter(value);
-            newQuery = query.copyWith(
-              minCapacity: capacityFilter['min'],
-              maxCapacity: capacityFilter['max'],
-            );
+            newQuery = query.copyWith(minCapacity: capacityFilter['min'], maxCapacity: capacityFilter['max']);
           }
           break;
         default:
@@ -134,9 +203,7 @@ class _ProjectSearchBarState extends State<ProjectSearchBar> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final hasText = widget.controller.text.isNotEmpty;
-    final currentMode = _searchModes.firstWhere(
-      (mode) => mode['key'] == _searchMode,
-    );
+    final currentMode = _searchModes.firstWhere((mode) => mode['key'] == _searchMode);
 
     return Column(
       children: [
@@ -160,9 +227,7 @@ class _ProjectSearchBarState extends State<ProjectSearchBar> {
                       Icon(
                         mode['icon'] as IconData,
                         size: 16,
-                        color: isSelected
-                            ? colorScheme.onSecondaryContainer
-                            : colorScheme.onSurfaceVariant,
+                        color: isSelected ? colorScheme.onSecondaryContainer : colorScheme.onSurfaceVariant,
                       ),
                       const SizedBox(width: 4),
                       Text(mode['label'] as String),
@@ -184,6 +249,43 @@ class _ProjectSearchBarState extends State<ProjectSearchBar> {
           ),
         ),
 
+        // Real-time status indicator
+        if (_isRealtimeConnected)
+          Container(
+            margin: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: _hasRecentUpdate ? colorScheme.primaryContainer : colorScheme.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: _hasRecentUpdate ? colorScheme.primary : colorScheme.outline.withOpacity(0.3)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  _hasRecentUpdate ? Icons.sync : Icons.wifi,
+                  size: 14,
+                  color: _hasRecentUpdate ? colorScheme.primary : colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  _hasRecentUpdate ? 'Live update received' : 'Real-time connected',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: _hasRecentUpdate ? colorScheme.primary : colorScheme.onSurfaceVariant,
+                    fontWeight: _hasRecentUpdate ? FontWeight.w600 : FontWeight.normal,
+                  ),
+                ),
+                if (_hasRecentUpdate)
+                  Container(
+                    margin: const EdgeInsets.only(left: 6),
+                    width: 6,
+                    height: 6,
+                    decoration: BoxDecoration(color: colorScheme.primary, shape: BoxShape.circle),
+                  ),
+              ],
+            ),
+          ),
+
         Row(
           children: [
             Expanded(
@@ -195,13 +297,8 @@ class _ProjectSearchBarState extends State<ProjectSearchBar> {
                 },
                 decoration: InputDecoration(
                   hintText: _getSearchHint(),
-                  hintStyle: TextStyle(
-                    color: colorScheme.onSurfaceVariant.withOpacity(0.7),
-                  ),
-                  prefixIcon: Icon(
-                    currentMode['icon'] as IconData,
-                    color: colorScheme.onSurfaceVariant,
-                  ),
+                  hintStyle: TextStyle(color: colorScheme.onSurfaceVariant.withOpacity(0.7)),
+                  prefixIcon: Icon(currentMode['icon'] as IconData, color: colorScheme.onSurfaceVariant),
                   suffixIcon: hasText
                       ? Row(
                           mainAxisSize: MainAxisSize.min,
@@ -211,10 +308,7 @@ class _ProjectSearchBarState extends State<ProjectSearchBar> {
                                 padding: const EdgeInsets.only(right: 8),
                                 child: Text(
                                   'kW',
-                                  style: TextStyle(
-                                    color: colorScheme.onSurfaceVariant,
-                                    fontWeight: FontWeight.w500,
-                                  ),
+                                  style: TextStyle(color: colorScheme.onSurfaceVariant, fontWeight: FontWeight.w500),
                                 ),
                               ),
                             IconButton(
@@ -224,10 +318,7 @@ class _ProjectSearchBarState extends State<ProjectSearchBar> {
                                 _handleSearchChanged('');
                                 widget.onClearSearch?.call();
                               },
-                              icon: Icon(
-                                Icons.clear,
-                                color: colorScheme.onSurfaceVariant,
-                              ),
+                              icon: Icon(Icons.clear, color: colorScheme.onSurfaceVariant),
                             ),
                           ],
                         )
@@ -238,27 +329,17 @@ class _ProjectSearchBarState extends State<ProjectSearchBar> {
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: colorScheme.outline.withOpacity(0.5),
-                    ),
+                    borderSide: BorderSide(color: colorScheme.outline.withOpacity(0.5)),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: colorScheme.primary,
-                      width: 2,
-                    ),
+                    borderSide: BorderSide(color: colorScheme.primary, width: 2),
                   ),
                   filled: true,
                   fillColor: colorScheme.surface,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 ),
-                keyboardType: _searchMode == 'capacity'
-                    ? TextInputType.number
-                    : TextInputType.text,
+                keyboardType: _searchMode == 'capacity' ? TextInputType.number : TextInputType.text,
               ),
             ),
             const SizedBox(width: 12),
@@ -269,12 +350,8 @@ class _ProjectSearchBarState extends State<ProjectSearchBar> {
                   onPressed: widget.onFilterTap,
                   icon: const Icon(Icons.tune),
                   style: IconButton.styleFrom(
-                    backgroundColor: widget.showActiveFilters
-                        ? colorScheme.primary
-                        : colorScheme.primaryContainer,
-                    foregroundColor: widget.showActiveFilters
-                        ? colorScheme.onPrimary
-                        : colorScheme.onPrimaryContainer,
+                    backgroundColor: widget.showActiveFilters ? colorScheme.primary : colorScheme.primaryContainer,
+                    foregroundColor: widget.showActiveFilters ? colorScheme.onPrimary : colorScheme.onPrimaryContainer,
                   ),
                 ),
                 // Active filters badge
@@ -284,21 +361,11 @@ class _ProjectSearchBarState extends State<ProjectSearchBar> {
                     top: 0,
                     child: Container(
                       padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: colorScheme.error,
-                        shape: BoxShape.circle,
-                      ),
-                      constraints: const BoxConstraints(
-                        minWidth: 16,
-                        minHeight: 16,
-                      ),
+                      decoration: BoxDecoration(color: colorScheme.error, shape: BoxShape.circle),
+                      constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
                       child: Text(
                         '${widget.activeFilterCount}',
-                        style: TextStyle(
-                          color: colorScheme.onError,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: TextStyle(color: colorScheme.onError, fontSize: 10, fontWeight: FontWeight.bold),
                         textAlign: TextAlign.center,
                       ),
                     ),
@@ -320,18 +387,12 @@ class _ProjectSearchBarState extends State<ProjectSearchBar> {
             ),
             child: Row(
               children: [
-                Icon(
-                  Icons.lightbulb_outline,
-                  size: 16,
-                  color: colorScheme.primary,
-                ),
+                Icon(Icons.lightbulb_outline, size: 16, color: colorScheme.primary),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     _getSearchModeHint(),
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
+                    style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
                   ),
                 ),
               ],
@@ -340,10 +401,7 @@ class _ProjectSearchBarState extends State<ProjectSearchBar> {
 
         // Active filters display
         if (widget.currentQuery?.hasActiveFilters == true)
-          Container(
-            margin: const EdgeInsets.only(top: 8),
-            child: _buildActiveFiltersDisplay(context),
-          ),
+          Container(margin: const EdgeInsets.only(top: 8), child: _buildActiveFiltersDisplay(context)),
       ],
     );
   }
@@ -379,10 +437,7 @@ class _ProjectSearchBarState extends State<ProjectSearchBar> {
             onDeleted: onRemove,
             deleteIcon: const Icon(Icons.close, size: 16),
             backgroundColor: colorScheme.secondaryContainer,
-            labelStyle: TextStyle(
-              color: colorScheme.onSecondaryContainer,
-              fontSize: 12,
-            ),
+            labelStyle: TextStyle(color: colorScheme.onSecondaryContainer, fontSize: 12),
           ),
         ),
       );
@@ -421,8 +476,7 @@ class _ProjectSearchBarState extends State<ProjectSearchBar> {
     if (query.minCapacity != null || query.maxCapacity != null) {
       String capacityLabel = 'Capacity: ';
       if (query.minCapacity != null && query.maxCapacity != null) {
-        capacityLabel +=
-            '${query.minCapacity!.toInt()}-${query.maxCapacity!.toInt()} kW';
+        capacityLabel += '${query.minCapacity!.toInt()}-${query.maxCapacity!.toInt()} kW';
       } else if (query.minCapacity != null) {
         capacityLabel += '>${query.minCapacity!.toInt()} kW';
       } else {
@@ -430,9 +484,7 @@ class _ProjectSearchBarState extends State<ProjectSearchBar> {
       }
 
       addFilterChip(capacityLabel, () {
-        widget.onQueryChanged?.call(
-          query.copyWith(minCapacity: null, maxCapacity: null),
-        );
+        widget.onQueryChanged?.call(query.copyWith(minCapacity: null, maxCapacity: null));
       });
     }
 
@@ -461,10 +513,7 @@ class _ProjectSearchBarState extends State<ProjectSearchBar> {
               onPressed: () {
                 widget.onQueryChanged?.call(query.clearFilters());
               },
-              child: Text(
-                'Clear All',
-                style: TextStyle(color: colorScheme.primary, fontSize: 12),
-              ),
+              child: Text('Clear All', style: TextStyle(color: colorScheme.primary, fontSize: 12)),
             ),
           ],
         ),

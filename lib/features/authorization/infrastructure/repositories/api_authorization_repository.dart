@@ -10,17 +10,14 @@ import '../models/permission_model.dart';
 
 /// API implementation of authorization repository
 class ApiAuthorizationRepository implements AuthorizationRepository {
-  const ApiAuthorizationRepository({
-    required Dio dio,
-    required FlutterSecureStorage secureStorage,
-  }) : _dio = dio,
-       _secureStorage = secureStorage;
+  const ApiAuthorizationRepository({required Dio dio, required FlutterSecureStorage secureStorage})
+    : _dio = dio,
+      _secureStorage = secureStorage;
 
   final Dio _dio;
   final FlutterSecureStorage _secureStorage;
 
   static const String _roleCachePrefix = 'cached_role_';
-  static const String _permissionsCachePrefix = 'cached_permissions_';
 
   @override
   Future<Role?> getRoleByName(String roleName) async {
@@ -81,14 +78,10 @@ class ApiAuthorizationRepository implements AuthorizationRepository {
       final response = await _dio.get('/api/roles/$roleId/permissions');
 
       if (response.statusCode == 200) {
-        final permissionsResponse = PermissionsListApiResponse.fromJson(
-          response.data,
-        );
+        final permissionsResponse = PermissionsListApiResponse.fromJson(response.data);
 
         if (permissionsResponse.success) {
-          return permissionsResponse.data
-              .map((model) => model.toEntity())
-              .toList();
+          return permissionsResponse.data.map((model) => model.toEntity()).toList();
         }
       }
 
@@ -101,11 +94,7 @@ class ApiAuthorizationRepository implements AuthorizationRepository {
   }
 
   @override
-  Future<bool> hasRolePermission(
-    String roleName,
-    String resource,
-    String action,
-  ) async {
+  Future<bool> hasRolePermission(String roleName, String resource, String action) async {
     try {
       final response = await _dio.post(
         '/api/authorization/check',
@@ -135,14 +124,10 @@ class ApiAuthorizationRepository implements AuthorizationRepository {
       final response = await _dio.get('/api/permissions');
 
       if (response.statusCode == 200) {
-        final permissionsResponse = PermissionsListApiResponse.fromJson(
-          response.data,
-        );
+        final permissionsResponse = PermissionsListApiResponse.fromJson(response.data);
 
         if (permissionsResponse.success) {
-          return permissionsResponse.data
-              .map((model) => model.toEntity())
-              .toList();
+          return permissionsResponse.data.map((model) => model.toEntity()).toList();
         }
       }
 
@@ -175,9 +160,7 @@ class ApiAuthorizationRepository implements AuthorizationRepository {
       final cachedData = await _secureStorage.read(key: cacheKey);
 
       if (cachedData != null) {
-        final roleModel = RoleModel.fromJson(
-          cachedData as Map<String, dynamic>,
-        );
+        final roleModel = RoleModel.fromJson(cachedData as Map<String, dynamic>);
         return roleModel.toEntity();
       }
 
@@ -192,9 +175,7 @@ class ApiAuthorizationRepository implements AuthorizationRepository {
   Future<void> clearRoleCache() async {
     try {
       final allKeys = await _secureStorage.readAll();
-      final roleCacheKeys = allKeys.keys
-          .where((key) => key.startsWith(_roleCachePrefix))
-          .toList();
+      final roleCacheKeys = allKeys.keys.where((key) => key.startsWith(_roleCachePrefix)).toList();
 
       for (final key in roleCacheKeys) {
         await _secureStorage.delete(key: key);

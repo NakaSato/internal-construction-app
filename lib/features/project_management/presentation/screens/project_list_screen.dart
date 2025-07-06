@@ -1,19 +1,19 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injection.dart';
-import '../../../../core/widgets/app_header.dart';
 import '../../../../core/services/universal_realtime_handler.dart';
 import '../../../../core/services/realtime_api_streams.dart';
 import '../../../authentication/application/auth_bloc.dart';
 import '../../../authentication/application/auth_state.dart';
 import '../../application/project_bloc.dart';
 import '../../domain/entities/project_api_models.dart';
-import '../widgets/project_card.dart';
 import '../widgets/project_search_bar.dart';
 import '../widgets/project_filter_bottom_sheet.dart';
+import '../widgets/project_app_header.dart';
+import '../widgets/project_floating_action_button.dart';
+import '../widgets/project_list_content.dart';
 
 /// Enhanced project list screen that uses the new API-based project management system
 class EnhancedProjectListScreen extends StatefulWidget {
@@ -50,15 +50,69 @@ class _EnhancedProjectListScreenState extends State<EnhancedProjectListScreen> {
     // Initialize enhanced real-time API streams
     _realtimeApiStreams = getIt<RealtimeApiStreams>();
 
+    // Listen for authentication state changes throughout the app lifecycle
+    _setupAuthenticationListener();
+
+    // Check authentication and start if authenticated
+    _checkAuthAndInitializeIfAuthenticated();
+  }
+
+  /// Set up authentication state listener to handle login/logout
+  void _setupAuthenticationListener() {
+    _authSubscription = context.read<AuthBloc>().stream.listen((authState) {
+      if (!mounted) return;
+
+      if (authState is AuthAuthenticated) {
+        debugPrint('🔐 Project List: User authenticated - initializing services');
+        _initializeAuthenticatedServices();
+      } else if (authState is AuthUnauthenticated) {
+        debugPrint('🔐 Project List: User unauthenticated - cleaning up services');
+        _cleanupUnauthenticatedServices();
+      } else if (authState is AuthFailure) {
+        debugPrint('🔐 Project List: Authentication failed - ${authState.message}');
+        _cleanupUnauthenticatedServices();
+      }
+    });
+  }
+
+  /// Check initial authentication state and initialize if authenticated
+  void _checkAuthAndInitializeIfAuthenticated() {
+    final authState = context.read<AuthBloc>().state;
+    if (authState is AuthAuthenticated) {
+      _initializeAuthenticatedServices();
+    } else {
+      debugPrint('⚠️ Project List: User not authenticated on init');
+    }
+  }
+
+  /// Initialize services when user is authenticated
+  void _initializeAuthenticatedServices() {
     // Start with fresh API data by clearing cache first
     _loadInitialProjectsWithFreshData();
 
     // Start live reload timer as fallback
     _startLiveReload();
 
-    // Initialize both real-time systems based on authentication state
+    // Initialize both real-time systems
     _checkAuthAndInitializeRealtime();
     _initializeEnhancedRealtime();
+  }
+
+  /// Clean up services when user is unauthenticated
+  void _cleanupUnauthenticatedServices() {
+    // Stop live reload
+    if (_refreshTimer?.isActive == true) {
+      _refreshTimer?.cancel();
+      _isLiveReloadEnabled = false;
+    }
+
+    // Disconnect real-time services
+    _disconnectRealtime();
+
+    // Clear any existing project data
+    if (mounted) {
+      context.read<EnhancedProjectBloc>().add(const ClearProjectsRequested());
+    }
   }
 
   /// Load initial projects with fresh API data
@@ -145,7 +199,7 @@ class _EnhancedProjectListScreenState extends State<EnhancedProjectListScreen> {
             if (projectId != null) {
               context.read<EnhancedProjectBloc>().add(RealTimeProjectDeletedReceived(projectId: projectId));
             } else {
-              debugPrint('❌ No project ID in delete event');
+              debugPrint('No project ID in delete event');
               _silentRefresh(); // Fallback to refresh
             }
             break;
@@ -156,14 +210,14 @@ class _EnhancedProjectListScreenState extends State<EnhancedProjectListScreen> {
             break;
 
           default:
-            debugPrint('⚠️ Unknown project event type: ${event.type.name}');
+            debugPrint('Unknown project event type: ${event.type.name}');
             _silentRefresh(); // Fallback to refresh
         }
       });
 
       // Register handlers for task-related events (affects project status)
       _realtimeHandler.registerTaskHandler((event) {
-        debugPrint('📡 Real-time task event: ${event.type.name}');
+        debugPrint('Real-time task event: ${event.type.name}');
         // Refresh project list when tasks are updated (may affect project progress)
         if (mounted) {
           _silentRefresh();
@@ -179,9 +233,9 @@ class _EnhancedProjectListScreenState extends State<EnhancedProjectListScreen> {
         }
       });
 
-      debugPrint('✅ Project List: Real-time updates initialized successfully');
+      debugPrint('Project List: Real-time updates initialized successfully');
     } catch (e) {
-      debugPrint('❌ Project List: Failed to initialize real-time updates: $e');
+      debugPrint('Project List: Failed to initialize real-time updates: $e');
       // Continue with fallback polling if real-time fails
     }
   }
@@ -191,6 +245,8 @@ class _EnhancedProjectListScreenState extends State<EnhancedProjectListScreen> {
     try {
       // Initialize connection
       await _realtimeApiStreams.initialize();
+
+      if (!mounted) return;
 
       setState(() {
         _isRealtimeConnected = _realtimeApiStreams.isConnected;
@@ -210,7 +266,7 @@ class _EnhancedProjectListScreenState extends State<EnhancedProjectListScreen> {
           }
         },
         onError: (error) {
-          debugPrint('❌ Enhanced real-time error: $error');
+          debugPrint('Enhanced real-time error: $error');
           setState(() {
             _isRealtimeConnected = false;
           });
@@ -460,35 +516,7 @@ class _EnhancedProjectListScreenState extends State<EnhancedProjectListScreen> {
       body: Column(
         children: [
           // App Header
-          BlocBuilder<AuthBloc, AuthState>(
-            builder: (context, authState) {
-              final user = authState is AuthAuthenticated ? authState.user : null;
-
-              if (user == null) {
-                return Container(
-                  height: 120,
-                  color: Theme.of(context).colorScheme.primary,
-                  child: const Center(
-                    child: Text('Please log in to continue', style: TextStyle(color: Colors.white, fontSize: 16)),
-                  ),
-                );
-              }
-
-              return BlocBuilder<EnhancedProjectBloc, EnhancedProjectState>(
-                builder: (context, projectState) {
-                  String subtitle = 'Manage solar installation projects';
-
-                  // Add project count to subtitle if available
-                  if (projectState is EnhancedProjectsLoaded) {
-                    final count = projectState.projectsResponse.totalCount;
-                    subtitle = 'Manage solar installation projects • $count project${count != 1 ? 's' : ''}';
-                  }
-
-                  return AppHeader(title: 'Project Management', subtitle: subtitle, user: user);
-                },
-              );
-            },
-          ),
+          const ProjectAppHeader(),
 
           // Search and Filter Bar with Real-time Status
           Container(
@@ -689,179 +717,12 @@ class _EnhancedProjectListScreenState extends State<EnhancedProjectListScreen> {
           ),
 
           // Project List
-          Expanded(
-            child: BlocBuilder<EnhancedProjectBloc, EnhancedProjectState>(
-              builder: (context, state) {
-                if (state is EnhancedProjectLoading) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                if (state is EnhancedProjectError) {
-                  return _buildErrorWidget(state);
-                }
-
-                if (state is EnhancedProjectsLoaded) {
-                  return _buildProjectList(state.projectsResponse);
-                }
-
-                return _buildEmptyState();
-              },
-            ),
-          ),
+          Expanded(child: ProjectListContent(onRefresh: _onRefresh)),
         ],
       ),
 
       // Floating Action Button for creating new projects
-      floatingActionButton: BlocBuilder<AuthBloc, AuthState>(
-        builder: (context, authState) {
-          final user = authState is AuthAuthenticated ? authState.user : null;
-          final canCreateProject = user?.roleName == 'Admin' || user?.roleName == 'Project Manager';
-
-          if (!canCreateProject) return const SizedBox.shrink();
-
-          return FloatingActionButton.extended(
-            onPressed: () => context.push('/projects/create'),
-            icon: const Icon(Icons.add),
-            label: const Text('New Project'),
-            backgroundColor: Theme.of(context).colorScheme.primary,
-            foregroundColor: Theme.of(context).colorScheme.onPrimary,
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildProjectList(ProjectsResponse projectsResponse) {
-    if (projectsResponse.items.isEmpty) {
-      return _buildEmptyState();
-    }
-
-    return RefreshIndicator(
-      onRefresh: () async => _onRefresh(),
-      child: ListView.builder(
-        padding: const EdgeInsets.all(20),
-        itemCount: projectsResponse.items.length + 1, // +1 for pagination info
-        itemBuilder: (context, index) {
-          if (index == projectsResponse.items.length) {
-            return _buildPaginationInfo(projectsResponse);
-          }
-
-          final project = projectsResponse.items[index];
-          return Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            margin: const EdgeInsets.only(bottom: 32),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 8, offset: const Offset(0, 2)),
-              ],
-            ),
-            child: EnhancedProjectCard(project: project, onTap: () => context.push('/projects/${project.projectId}')),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildPaginationInfo(ProjectsResponse response) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      margin: const EdgeInsets.only(top: 16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHigh,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant, width: 1),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text('Page ${response.pageNumber} of ${response.totalPages}', style: Theme.of(context).textTheme.bodySmall),
-          Text('${response.totalCount} total projects', style: Theme.of(context).textTheme.bodySmall),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildErrorWidget(EnhancedProjectError error) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.error_outline, size: 64, color: Theme.of(context).colorScheme.error),
-            const SizedBox(height: 16),
-            Text(error.message, style: Theme.of(context).textTheme.headlineSmall, textAlign: TextAlign.center),
-            if (error.details != null) ...[
-              const SizedBox(height: 8),
-              Text(
-                error.details!,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
-                textAlign: TextAlign.center,
-              ),
-            ],
-            const SizedBox(height: 24),
-            ElevatedButton.icon(onPressed: _onRefresh, icon: const Icon(Icons.refresh), label: const Text('Try Again')),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.engineering_outlined, size: 64, color: Theme.of(context).colorScheme.onSurfaceVariant),
-            const SizedBox(height: 16),
-            Text('No Projects Found', style: Theme.of(context).textTheme.headlineSmall),
-            const SizedBox(height: 8),
-            Text(
-              'There are no projects matching your search criteria.',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            BlocBuilder<AuthBloc, AuthState>(
-              builder: (context, authState) {
-                final user = authState is AuthAuthenticated ? authState.user : null;
-                final canCreateProject = user?.roleName == 'Admin' || user?.roleName == 'Project Manager';
-
-                if (!canCreateProject) {
-                  return ElevatedButton.icon(
-                    onPressed: _onRefresh,
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('Refresh'),
-                  );
-                }
-
-                return Column(
-                  children: [
-                    ElevatedButton.icon(
-                      onPressed: () => context.push('/projects/create'),
-                      icon: const Icon(Icons.add),
-                      label: const Text('Create First Project'),
-                    ),
-                    const SizedBox(height: 8),
-                    TextButton.icon(
-                      onPressed: _onRefresh,
-                      icon: const Icon(Icons.refresh),
-                      label: const Text('Refresh'),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ],
-        ),
-      ),
+      floatingActionButton: const ProjectFloatingActionButton(),
     );
   }
 }

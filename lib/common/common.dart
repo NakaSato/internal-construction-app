@@ -8,7 +8,6 @@ export 'models/models.dart';
 
 // Utils
 export 'utils/extensions.dart';
-export 'utils/legacy_app_utils.dart';
 
 // Widgets
 export 'widgets/common_widgets.dart';

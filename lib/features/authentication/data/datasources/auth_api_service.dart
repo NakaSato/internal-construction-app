@@ -21,4 +21,8 @@ abstract class AuthApiService {
   /// Refresh authentication token
   @POST('/api/v1/auth/refresh')
   Future<StringApiResponse> refreshToken(@Body() String refreshToken);
+
+  /// Logout current user
+  @POST('/api/v1/auth/logout')
+  Future<void> logout();
 }

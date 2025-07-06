@@ -138,6 +138,7 @@ class _DailyReportsScreenState extends State<DailyReportsScreen> {
     _scrollController.dispose();
     _searchQuery.dispose();
     _selectedReports.dispose();
+    _authSubscription?.cancel();
     super.dispose();
   }
 

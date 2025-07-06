@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
 import '../config/environment_config.dart';
+import '../interceptors/auth_interceptor.dart';
 
 /// Enhanced API client with authentication, error handling, and logging
 /// All configuration now comes from .env file via EnvironmentConfig
@@ -32,6 +33,9 @@ class ApiClient {
 
   /// Set up request/response interceptors for logging and error handling
   void _setupInterceptors() {
+    // Authentication interceptor - must be first to handle 401s properly
+    _dio.interceptors.add(AuthInterceptor());
+
     // Request interceptor for authentication
     _dio.interceptors.add(
       InterceptorsWrapper(
@@ -41,12 +45,12 @@ class ApiClient {
           }
 
           if (kDebugMode) {
-            print('🚀 API Request: ${options.method} ${options.path}');
+            print('API Request: ${options.method} ${options.path}');
             if (options.queryParameters.isNotEmpty) {
-              print('📋 Query Parameters: ${options.queryParameters}');
+              print('Query Parameters: ${options.queryParameters}');
             }
             if (options.data != null) {
-              print('📦 Request Data: ${options.data}');
+              print('Request Data: ${options.data}');
             }
           }
 
@@ -55,9 +59,9 @@ class ApiClient {
 
         onResponse: (response, handler) {
           if (kDebugMode) {
-            print('✅ API Response: ${response.statusCode} ${response.requestOptions.path}');
+            print('API Response: ${response.statusCode} ${response.requestOptions.path}');
             if (response.data != null) {
-              print('📄 Response Data: ${response.data}');
+              print('Response Data: ${response.data}');
             }
           }
           handler.next(response);
@@ -65,10 +69,10 @@ class ApiClient {
 
         onError: (error, handler) {
           if (kDebugMode) {
-            print('❌ API Error: ${error.response?.statusCode} ${error.requestOptions.path}');
-            print('🔍 Error Message: ${error.message}');
+            print('API Error: ${error.response?.statusCode} ${error.requestOptions.path}');
+            print('Error Message: ${error.message}');
             if (error.response?.data != null) {
-              print('📄 Error Data: ${error.response?.data}');
+              print('Error Data: ${error.response?.data}');
             }
           }
           handler.next(error);

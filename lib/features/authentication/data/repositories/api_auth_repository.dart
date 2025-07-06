@@ -4,7 +4,9 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:injectable/injectable.dart';
+import 'package:get_it/get_it.dart';
 
+import '../../../../core/network/api_client.dart';
 import '../../../../core/utils/api_error_parser.dart';
 import '../../../../core/utils/username_utils.dart';
 import '../../domain/entities/user.dart';
@@ -26,11 +28,11 @@ class ApiAuthRepository implements AuthRepository {
   static const String _refreshTokenKey = 'refresh_token';
   static const String _userKey = 'cached_user';
 
+  /// Get the API client instance to manage tokens
+  ApiClient get _apiClient => GetIt.instance<ApiClient>();
+
   @override
-  Future<User> signInWithEmailAndPassword({
-    required String email,
-    required String password,
-  }) async {
+  Future<User> signInWithEmailAndPassword({required String email, required String password}) async {
     try {
       // For API login, we use username field but pass email
       final request = LoginRequestModel(username: email, password: password);
@@ -45,12 +47,11 @@ class ApiAuthRepository implements AuthRepository {
       // Store tokens securely
       if (authData.token != null) {
         await _secureStorage.write(key: _tokenKey, value: authData.token!);
+        // Update API client with new token
+        _apiClient.setAuthToken(authData.token!);
       }
       if (authData.refreshToken != null) {
-        await _secureStorage.write(
-          key: _refreshTokenKey,
-          value: authData.refreshToken!,
-        );
+        await _secureStorage.write(key: _refreshTokenKey, value: authData.refreshToken!);
       }
 
       // Cache user data
@@ -130,10 +131,23 @@ class ApiAuthRepository implements AuthRepository {
 
   @override
   Future<void> signOut() async {
+    try {
+      // Call logout API endpoint if available
+      await _apiService.logout();
+    } catch (e) {
+      // Log but don't throw - we still want to clear local data
+      if (kDebugMode) {
+        debugPrint('Logout API call failed: $e');
+      }
+    }
+
     // Clear stored tokens and user data
     await _secureStorage.delete(key: _tokenKey);
     await _secureStorage.delete(key: _refreshTokenKey);
     await _secureStorage.delete(key: _userKey);
+
+    // Clear token from API client
+    _apiClient.clearAuthToken();
   }
 
   @override
@@ -142,6 +156,11 @@ class ApiAuthRepository implements AuthRepository {
       // First check cached user
       final cachedUser = await _getCachedUser();
       if (cachedUser != null) {
+        // Ensure API client has the token when we have a cached user
+        final token = await getAuthToken();
+        if (token != null) {
+          _apiClient.setAuthToken(token);
+        }
         return cachedUser;
       }
 
@@ -165,12 +184,16 @@ class ApiAuthRepository implements AuthRepository {
   @override
   Future<void> storeAuthToken(String token) async {
     await _secureStorage.write(key: _tokenKey, value: token);
+    // Update API client with new token
+    _apiClient.setAuthToken(token);
   }
 
   @override
   Future<void> removeAuthToken() async {
     await _secureStorage.delete(key: _tokenKey);
     await _secureStorage.delete(key: _refreshTokenKey);
+    // Clear token from API client
+    _apiClient.clearAuthToken();
   }
 
   @override
@@ -190,11 +213,7 @@ class ApiAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<User> updateProfile({
-    String? name,
-    String? phoneNumber,
-    String? profileImageUrl,
-  }) async {
+  Future<User> updateProfile({String? name, String? phoneNumber, String? profileImageUrl}) async {
     throw UnimplementedError('Profile update not implemented for API mode');
   }
 
@@ -222,6 +241,8 @@ class ApiAuthRepository implements AuthRepository {
 
       if (response.success && response.data != null) {
         await _secureStorage.write(key: _tokenKey, value: response.data!);
+        // Update API client with refreshed token
+        _apiClient.setAuthToken(response.data!);
         return response.data!;
       }
 

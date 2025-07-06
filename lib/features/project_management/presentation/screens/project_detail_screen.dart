@@ -10,7 +10,13 @@ import '../../../authentication/application/auth_bloc.dart';
 import '../../../authentication/application/auth_state.dart';
 import '../../../authentication/domain/entities/user.dart';
 import '../../../daily_reports/application/cubits/daily_reports_cubit.dart';
+import '../../../wbs/application/cubits/wbs_cubit.dart';
+import '../../../wbs/domain/usecases/wbs_usecases.dart';
+import '../../../wbs/presentation/widgets/wbs_tree_widget.dart';
+import '../../../wbs/presentation/widgets/wbs_task_details_widget.dart';
+import '../../../wbs/presentation/widgets/wbs_progress_widget.dart';
 import '../widgets/project_detail/project_header_widget.dart';
+import '../widgets/project_detail/project_details_widget.dart';
 import 'edit_project_screen.dart';
 import 'project_detail/constants.dart';
 import 'project_detail/state_widgets.dart';
@@ -29,9 +35,10 @@ class ProjectDetailScreen extends StatefulWidget {
 class _ProjectDetailScreenState extends State<ProjectDetailScreen> with TickerProviderStateMixin {
   late final EnhancedProjectBloc _projectBloc;
   late final DailyReportsCubit _dailyReportsCubit;
+  late final WbsCubit _wbsCubit;
   late final TabController _tabController;
 
-  int _tabCount = 7; // Default to full access
+  int _tabCount = 8; // Default to full access (added WBS tab)
   UserRole _currentUserRole = UserRole.admin;
   User? _currentUser;
 
@@ -41,6 +48,16 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> with TickerPr
     _projectBloc = GetIt.instance<EnhancedProjectBloc>();
     _dailyReportsCubit = GetIt.instance<DailyReportsCubit>();
 
+    // Initialize WBS cubit with dependencies
+    _wbsCubit = WbsCubit(
+      getProjectWbs: GetIt.instance<GetProjectWbs>(),
+      getWbsTask: GetIt.instance<GetWbsTask>(),
+      createWbsTask: GetIt.instance<CreateWbsTask>(),
+      updateWbsTask: GetIt.instance<UpdateWbsTask>(),
+      updateTaskStatus: GetIt.instance<UpdateTaskStatus>(),
+      deleteWbsTask: GetIt.instance<DeleteWbsTask>(),
+    );
+
     // Initialize with default tab count, will be updated based on user role
     _tabController = TabController(length: _tabCount, vsync: this);
 
@@ -49,11 +66,15 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> with TickerPr
 
     // Load project data
     _projectBloc.add(LoadProjectDetailsRequested(projectId: widget.projectId));
+
+    // Load WBS data for the project
+    _wbsCubit.loadProjectWbs(widget.projectId);
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    _wbsCubit.close();
     super.dispose();
   }
 
@@ -83,13 +104,14 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> with TickerPr
   }
 
   int _getTabCountForRole(UserRole role) {
-    return role.hasFullAccess ? 7 : 4; // Admin/Manager: 7 tabs, User: 4 tabs
+    return role.hasFullAccess ? 8 : 5; // Admin/Manager: 8 tabs, User: 5 tabs (includes WBS)
   }
 
   List<Tab> _buildTabs() {
     final tabs = <Tab>[
       const Tab(text: 'Overview'),
       const Tab(text: 'Progress'),
+      const Tab(text: 'WBS'),
       const Tab(text: 'Tasks'),
       const Tab(text: 'Reports'),
     ];
@@ -141,6 +163,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> with TickerPr
       providers: [
         BlocProvider.value(value: _projectBloc),
         BlocProvider.value(value: _dailyReportsCubit),
+        BlocProvider.value(value: _wbsCubit),
       ],
       child: BlocListener<AuthBloc, AuthState>(
         listener: (context, authState) {
@@ -236,9 +259,209 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> with TickerPr
             ),
           ];
         },
-        body: TabBarView(
-          controller: _tabController,
-          children: List.generate(_tabCount, (index) => const Center(child: Text('Tab content coming soon'))),
+        body: TabBarView(controller: _tabController, children: _buildTabContent(project)),
+      ),
+    );
+  }
+
+  List<Widget> _buildTabContent(Project project) {
+    final tabs = <Widget>[
+      // Overview Tab
+      SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: ProjectDetailsWidget(project: project),
+      ),
+
+      // Progress Tab
+      const Center(child: Text('Progress content coming soon')),
+
+      // WBS Tab
+      BlocBuilder<WbsCubit, WbsState>(
+        builder: (context, state) {
+          if (state is WbsLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (state is WbsError) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error_outline, size: 64, color: Theme.of(context).colorScheme.error),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Error loading WBS',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Theme.of(context).colorScheme.error),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(state.message, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyMedium),
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: () => _wbsCubit.loadProjectWbs(project.projectId),
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Retry'),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          if (state is WbsLoaded) {
+            return _buildWbsContent(state);
+          }
+
+          // Initial state - load WBS
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const CircularProgressIndicator(),
+                const SizedBox(height: 16),
+                const Text('Loading Work Breakdown Structure...'),
+                const SizedBox(height: 8),
+                ElevatedButton(
+                  onPressed: () => _wbsCubit.loadProjectWbs(project.projectId),
+                  child: const Text('Load WBS'),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+
+      // Tasks Tab
+      const Center(child: Text('Tasks content coming soon')),
+
+      // Reports Tab
+      const Center(child: Text('Reports content coming soon')),
+    ];
+
+    // Add admin/manager only tabs
+    if (_currentUserRole.hasFullAccess) {
+      tabs.addAll([
+        const Center(child: Text('Team content coming soon')),
+        const Center(child: Text('Documents content coming soon')),
+        const Center(child: Text('Settings content coming soon')),
+      ]);
+    }
+
+    return tabs;
+  }
+
+  Widget _buildWbsContent(WbsLoaded state) {
+    final isTablet = MediaQuery.of(context).size.width > 768;
+
+    if (isTablet) {
+      // Two-pane layout for tablets
+      return Row(
+        children: [
+          // Left pane - WBS tree and progress
+          Expanded(
+            flex: 2,
+            child: Column(
+              children: [
+                // Progress summary
+                WbsProgressWidget(wbsStructure: state.wbsStructure),
+                const Divider(height: 1),
+                // WBS tree
+                Expanded(
+                  child: WbsTreeWidget(
+                    wbsStructure: state.wbsStructure,
+                    selectedTask: state.selectedTask,
+                    onTaskSelected: (task) {
+                      _wbsCubit.selectTask(task.wbsId);
+                    },
+                    onTaskStatusChanged: (taskId, status) {
+                      _wbsCubit.updateTaskStatusOnly(taskId: taskId, status: status);
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const VerticalDivider(width: 1),
+          // Right pane - Task details
+          Expanded(
+            flex: 1,
+            child: WbsTaskDetailsWidget(
+              task: state.selectedTask,
+              onTaskUpdated: (task) {
+                _wbsCubit.updateTask(taskId: task.wbsId, task: task);
+              },
+              onTaskDeleted: (taskId) {
+                _wbsCubit.deleteTask(taskId);
+              },
+            ),
+          ),
+        ],
+      );
+    } else {
+      // Single pane layout for mobile
+      return Column(
+        children: [
+          // Progress summary (collapsed on mobile)
+          WbsProgressWidget(wbsStructure: state.wbsStructure, isCollapsed: true),
+          const Divider(height: 1),
+          // WBS tree
+          Expanded(
+            child: WbsTreeWidget(
+              wbsStructure: state.wbsStructure,
+              selectedTask: state.selectedTask,
+              onTaskSelected: (task) {
+                _wbsCubit.selectTask(task.wbsId);
+                _showTaskDetailsBottomSheet(task);
+              },
+              onTaskStatusChanged: (taskId, status) {
+                _wbsCubit.updateTaskStatusOnly(taskId: taskId, status: status);
+              },
+            ),
+          ),
+        ],
+      );
+    }
+  }
+
+  void _showTaskDetailsBottomSheet(dynamic task) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        expand: false,
+        builder: (context, scrollController) => Column(
+          children: [
+            // Handle
+            Container(
+              margin: const EdgeInsets.symmetric(vertical: 8),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            // Content
+            Expanded(
+              child: SingleChildScrollView(
+                controller: scrollController,
+                padding: const EdgeInsets.all(16),
+                child: WbsTaskDetailsWidget(
+                  task: task,
+                  onTaskUpdated: (updatedTask) {
+                    _wbsCubit.updateTask(taskId: updatedTask.wbsId, task: updatedTask);
+                    Navigator.of(context).pop();
+                  },
+                  onTaskDeleted: (taskId) {
+                    _wbsCubit.deleteTask(taskId);
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
