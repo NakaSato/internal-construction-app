@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../features/projects/application/project_bloc.dart';
@@ -9,8 +8,32 @@ import '../../../features/projects/presentation/widgets/project_card.dart';
 import '../../permissions/presentation/widgets/permission_widgets.dart';
 
 /// Project list section with loading, empty, and error states
-class ProjectListSection extends StatelessWidget {
+class ProjectListSection extends StatefulWidget {
   const ProjectListSection({super.key});
+
+  @override
+  State<ProjectListSection> createState() => _ProjectListSectionState();
+}
+
+class _ProjectListSectionState extends State<ProjectListSection> {
+  @override
+  void initState() {
+    super.initState();
+    // Load projects if not already loaded
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final state = context.read<ProjectBloc>().state;
+      if (state is! ProjectsLoaded && state is! ProjectLoading) {
+        context.read<ProjectBloc>().add(
+          const LoadProjectsRequested(
+            query: ProjectsQuery(
+              pageSize: 1000, // Load up to 1000 projects to show all
+              pageNumber: 1,
+            ),
+          ),
+        );
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,36 +44,25 @@ class ProjectListSection extends StatelessWidget {
         _buildHeader(context),
         const SizedBox(height: 16),
 
-        // Content section
-        BlocProvider(
-          create: (context) => GetIt.instance<ProjectBloc>()
-            ..add(
-              const LoadProjectsRequested(
-                query: ProjectsQuery(
-                  pageSize: 1000, // Load up to 1000 projects to show all
-                  pageNumber: 1,
-                ),
-              ),
-            ),
-          child: BlocBuilder<ProjectBloc, ProjectState>(
-            builder: (context, state) {
-              if (state is ProjectLoading) {
-                return const _LoadingState();
-              } else if (state is ProjectsLoaded) {
-                final allProjects = state.projectsResponse.items;
+        // Content section - Use the shared ProjectBloc instance from app level
+        BlocBuilder<ProjectBloc, ProjectState>(
+          builder: (context, state) {
+            if (state is ProjectLoading) {
+              return const _LoadingState();
+            } else if (state is ProjectsLoaded) {
+              final allProjects = state.projectsResponse.items;
 
-                if (allProjects.isEmpty) {
-                  return const _EmptyState();
-                }
-
-                return _ProjectList(projects: allProjects);
-              } else if (state is ProjectError) {
-                return _ErrorState(message: state.message);
+              if (allProjects.isEmpty) {
+                return const _EmptyState();
               }
 
-              return const SizedBox.shrink();
-            },
-          ),
+              return _ProjectList(projects: allProjects);
+            } else if (state is ProjectError) {
+              return _ErrorState(message: state.message);
+            }
+
+            return const SizedBox.shrink();
+          },
         ),
       ],
     );
@@ -249,9 +261,9 @@ class _ErrorState extends StatelessWidget {
             OutlinedButton.icon(
               onPressed: () {
                 context.read<ProjectBloc>().add(
-                  const LoadProjectsRequested(
+                  const RefreshProjectsWithCacheClear(
                     query: ProjectsQuery(
-                      pageSize: 1000, // Load up to 1000 projects to show all
+                      pageSize: 250, // Load up to 250 projects to show all
                       pageNumber: 1,
                     ),
                   ),
@@ -308,7 +320,7 @@ class _ErrorState extends StatelessWidget {
               child: OutlinedButton(
                 onPressed: () {
                   context.read<ProjectBloc>().add(
-                    const LoadProjectsRequested(
+                    const RefreshProjectsWithCacheClear(
                       query: ProjectsQuery(
                         pageSize: 1000, // Load up to 1000 projects to show all
                         pageNumber: 1,
@@ -350,7 +362,7 @@ class _ErrorState extends StatelessWidget {
                     child: OutlinedButton(
                       onPressed: () {
                         context.read<ProjectBloc>().add(
-                          const LoadProjectsRequested(
+                          const RefreshProjectsWithCacheClear(
                             query: ProjectsQuery(
                               pageSize: 1000, // Load up to 1000 projects to show all
                               pageNumber: 1,
@@ -393,7 +405,7 @@ class _ErrorState extends StatelessWidget {
                     child: OutlinedButton(
                       onPressed: () {
                         context.read<ProjectBloc>().add(
-                          const LoadProjectsRequested(
+                          const RefreshProjectsWithCacheClear(
                             query: ProjectsQuery(
                               pageSize: 1000, // Load up to 1000 projects to show all
                               pageNumber: 1,
@@ -426,8 +438,9 @@ class _ProjectList extends StatelessWidget {
   Widget build(BuildContext context) {
     return RefreshIndicator(
       onRefresh: () async {
+        // Use cache-clearing refresh for fresh data
         context.read<ProjectBloc>().add(
-          const LoadProjectsRequested(
+          const RefreshProjectsWithCacheClear(
             query: ProjectsQuery(
               pageSize: 1000, // Load up to 1000 projects to show all
               pageNumber: 1,
@@ -435,7 +448,7 @@ class _ProjectList extends StatelessWidget {
           ),
         );
         // Wait a bit for the refresh to complete
-        await Future.delayed(const Duration(milliseconds: 250));
+        await Future.delayed(const Duration(milliseconds: 300));
       },
       child: ListView.separated(
         shrinkWrap: true,

@@ -76,11 +76,7 @@ class AuthEmailVerifyRequested extends AuthEvent {
 
 /// Event to update user profile
 class AuthProfileUpdateRequested extends AuthEvent {
-  const AuthProfileUpdateRequested({
-    this.name,
-    this.phoneNumber,
-    this.profileImageUrl,
-  });
+  const AuthProfileUpdateRequested({this.name, this.phoneNumber, this.profileImageUrl});
 
   final String? name;
   final String? phoneNumber;
@@ -88,4 +84,24 @@ class AuthProfileUpdateRequested extends AuthEvent {
 
   @override
   List<Object?> get props => [name, phoneNumber, profileImageUrl];
+}
+
+/// Event to refresh authentication token
+class AuthTokenRefreshRequested extends AuthEvent {
+  const AuthTokenRefreshRequested();
+}
+
+/// Event to check if token needs refresh and automatically refresh if needed
+class AuthTokenValidationRequested extends AuthEvent {
+  const AuthTokenValidationRequested();
+}
+
+/// Event to handle automatic logout due to token expiration
+class AuthTokenExpiredEvent extends AuthEvent {
+  const AuthTokenExpiredEvent({this.message});
+
+  final String? message;
+
+  @override
+  List<Object?> get props => [message];
 }

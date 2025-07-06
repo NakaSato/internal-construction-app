@@ -80,6 +80,7 @@ import '../network/network_info.dart' as _i932;
 import '../services/realtime_api_streams.dart' as _i826;
 import '../services/realtime_service.dart' as _i301;
 import '../services/security_service.dart' as _i337;
+import '../services/session_validation_service.dart' as _i490;
 import '../services/signalr_service.dart' as _i320;
 import '../services/token_service.dart' as _i227;
 import '../services/unified_realtime_api_service.dart' as _i53;
@@ -221,7 +222,7 @@ extension GetItInjectableX on _i174.GetIt {
       () =>
           _i907.CalendarManagementBloc(gh<_i28.CalendarManagementRepository>()),
     );
-    gh.factory<_i488.ProjectBloc>(
+    gh.lazySingleton<_i488.ProjectBloc>(
       () => _i488.ProjectBloc(
         repository: gh<_i338.ProjectRepository>(),
         signalRService: gh<_i320.SignalRService>(),
@@ -250,7 +251,17 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i153.AuthCubit(gh<_i202.AuthRepositoryFactory>()),
     );
     gh.factory<_i574.AuthBloc>(
-      () => _i574.AuthBloc(gh<_i202.AuthRepositoryFactory>()),
+      () => _i574.AuthBloc(
+        gh<_i202.AuthRepositoryFactory>(),
+        gh<_i227.TokenService>(),
+        gh<_i337.SecurityService>(),
+      ),
+    );
+    gh.lazySingleton<_i490.SessionValidationService>(
+      () => _i490.SessionValidationService(
+        gh<_i227.TokenService>(),
+        gh<_i337.SecurityService>(),
+      ),
     );
     return this;
   }

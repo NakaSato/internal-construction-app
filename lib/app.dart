@@ -28,8 +28,8 @@ import 'features/projects/application/project_bloc.dart';
 import 'features/work_calendar/application/work_calendar_bloc.dart';
 
 // Security and token management
-import 'core/services/token_service.dart';
 import 'core/services/security_service.dart';
+import 'core/services/session_validation_service.dart';
 
 /// The main application widget that configures the Flutter app.
 ///
@@ -102,7 +102,7 @@ class ConstructionApp extends StatelessWidget {
   /// Performs secure logout with comprehensive cleanup
   Future<void> _performSecureLogout(SecurityService securityService) async {
     if (kDebugMode) {
-      debugPrint('🔒 [SECURITY] Performing secure logout...');
+      debugPrint('[SECURITY] Performing secure logout...');
     }
 
     try {
@@ -381,60 +381,56 @@ class _AppWrapperState extends State<_AppWrapper> with WidgetsBindingObserver {
   /// Called when app resumes from background.
   void _onAppResumed() {
     if (kDebugMode) {
-      debugPrint('🔄 [APP] Resuming - refreshing critical data');
+      debugPrint('🔄 [APP] Resuming - validating session and refreshing critical data');
     }
 
-    // Refresh tokens and update security session when app resumes
-    _refreshTokensOnResume();
+    // Use session validation service for comprehensive session management
+    _validateSessionOnResume();
   }
 
-  /// Refresh authentication tokens when app resumes from background
-  Future<void> _refreshTokensOnResume() async {
+  /// Validate session when app resumes from background using SessionValidationService
+  Future<void> _validateSessionOnResume() async {
     try {
-      final tokenService = getIt<TokenService>();
-      final securityService = getIt<SecurityService>();
+      final sessionValidationService = getIt<SessionValidationService>();
 
-      // Check if we have valid tokens
-      final isValid = await tokenService.isTokenValid();
-      if (!isValid) {
-        // Try to refresh the token
-        final refreshResult = await tokenService.refreshToken();
-        if (!refreshResult.isSuccess) {
-          // If refresh fails, user needs to re-authenticate
-          if (kDebugMode) {
-            debugPrint('� [SECURITY] Token refresh failed on resume');
-          }
-          // Trigger logout through auth bloc
-          final authBloc = getIt<AuthBloc>();
-          authBloc.add(const AuthSignOutRequested());
-          return;
-        }
-      }
+      // Let the session validation service handle app resume logic
+      await sessionValidationService.onAppResume();
 
-      // Update last activity for session management
-      await securityService.updateLastActivity();
-
-      // Check if session has timed out
-      final isTimedOut = await securityService.isSessionTimedOut();
-      if (isTimedOut) {
-        if (kDebugMode) {
-          debugPrint('🚨 [SECURITY] Session timed out');
-        }
-        final authBloc = getIt<AuthBloc>();
-        authBloc.add(const AuthSignOutRequested());
+      if (kDebugMode) {
+        debugPrint('✅ [SECURITY] Session validation on resume completed');
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('❌ [SECURITY] Error refreshing tokens on resume: $e');
+        debugPrint('❌ [SECURITY] Error validating session on resume: $e');
       }
     }
   }
 
   /// Called when app goes to background.
   void _onAppPaused() {
-    // Save state, pause timers, reduce resource usage
+    // Update activity and save state when app goes to background
     if (kDebugMode) {
-      debugPrint('⏸️ [APP] Pausing - saving state');
+      debugPrint('⏸️ [APP] Pausing - updating activity and saving state');
+    }
+
+    _updateActivityOnPause();
+  }
+
+  /// Update last activity when app pauses using SessionValidationService
+  Future<void> _updateActivityOnPause() async {
+    try {
+      final sessionValidationService = getIt<SessionValidationService>();
+
+      // Let the session validation service handle app pause logic
+      await sessionValidationService.onAppPause();
+
+      if (kDebugMode) {
+        debugPrint('✅ [SECURITY] Activity updated on pause');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ [SECURITY] Error updating activity on pause: $e');
+      }
     }
   }
 

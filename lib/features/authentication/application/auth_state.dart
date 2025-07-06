@@ -74,3 +74,38 @@ class AuthProfileUpdated extends AuthState {
   @override
   List<Object?> get props => [user];
 }
+
+/// State when email verification is requested
+class AuthEmailVerificationPending extends AuthState {
+  const AuthEmailVerificationPending();
+}
+
+/// State when token is refreshed successfully
+class AuthTokenRefreshed extends AuthState {
+  const AuthTokenRefreshed({required this.token});
+
+  final String token;
+
+  @override
+  List<Object?> get props => [token];
+}
+
+/// State when token is valid
+class AuthTokenValid extends AuthState {
+  const AuthTokenValid();
+}
+
+/// State when token is invalid
+class AuthTokenInvalid extends AuthState {
+  const AuthTokenInvalid();
+}
+
+/// State when token has expired
+class AuthTokenExpired extends AuthState {
+  const AuthTokenExpired({this.message});
+
+  final String? message;
+
+  @override
+  List<Object?> get props => [message];
+}

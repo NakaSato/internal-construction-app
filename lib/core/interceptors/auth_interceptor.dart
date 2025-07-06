@@ -1,41 +1,137 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../features/authentication/application/auth_bloc.dart';
-import '../../features/authentication/application/auth_event.dart';
+import '../services/session_validation_service.dart';
 import '../navigation/app_router.dart';
 
-/// Interceptor that handles authentication errors (401)
-/// Automatically logs out user and redirects to login when token is invalid
+/// Enhanced interceptor that handles authentication errors with automatic token refresh
+/// Features:
+/// - Automatic token refresh on 401 errors
+/// - Intelligent retry logic for failed requests
+/// - Session validation before API calls
+/// - Graceful logout when refresh fails
 class AuthInterceptor extends Interceptor {
   static bool _isHandling401 = false; // Prevent multiple simultaneous logouts
 
   @override
-  void onError(DioException err, ErrorInterceptorHandler handler) {
-    // Handle 401 Unauthorized errors
-    if (err.response?.statusCode == 401 && !_isHandling401) {
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
+    // Skip session validation for auth endpoints to avoid infinite loops
+    if (_isAuthEndpoint(options.path)) {
+      handler.next(options);
+      return;
+    }
+
+    try {
+      // Validate session and refresh token if needed before making the request
+      final sessionService = GetIt.instance.get<SessionValidationService>();
+      final sessionValid = await sessionService.ensureValidSession();
+
+      if (!sessionValid) {
+        // Session is invalid and cannot be restored, reject the request
+        final error = DioException(
+          requestOptions: options,
+          response: Response(
+            requestOptions: options,
+            statusCode: 401,
+            statusMessage: 'Session invalid - user logged out',
+          ),
+          type: DioExceptionType.badResponse,
+        );
+        handler.reject(error);
+        return;
+      }
+
+      // Session is valid, proceed with the request
+      handler.next(options);
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ [AUTH_INTERCEPTOR] Session validation error: $e');
+      }
+      // If session validation fails, proceed with the request
+      // The onError handler will catch any 401 responses
+      handler.next(options);
+    }
+  }
+
+  @override
+  void onError(DioException err, ErrorInterceptorHandler handler) async {
+    // Handle 401 Unauthorized errors with automatic retry
+    if (err.response?.statusCode == 401 && !_isHandling401 && !_isAuthEndpoint(err.requestOptions.path)) {
       _isHandling401 = true;
-      _handleUnauthorized();
+
+      try {
+        if (kDebugMode) {
+          debugPrint('🔄 [AUTH_INTERCEPTOR] Handling 401 error, attempting token refresh...');
+        }
+
+        // Attempt to refresh the session
+        final sessionService = GetIt.instance.get<SessionValidationService>();
+        final result = await sessionService.validateSession(forceRefresh: true);
+
+        if (result.isSuccess) {
+          // Token refreshed successfully, retry the original request
+          if (kDebugMode) {
+            debugPrint('✅ [AUTH_INTERCEPTOR] Token refreshed, retrying request');
+          }
+
+          // Retry the original request with the new token
+          try {
+            final response = await Dio().fetch(err.requestOptions);
+            handler.resolve(response);
+            return;
+          } catch (retryError) {
+            if (kDebugMode) {
+              debugPrint('❌ [AUTH_INTERCEPTOR] Retry failed: $retryError');
+            }
+            // If retry fails, proceed with the original error
+            handler.next(err);
+            return;
+          }
+        } else {
+          // Token refresh failed, force logout
+          if (kDebugMode) {
+            debugPrint('❌ [AUTH_INTERCEPTOR] Token refresh failed: ${result.error}');
+          }
+          await _forceLogoutDueToAuthFailure(result.error ?? 'Token refresh failed');
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('❌ [AUTH_INTERCEPTOR] Error during 401 handling: $e');
+        }
+        await _forceLogoutDueToAuthFailure('Authentication error: $e');
+      } finally {
+        // Reset the handling flag after a delay
+        Future.delayed(const Duration(seconds: 2), () {
+          _isHandling401 = false;
+        });
+      }
     }
 
     handler.next(err);
   }
 
-  /// Handle unauthorized access by logging out user and redirecting to login
-  void _handleUnauthorized() async {
+  /// Check if the endpoint is an authentication endpoint
+  bool _isAuthEndpoint(String path) {
+    return path.contains('/auth/') || path.contains('/login') || path.contains('/refresh') || path.contains('/logout');
+  }
+
+  /// Force logout when authentication cannot be restored
+  Future<void> _forceLogoutDueToAuthFailure(String reason) async {
     try {
-      // Get the AuthBloc from dependency injection
-      final authBloc = GetIt.instance.get<AuthBloc>();
+      if (kDebugMode) {
+        debugPrint('🚨 [AUTH_INTERCEPTOR] Forcing logout: $reason');
+      }
 
-      // Trigger logout
-      authBloc.add(const AuthSignOutRequested());
+      // Use the session validation service to handle logout
+      final sessionService = GetIt.instance.get<SessionValidationService>();
+      await sessionService.forceLogoutDueToInvalidSession(reason);
 
-      // Navigate to login screen using the global navigator key
+      // Show user notification
       final context = navigatorKey.currentContext;
       if (context != null && context.mounted) {
-        // Show a snackbar to inform the user
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Session expired. Please log in again.'),
@@ -48,14 +144,13 @@ class AuthInterceptor extends Interceptor {
         context.go(AppRoutes.login);
       }
 
-      debugPrint('🔐 Auth Interceptor: Token invalid/expired - User logged out and redirected to login');
+      if (kDebugMode) {
+        debugPrint('✅ [AUTH_INTERCEPTOR] Logout completed and user redirected to login');
+      }
     } catch (e) {
-      debugPrint('❌ Auth Interceptor: Error handling 401 - $e');
-    } finally {
-      // Reset the handling flag after a delay to allow for new 401s
-      Future.delayed(const Duration(seconds: 2), () {
-        _isHandling401 = false;
-      });
+      if (kDebugMode) {
+        debugPrint('❌ [AUTH_INTERCEPTOR] Error during forced logout: $e');
+      }
     }
   }
 }

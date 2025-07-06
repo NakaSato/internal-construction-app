@@ -96,7 +96,8 @@ class ApiProjectRepository implements ProjectRepository {
       }
 
       if (kDebugMode) {
-        debugPrint('🔍 Loading project details for ID: $id');
+        debugPrint('🔍 [API_REPO] Loading project details for ID: $id');
+        debugPrint('🔍 [API_REPO] API Service base URL: ${_apiService.toString()}');
       }
 
       final response = await _apiService.getProject(id);

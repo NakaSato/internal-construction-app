@@ -258,7 +258,7 @@ class ProjectError extends ProjectState {
 }
 
 /// Project BLoC that uses the project management API
-@injectable
+@LazySingleton()
 class ProjectBloc extends Bloc<ProjectEvent, ProjectState> {
   ProjectBloc({required ProjectRepository repository, required SignalRService signalRService})
     : _repository = repository,
@@ -320,18 +320,43 @@ class ProjectBloc extends Bloc<ProjectEvent, ProjectState> {
     }
   }
 
-  Future<void> _onLoadProjectDetailsRequested(
-    LoadProjectDetailsRequested event,
-    Emitter<ProjectState> emit,
-  ) async {
+  Future<void> _onLoadProjectDetailsRequested(LoadProjectDetailsRequested event, Emitter<ProjectState> emit) async {
     emit(const ProjectLoading());
 
     try {
+      if (kDebugMode) {
+        debugPrint('🔍 [PROJECT_BLOC] Loading project details for ID: ${event.projectId}');
+      }
+
       final project = await _repository.getProjectById(event.projectId);
+
+      if (kDebugMode) {
+        debugPrint('✅ [PROJECT_BLOC] Successfully loaded project: ${project.projectName}');
+      }
 
       emit(ProjectDetailsLoaded(project: project));
     } catch (e) {
-      emit(ProjectError(message: 'Failed to load project details', details: e.toString()));
+      if (kDebugMode) {
+        debugPrint('❌ [PROJECT_BLOC] Failed to load project details for ID: ${event.projectId}');
+        debugPrint('❌ [PROJECT_BLOC] Error: $e');
+      }
+
+      String errorMessage = 'Failed to load project details';
+
+      // Provide more specific error messages based on error type
+      if (e is ArgumentError) {
+        errorMessage = 'Invalid project ID: ${e.message}';
+      } else if (e.toString().contains('404')) {
+        errorMessage = 'Project not found';
+      } else if (e.toString().contains('403')) {
+        errorMessage = 'Access denied';
+      } else if (e.toString().contains('401')) {
+        errorMessage = 'Authentication required';
+      } else if (e.toString().contains('timeout') || e.toString().contains('network')) {
+        errorMessage = 'Network connection failed';
+      }
+
+      emit(ProjectError(message: errorMessage, details: e.toString()));
     }
   }
 
@@ -440,10 +465,7 @@ class ProjectBloc extends Bloc<ProjectEvent, ProjectState> {
   }
 
   /// Initialize real-time connection
-  Future<void> _onInitializeRealTimeConnection(
-    InitializeRealTimeConnection event,
-    Emitter<ProjectState> emit,
-  ) async {
+  Future<void> _onInitializeRealTimeConnection(InitializeRealTimeConnection event, Emitter<ProjectState> emit) async {
     try {
       await _signalRService.connect();
       // SignalR automatically handles event subscription based on user permissions
@@ -454,10 +476,7 @@ class ProjectBloc extends Bloc<ProjectEvent, ProjectState> {
   }
 
   /// Handle real-time project update
-  Future<void> _onRealTimeProjectUpdateReceived(
-    RealTimeProjectUpdateReceived event,
-    Emitter<ProjectState> emit,
-  ) async {
+  Future<void> _onRealTimeProjectUpdateReceived(RealTimeProjectUpdateReceived event, Emitter<ProjectState> emit) async {
     final currentState = state;
 
     // Update the state if we're currently showing projects
@@ -550,10 +569,7 @@ class ProjectBloc extends Bloc<ProjectEvent, ProjectState> {
     }
   }
 
-  Future<void> _onRefreshProjectsWithCacheClear(
-    RefreshProjectsWithCacheClear event,
-    Emitter<ProjectState> emit,
-  ) async {
+  Future<void> _onRefreshProjectsWithCacheClear(RefreshProjectsWithCacheClear event, Emitter<ProjectState> emit) async {
     emit(const ProjectLoading());
 
     try {
@@ -646,10 +662,7 @@ class ProjectBloc extends Bloc<ProjectEvent, ProjectState> {
   // Real-time API update handlers
   StreamSubscription<RealtimeProjectUpdate>? _realtimeApiSubscription;
 
-  Future<void> _onStartProjectRealtimeUpdates(
-    StartProjectRealtimeUpdates event,
-    Emitter<ProjectState> emit,
-  ) async {
+  Future<void> _onStartProjectRealtimeUpdates(StartProjectRealtimeUpdates event, Emitter<ProjectState> emit) async {
     try {
       final realtimeStreams = getIt<RealtimeApiStreams>();
       await realtimeStreams.initialize();
@@ -673,10 +686,7 @@ class ProjectBloc extends Bloc<ProjectEvent, ProjectState> {
     }
   }
 
-  Future<void> _onStopProjectRealtimeUpdates(
-    StopProjectRealtimeUpdates event,
-    Emitter<ProjectState> emit,
-  ) async {
+  Future<void> _onStopProjectRealtimeUpdates(StopProjectRealtimeUpdates event, Emitter<ProjectState> emit) async {
     _realtimeApiSubscription?.cancel();
     _realtimeApiSubscription = null;
 
@@ -685,10 +695,7 @@ class ProjectBloc extends Bloc<ProjectEvent, ProjectState> {
     }
   }
 
-  Future<void> _onProjectRealtimeUpdateReceived(
-    ProjectRealtimeUpdateReceived event,
-    Emitter<ProjectState> emit,
-  ) async {
+  Future<void> _onProjectRealtimeUpdateReceived(ProjectRealtimeUpdateReceived event, Emitter<ProjectState> emit) async {
     final update = event.update;
     final currentState = state;
 
@@ -728,8 +735,7 @@ class ProjectBloc extends Bloc<ProjectEvent, ProjectState> {
 
       case 'create':
         if (update.project != null && currentState is ProjectsLoaded) {
-          final updatedProjects = List<Project>.from(currentState.projectsResponse.items)
-            ..insert(0, update.project!);
+          final updatedProjects = List<Project>.from(currentState.projectsResponse.items)..insert(0, update.project!);
 
           final updatedResponse = ProjectsResponse(
             items: updatedProjects,
