@@ -13,8 +13,8 @@ import '../../features/authentication/application/auth_bloc.dart';
 import '../../features/authentication/application/auth_state.dart';
 
 // Feature imports - Calendar Management
-import '../../features/calendar_management/presentation/screens/calendar_tab_screen.dart';
-import '../../features/calendar_management/config/mock_calendar_management_di.dart';
+import '../../features/calendar/presentation/screens/calendar_tab_screen.dart';
+import '../../features/calendar/config/mock_calendar_management_di.dart';
 
 // Feature imports - Work Request Approval
 import '../../features/work_request_approval/presentation/screens/approvals_tab_screen.dart';
@@ -44,8 +44,7 @@ class MainAppScreen extends StatefulWidget {
   State<MainAppScreen> createState() => _MainAppScreenState();
 }
 
-class _MainAppScreenState extends State<MainAppScreen>
-    with SingleTickerProviderStateMixin {
+class _MainAppScreenState extends State<MainAppScreen> with SingleTickerProviderStateMixin {
   late int _currentIndex;
   late TabController _tabController;
 
@@ -53,11 +52,7 @@ class _MainAppScreenState extends State<MainAppScreen>
   void initState() {
     super.initState();
     _currentIndex = widget.initialTabIndex ?? AppTab.dashboard.value;
-    _tabController = TabController(
-      length: AppTab.values.length,
-      vsync: this,
-      initialIndex: _currentIndex,
-    );
+    _tabController = TabController(length: AppTab.values.length, vsync: this, initialIndex: _currentIndex);
   }
 
   @override
@@ -78,13 +73,9 @@ class _MainAppScreenState extends State<MainAppScreen>
       child: BlocBuilder<AuthBloc, AuthState>(
         builder: (context, state) {
           return switch (state) {
-            AuthLoading() => const Scaffold(
-              body: Center(child: LoadingIndicator()),
-            ),
+            AuthLoading() => const Scaffold(body: Center(child: LoadingIndicator())),
             AuthAuthenticated() => _buildAuthenticatedApp(context, state),
-            AuthUnauthenticated() => const Scaffold(
-              body: Center(child: LoadingIndicator()),
-            ),
+            AuthUnauthenticated() => const Scaffold(body: Center(child: LoadingIndicator())),
             AuthFailure() => _buildAuthErrorState(context, state),
             _ => const Scaffold(body: Center(child: LoadingIndicator())),
           };
@@ -102,11 +93,7 @@ class _MainAppScreenState extends State<MainAppScreen>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.error_outline,
-                size: 64,
-                color: Theme.of(context).colorScheme.error,
-              ),
+              Icon(Icons.error_outline, size: 64, color: Theme.of(context).colorScheme.error),
               const SizedBox(height: 16),
               Text(
                 'Authentication Error',
@@ -114,16 +101,9 @@ class _MainAppScreenState extends State<MainAppScreen>
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
-              Text(
-                state.message,
-                style: Theme.of(context).textTheme.bodyMedium,
-                textAlign: TextAlign.center,
-              ),
+              Text(state.message, style: Theme.of(context).textTheme.bodyMedium, textAlign: TextAlign.center),
               const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: () => context.go(AppRoutes.login),
-                child: const Text('Go to Login'),
-              ),
+              ElevatedButton(onPressed: () => context.go(AppRoutes.login), child: const Text('Go to Login')),
             ],
           ),
         ),
@@ -149,10 +129,7 @@ class _MainAppScreenState extends State<MainAppScreen>
           const ProfileScreen(),
         ],
       ),
-      bottomNavigationBar: CustomBottomBar(
-        currentIndex: _currentIndex,
-        onTap: _handleTabChange,
-      ),
+      bottomNavigationBar: CustomBottomBar(currentIndex: _currentIndex, onTap: _handleTabChange),
     );
   }
 
@@ -167,10 +144,7 @@ class _MainAppScreenState extends State<MainAppScreen>
 
   /// Handle tab change with proper validation
   void _handleTabChange(int index) {
-    if (mounted &&
-        index != _currentIndex &&
-        index >= 0 &&
-        index < AppTab.values.length) {
+    if (mounted && index != _currentIndex && index >= 0 && index < AppTab.values.length) {
       setState(() {
         _currentIndex = index;
       });

@@ -26,13 +26,13 @@ import '../../features/authentication/domain/repositories/auth_repository.dart'
     as _i742;
 import '../../features/authentication/infrastructure/auth_repository_factory.dart'
     as _i202;
-import '../../features/calendar_management/application/calendar_management_bloc.dart'
+import '../../features/calendar/application/calendar_management_bloc.dart'
     as _i185;
-import '../../features/calendar_management/domain/repositories/calendar_management_repository.dart'
+import '../../features/calendar/domain/repositories/calendar_management_repository.dart'
     as _i646;
-import '../../features/calendar_management/infrastructure/repositories/api_calendar_management_repository.dart'
+import '../../features/calendar/infrastructure/repositories/api_calendar_management_repository.dart'
     as _i43;
-import '../../features/calendar_management/infrastructure/services/calendar_api_service.dart'
+import '../../features/calendar/infrastructure/services/calendar_api_service.dart'
     as _i1036;
 import '../../features/daily_reports/data/repositories/api_daily_report_repository.dart'
     as _i50;
@@ -42,27 +42,24 @@ import '../../features/daily_reports/domain/repositories/daily_report_repository
     as _i137;
 import '../../features/daily_reports/infrastructure/services/daily_reports_api_service.dart'
     as _i975;
-import '../../features/project_management/application/project_bloc.dart'
-    as _i1062;
-import '../../features/project_management/data/datasources/project_api_service.dart'
+import '../../features/projects/application/project_bloc.dart' as _i1062;
+import '../../features/projects/data/datasources/project_api_service.dart'
     as _i421;
-import '../../features/project_management/data/repositories/api_project_repository.dart'
+import '../../features/projects/data/repositories/api_project_repository.dart'
     as _i677;
-import '../../features/project_management/data/repositories/realtime_api_project_repository.dart'
+import '../../features/projects/data/repositories/realtime_api_project_repository.dart'
     as _i619;
-import '../../features/project_management/domain/repositories/project_repository.dart'
+import '../../features/projects/domain/repositories/project_repository.dart'
     as _i475;
-import '../../features/task_management/data/repositories/api_task_repository.dart'
-    as _i14;
-import '../../features/task_management/data/repositories/realtime_task_repository.dart'
+import '../../features/task/data/repositories/api_task_repository.dart' as _i14;
+import '../../features/task/data/repositories/realtime_task_repository.dart'
     as _i201;
-import '../../features/task_management/domain/repositories/task_repository.dart'
-    as _i585;
-import '../../features/task_management/infrastructure/datasources/task_remote_datasource.dart'
+import '../../features/task/domain/repositories/task_repository.dart' as _i585;
+import '../../features/task/infrastructure/datasources/task_remote_datasource.dart'
     as _i518;
-import '../../features/task_management/infrastructure/datasources/task_remote_datasource_impl.dart'
+import '../../features/task/infrastructure/datasources/task_remote_datasource_impl.dart'
     as _i495;
-import '../../features/task_management/infrastructure/repositories/task_repository_impl.dart'
+import '../../features/task/infrastructure/repositories/task_repository_impl.dart'
     as _i337;
 import '../../features/wbs/domain/repositories/wbs_repository.dart' as _i528;
 import '../../features/wbs/domain/usecases/wbs_usecases.dart' as _i572;
@@ -204,7 +201,7 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i572.DeleteWbsTask>(
       () => _i572.DeleteWbsTask(gh<_i528.WbsRepository>()),
     );
-    gh.factory<_i475.EnhancedProjectRepository>(
+    gh.factory<_i475.ProjectRepository>(
       () => _i619.RealtimeProjectRepositoryWrapper(
         gh<_i677.ApiProjectRepository>(),
       ),
@@ -231,9 +228,9 @@ extension GetItInjectableX on _i174.GetIt {
       ),
       registerFor: {_dev, _prod},
     );
-    gh.factory<_i1062.EnhancedProjectBloc>(
-      () => _i1062.EnhancedProjectBloc(
-        repository: gh<_i475.EnhancedProjectRepository>(),
+    gh.factory<_i1062.ProjectBloc>(
+      () => _i1062.ProjectBloc(
+        repository: gh<_i475.ProjectRepository>(),
         signalRService: gh<_i320.SignalRService>(),
       ),
     );

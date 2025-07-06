@@ -155,7 +155,7 @@ class RealtimeBlocEnhancer<T extends RealtimeUpdate> {
 }
 
 /// Mixin for BLoCs to easily add real-time capabilities
-mixin RealtimeEnhancedBlocMixin<E, S, T extends RealtimeUpdate> on BlocBase<S> {
+mixin RealtimeBlocMixin<E, S, T extends RealtimeUpdate> on BlocBase<S> {
   late final RealtimeBlocEnhancer<T> _realtimeEnhancer;
 
   /// Endpoint name for this BLoC - must be implemented by the BLoC

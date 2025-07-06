@@ -71,11 +71,9 @@ class ApiConfig {
   static const String dailyReportsByDate = '/api/v1/daily-reports/date';
   static const String dailyReportsApproval = '/api/v1/daily-reports/{id}/approval';
 
-  // Enhanced Daily Reports endpoints
-  static const String dailyReportsEnhanced = '/api/v1/daily-reports/enhanced';
+  // Additional Daily Reports endpoints
   static const String dailyReportsValidate = '/api/v1/daily-reports/validate';
   static const String dailyReportsExport = '/api/v1/daily-reports/export';
-  static const String dailyReportsExportEnhanced = '/api/v1/daily-reports/export-enhanced';
   static const String dailyReportsWeeklySummary = '/api/v1/daily-reports/weekly-summary';
 
   // Project-specific Daily Reports endpoints
@@ -194,7 +192,6 @@ class ApiConfig {
         'dailyReports': {
           'list': buildUrl(dailyReports),
           'byId': buildUrl(dailyReportById.replaceAll('{id}', 'REPORT_ID')),
-          'enhanced': buildUrl(dailyReportsEnhanced),
           'analytics': buildUrl(dailyReportsProjectAnalytics.replaceAll('{projectId}', 'PROJECT_ID')),
           'export': buildUrl(dailyReportsExport),
           'pendingApproval': buildUrl(dailyReportsPendingApproval),

@@ -4,9 +4,9 @@ import 'package:get_it/get_it.dart';
 import 'package:injectable/injectable.dart';
 import 'injection.config.dart';
 import '../config/environment_config.dart' as app_env;
-import '../../features/project_management/domain/repositories/project_repository.dart';
+import '../../features/projects/domain/repositories/project_repository.dart';
 import '../../features/authorization/config/authorization_di.dart';
-import '../../features/calendar_management/config/mock_calendar_management_di.dart';
+import '../../features/calendar/config/mock_calendar_management_di.dart';
 import '../../features/daily_reports/config/daily_reports_di.dart';
 import '../../features/work_calendar/config/mock_work_calendar_di.dart';
 import '../../features/wbs/config/wbs_di.dart';
@@ -73,7 +73,7 @@ Future<void> initializeDependencies() async {
 /// Log which repository implementation is being used for debugging
 void _logRepositorySelection() {
   try {
-    final repo = getIt<EnhancedProjectRepository>();
+    final repo = getIt<ProjectRepository>();
     final repoType = repo.runtimeType.toString();
     print('📦 Injected repository: $repoType');
 

@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../app_header.dart';
 import '../../../features/authentication/application/auth_state.dart';
-import '../../../features/project_management/application/project_bloc.dart';
+import '../../../features/projects/application/project_bloc.dart';
 import '../../../features/notifications/application/notification_bloc.dart';
 import '../../../features/notifications/infrastructure/mock_notification_repository.dart';
 
@@ -17,11 +17,7 @@ class DashboardTab extends StatefulWidget {
   final AuthAuthenticated authState;
   final VoidCallback onProfileTap;
 
-  const DashboardTab({
-    super.key,
-    required this.authState,
-    required this.onProfileTap,
-  });
+  const DashboardTab({super.key, required this.authState, required this.onProfileTap});
 
   @override
   State<DashboardTab> createState() => _DashboardTabState();
@@ -35,8 +31,7 @@ class _DashboardTabState extends State<DashboardTab> {
   @override
   void initState() {
     super.initState();
-    _notificationBloc = NotificationBloc(MockNotificationRepository())
-      ..add(const LoadNotifications());
+    _notificationBloc = NotificationBloc(MockNotificationRepository())..add(const LoadNotifications());
   }
 
   @override
@@ -52,9 +47,7 @@ class _DashboardTabState extends State<DashboardTab> {
       child: BlocBuilder<NotificationBloc, NotificationState>(
         bloc: _notificationBloc,
         builder: (context, notificationState) {
-          final unreadCount = notificationState is NotificationLoaded
-              ? notificationState.unreadCount
-              : 0;
+          final unreadCount = notificationState is NotificationLoaded ? notificationState.unreadCount : 0;
 
           return Scaffold(
             appBar: AppHeader(
@@ -101,7 +94,7 @@ class _DashboardTabState extends State<DashboardTab> {
   Future<void> _refreshDashboard(BuildContext context) async {
     try {
       // Refresh projects
-      final projectBloc = context.read<EnhancedProjectBloc>();
+      final projectBloc = context.read<ProjectBloc>();
       projectBloc.add(const LoadProjectsRequested());
 
       // Refresh notifications
@@ -114,9 +107,7 @@ class _DashboardTabState extends State<DashboardTab> {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              '${DashboardConstants.refreshErrorPrefix}${e.toString()}',
-            ),
+            content: Text('${DashboardConstants.refreshErrorPrefix}${e.toString()}'),
             backgroundColor: Colors.red.shade700,
             behavior: SnackBarBehavior.floating,
             duration: DashboardConstants.snackbarDuration,

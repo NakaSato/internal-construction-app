@@ -41,18 +41,18 @@ class SignalRService {
 
       _reconnectAttempts = 0;
       _isConnecting = false;
-      debugPrint('✅ SignalRService: Connected successfully');
+      debugPrint('SignalRService: Connected successfully');
 
       _eventController?.add(RealtimeEvent(type: RealtimeEventType.connectionStatus, data: {'connected': true}));
     } on Exception catch (e) {
-      debugPrint('❌ SignalRService: Connection failed with Exception: $e');
+      debugPrint('SignalRService: Connection failed with Exception: $e');
       await diagnoseConnection(); // Run diagnostics
       _isConnecting = false;
       _scheduleReconnect();
       rethrow;
     } catch (e) {
-      debugPrint('❌ SignalRService: Connection failed with error: $e');
-      debugPrint('🔍 SignalRService: Error type: ${e.runtimeType}');
+      debugPrint('SignalRService: Connection failed with error: $e');
+      debugPrint('SignalRService: Error type: ${e.runtimeType}');
       await diagnoseConnection(); // Run diagnostics
       _isConnecting = false;
       _scheduleReconnect();
@@ -68,13 +68,13 @@ class SignalRService {
     try {
       await _hubConnection?.stop();
     } catch (e) {
-      debugPrint('⚠️ SignalRService: Error stopping connection: $e');
+      debugPrint('SignalRService: Error stopping connection: $e');
     }
 
     _hubConnection = null;
     _eventController?.add(RealtimeEvent(type: RealtimeEventType.connectionStatus, data: {'connected': false}));
 
-    debugPrint('🔌 SignalRService: Disconnected');
+    debugPrint('SignalRService: Disconnected');
   }
 
   /// Join a project group for project-specific updates
@@ -83,9 +83,9 @@ class SignalRService {
 
     try {
       await _hubConnection!.invoke('JoinProjectGroup', args: [projectId]);
-      debugPrint('✅ SignalRService: Joined project group: $projectId');
+      debugPrint('SignalRService: Joined project group: $projectId');
     } catch (e) {
-      debugPrint('❌ SignalRService: Failed to join project group: $e');
+      debugPrint('SignalRService: Failed to join project group: $e');
     }
   }
 
@@ -95,9 +95,9 @@ class SignalRService {
 
     try {
       await _hubConnection!.invoke('LeaveProjectGroup', args: [projectId]);
-      debugPrint('✅ SignalRService: Left project group: $projectId');
+      debugPrint('SignalRService: Left project group: $projectId');
     } catch (e) {
-      debugPrint('❌ SignalRService: Failed to leave project group: $e');
+      debugPrint('SignalRService: Failed to leave project group: $e');
     }
   }
 
@@ -107,9 +107,9 @@ class SignalRService {
 
     try {
       await _hubConnection!.invoke('JoinDailyReportSession', args: [reportId]);
-      debugPrint('✅ SignalRService: Joined daily report session: $reportId');
+      debugPrint('SignalRService: Joined daily report session: $reportId');
     } catch (e) {
-      debugPrint('❌ SignalRService: Failed to join daily report session: $e');
+      debugPrint('SignalRService: Failed to join daily report session: $e');
     }
   }
 
@@ -119,9 +119,9 @@ class SignalRService {
 
     try {
       await _hubConnection!.invoke('LeaveDailyReportSession', args: [reportId]);
-      debugPrint('✅ SignalRService: Left daily report session: $reportId');
+      debugPrint('SignalRService: Left daily report session: $reportId');
     } catch (e) {
-      debugPrint('❌ SignalRService: Failed to leave daily report session: $e');
+      debugPrint('SignalRService: Failed to leave daily report session: $e');
     }
   }
 
@@ -131,9 +131,9 @@ class SignalRService {
 
     try {
       await _hubConnection!.invoke('UpdateUserStatus', args: [status]);
-      debugPrint('✅ SignalRService: Updated user status: $status');
+      debugPrint('SignalRService: Updated user status: $status');
     } catch (e) {
-      debugPrint('❌ SignalRService: Failed to update user status: $e');
+      debugPrint('SignalRService: Failed to update user status: $e');
     }
   }
 
@@ -143,9 +143,9 @@ class SignalRService {
 
     try {
       await _hubConnection!.invoke('SendProjectMessage', args: [projectId, message]);
-      debugPrint('✅ SignalRService: Sent project message to: $projectId');
+      debugPrint('SignalRService: Sent project message to: $projectId');
     } catch (e) {
-      debugPrint('❌ SignalRService: Failed to send project message: $e');
+      debugPrint('SignalRService: Failed to send project message: $e');
     }
   }
 
@@ -226,18 +226,18 @@ class SignalRService {
 
     for (int i = 0; i < transportModes.length; i++) {
       try {
-        debugPrint('🔄 SignalRService: Attempting connection with transport: ${transportModes[i]}');
+        debugPrint('SignalRService: Attempting connection with transport: ${transportModes[i]}');
         await _connectWithTransport(transportModes[i]);
         return; // Success!
       } catch (e) {
-        debugPrint('❌ SignalRService: Failed with transport ${transportModes[i]}: $e');
+        debugPrint('SignalRService: Failed with transport ${transportModes[i]}: $e');
         if (i == transportModes.length - 1) {
           // Last transport mode, re-throw the error
-          debugPrint('🛑 SignalRService: All transport modes failed');
+          debugPrint('SignalRService: All transport modes failed');
           rethrow;
         }
         // Try next transport mode
-        debugPrint('🔄 SignalRService: Trying next transport mode...');
+        debugPrint('SignalRService: Trying next transport mode...');
       }
     }
   }
@@ -252,14 +252,14 @@ class SignalRService {
     // Use the HTTP URL for SignalR (not WebSocket URL)
     // SignalR will handle the WebSocket upgrade automatically during negotiation
     final hubUrl = '${EnvironmentConfig.apiBaseUrl}/notificationHub';
-    debugPrint('🔌 SignalRService: Connecting to $hubUrl with transport: $transport');
-    debugPrint('🔐 SignalRService: Token length: ${token.length}');
+    debugPrint('SignalRService: Connecting to $hubUrl with transport: $transport');
+    debugPrint('SignalRService: Token length: ${token.length}');
 
     // Configure options based on transport type
     final options = HttpConnectionOptions(
       accessTokenFactory: () async {
         final currentToken = await _storageService.getAccessToken();
-        debugPrint('🔐 SignalRService: Providing token for auth');
+        debugPrint('SignalRService: Providing token for auth');
         return currentToken ?? '';
       },
       transport: transport,
@@ -281,32 +281,32 @@ class SignalRService {
     // Set up event handlers
     _setupEventHandlers();
 
-    debugPrint('🚀 SignalRService: Starting connection...');
+    debugPrint('SignalRService: Starting connection...');
     await _hubConnection!.start();
-    debugPrint('✅ SignalRService: Connected successfully with transport: $transport');
+    debugPrint('SignalRService: Connected successfully with transport: $transport');
   }
 
   /// Diagnose connection issues by testing basic HTTP connectivity
   Future<void> diagnoseConnection() async {
     try {
       final hubUrl = _getSignalRHubUrl();
-      debugPrint('🔍 SignalRService: Diagnosing connection to $hubUrl');
+      debugPrint('SignalRService: Diagnosing connection to $hubUrl');
 
       final token = await _storageService.getAccessToken();
       if (token == null) {
-        debugPrint('❌ SignalRService: No authentication token found');
+        debugPrint('SignalRService: No authentication token found');
         return;
       }
 
-      debugPrint('✅ SignalRService: Token available: ${token.substring(0, 20)}...');
-      debugPrint('🔍 SignalRService: Hub URL: $hubUrl');
-      debugPrint('🔍 SignalRService: Base URL: ${EnvironmentConfig.apiBaseUrl}');
+      debugPrint('SignalRService: Token available: ${token.substring(0, 20)}...');
+      debugPrint('SignalRService: Hub URL: $hubUrl');
+      debugPrint('SignalRService: Base URL: ${EnvironmentConfig.apiBaseUrl}');
 
       // Try to ping the base API endpoint first
       final baseUrl = EnvironmentConfig.apiBaseUrl;
-      debugPrint('🔍 SignalRService: Testing base API connectivity to $baseUrl');
+      debugPrint('SignalRService: Testing base API connectivity to $baseUrl');
     } catch (e) {
-      debugPrint('❌ SignalRService: Diagnostic failed: $e');
+      debugPrint('SignalRService: Diagnostic failed: $e');
     }
   }
 
@@ -319,7 +319,7 @@ class SignalRService {
       final data = args[0] as Map<String, dynamic>;
       _eventController?.add(RealtimeEvent(type: RealtimeEventType.notificationCreated, data: data));
     } catch (e) {
-      debugPrint('❌ SignalRService: Error handling notification: $e');
+      debugPrint('SignalRService: Error handling notification: $e');
     }
   }
 
@@ -330,7 +330,7 @@ class SignalRService {
       final data = args[0] as Map<String, dynamic>;
       _eventController?.add(RealtimeEvent(type: RealtimeEventType.userJoined, data: data));
     } catch (e) {
-      debugPrint('❌ SignalRService: Error handling user joined project: $e');
+      debugPrint('SignalRService: Error handling user joined project: $e');
     }
   }
 

@@ -2,8 +2,8 @@ import 'package:get_it/get_it.dart';
 
 import '../network/api_client.dart';
 import '../../features/authentication/infrastructure/services/auth_api_service.dart';
-import '../../features/project_management/data/datasources/project_api_service.dart';
-import '../../features/task_management/infrastructure/services/task_api_service.dart';
+import '../../features/projects/data/datasources/project_api_service.dart';
+import '../../features/task/infrastructure/services/task_api_service.dart';
 import '../../features/daily_reports/infrastructure/services/daily_reports_api_service.dart';
 import '../../features/work_calendar/infrastructure/services/calendar_api_service.dart';
 
@@ -18,37 +18,27 @@ class ApiServicesRegistration {
 
     // Register authentication API service
     if (!getIt.isRegistered<AuthApiService>()) {
-      getIt.registerLazySingleton<AuthApiService>(
-        () => AuthApiService(getIt<ApiClient>()),
-      );
+      getIt.registerLazySingleton<AuthApiService>(() => AuthApiService(getIt<ApiClient>()));
     }
 
     // Register project management API service
     if (!getIt.isRegistered<ProjectApiService>()) {
-      getIt.registerLazySingleton<ProjectApiService>(
-        () => ProjectApiService(getIt<ApiClient>().dio),
-      );
+      getIt.registerLazySingleton<ProjectApiService>(() => ProjectApiService(getIt<ApiClient>().dio));
     }
 
     // Register task management API service
     if (!getIt.isRegistered<TaskApiService>()) {
-      getIt.registerLazySingleton<TaskApiService>(
-        () => TaskApiService(getIt<ApiClient>()),
-      );
+      getIt.registerLazySingleton<TaskApiService>(() => TaskApiService(getIt<ApiClient>()));
     }
 
     // Register daily reports API service
     if (!getIt.isRegistered<DailyReportsApiService>()) {
-      getIt.registerLazySingleton<DailyReportsApiService>(
-        () => DailyReportsApiService(getIt<ApiClient>()),
-      );
+      getIt.registerLazySingleton<DailyReportsApiService>(() => DailyReportsApiService(getIt<ApiClient>()));
     }
 
     // Register calendar API service
     if (!getIt.isRegistered<CalendarApiService>()) {
-      getIt.registerLazySingleton<CalendarApiService>(
-        () => CalendarApiService(getIt<ApiClient>()),
-      );
+      getIt.registerLazySingleton<CalendarApiService>(() => CalendarApiService(getIt<ApiClient>()));
     }
 
     print('✅ Registered all API services with dependency injection');

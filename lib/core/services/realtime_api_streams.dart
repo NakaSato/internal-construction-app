@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
 
 import 'unified_realtime_api_service.dart';
-import '../../features/project_management/domain/entities/project_api_models.dart';
+import '../../features/projects/domain/entities/project_api_models.dart';
 
 /// Real-time data streams for all API endpoints
 /// Provides typed streams and helper methods for each endpoint
@@ -139,7 +139,7 @@ abstract class RealtimeUpdate {
 /// Real-time project update model
 class RealtimeProjectUpdate extends RealtimeUpdate {
   final Map<String, dynamic> data;
-  final EnhancedProject? project;
+  final Project? project;
   final String? projectId;
 
   RealtimeProjectUpdate({
@@ -154,11 +154,11 @@ class RealtimeProjectUpdate extends RealtimeUpdate {
   factory RealtimeProjectUpdate.fromJson(Map<String, dynamic> json) {
     try {
       final data = json['data'] as Map<String, dynamic>;
-      EnhancedProject? project;
+      Project? project;
       String? projectId;
 
       if (data.containsKey('project')) {
-        project = EnhancedProject.fromJson(data['project']);
+        project = Project.fromJson(data['project']);
       }
 
       if (data.containsKey('projectId')) {

@@ -3,9 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../features/project_management/application/project_bloc.dart';
-import '../../../features/project_management/domain/entities/project_api_models.dart';
-import '../../../features/project_management/presentation/widgets/project_card.dart';
+import '../../../features/projects/application/project_bloc.dart';
+import '../../../features/projects/domain/entities/project_api_models.dart';
+import '../../../features/projects/presentation/widgets/project_card.dart';
 import '../../permissions/presentation/widgets/permission_widgets.dart';
 
 /// Project list section with loading, empty, and error states
@@ -23,7 +23,7 @@ class ProjectListSection extends StatelessWidget {
 
         // Content section
         BlocProvider(
-          create: (context) => GetIt.instance<EnhancedProjectBloc>()
+          create: (context) => GetIt.instance<ProjectBloc>()
             ..add(
               const LoadProjectsRequested(
                 query: ProjectsQuery(
@@ -32,11 +32,11 @@ class ProjectListSection extends StatelessWidget {
                 ),
               ),
             ),
-          child: BlocBuilder<EnhancedProjectBloc, EnhancedProjectState>(
+          child: BlocBuilder<ProjectBloc, ProjectState>(
             builder: (context, state) {
-              if (state is EnhancedProjectLoading) {
+              if (state is ProjectLoading) {
                 return const _LoadingState();
-              } else if (state is EnhancedProjectsLoaded) {
+              } else if (state is ProjectsLoaded) {
                 final allProjects = state.projectsResponse.items;
 
                 if (allProjects.isEmpty) {
@@ -44,7 +44,7 @@ class ProjectListSection extends StatelessWidget {
                 }
 
                 return _ProjectList(projects: allProjects);
-              } else if (state is EnhancedProjectError) {
+              } else if (state is ProjectError) {
                 return _ErrorState(message: state.message);
               }
 
@@ -86,13 +86,8 @@ class ProjectListSection extends StatelessWidget {
               icon: const Icon(Icons.add, size: 18),
               label: const Text('Create Project'),
               style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                textStyle: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                textStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
               ),
             );
           },
@@ -119,17 +114,15 @@ class _LoadingState extends StatelessWidget {
               height: 32,
               child: CircularProgressIndicator(
                 strokeWidth: 3,
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  Theme.of(context).colorScheme.primary,
-                ),
+                valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
               ),
             ),
             const SizedBox(height: 16),
             Text(
               'Loading projects...',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
             ),
           ],
         ),
@@ -155,11 +148,7 @@ class _EmptyState extends StatelessWidget {
               color: Theme.of(context).colorScheme.surfaceContainerHighest,
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              Icons.folder_open_outlined,
-              size: 20,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
+            child: Icon(Icons.folder_open_outlined, size: 20, color: Theme.of(context).colorScheme.onSurfaceVariant),
           ),
           const SizedBox(height: 8),
           Text(
@@ -172,9 +161,9 @@ class _EmptyState extends StatelessWidget {
           const SizedBox(height: 2),
           Text(
             'Projects will appear here once they are created',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
             textAlign: TextAlign.center,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
@@ -195,16 +184,11 @@ class _ErrorState extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final availableHeight = constraints.maxHeight.isFinite
-            ? constraints.maxHeight.toDouble()
-            : 120.0;
+        final availableHeight = constraints.maxHeight.isFinite ? constraints.maxHeight.toDouble() : 120.0;
 
         return SingleChildScrollView(
           child: ConstrainedBox(
-            constraints: BoxConstraints(
-              minHeight: availableHeight,
-              maxHeight: availableHeight,
-            ),
+            constraints: BoxConstraints(minHeight: availableHeight, maxHeight: availableHeight),
             child: _buildAdaptiveErrorLayout(context, availableHeight),
           ),
         );
@@ -235,16 +219,10 @@ class _ErrorState extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Theme.of(
-                  context,
-                ).colorScheme.error.withValues(alpha: 0.1),
+                color: Theme.of(context).colorScheme.error.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                Icons.error_outline,
-                size: 28,
-                color: Theme.of(context).colorScheme.error,
-              ),
+              child: Icon(Icons.error_outline, size: 28, color: Theme.of(context).colorScheme.error),
             ),
             const SizedBox(height: 12),
             Text(
@@ -259,10 +237,9 @@ class _ErrorState extends StatelessWidget {
             Flexible(
               child: Text(
                 message,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  fontSize: 13,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13),
                 textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -271,7 +248,7 @@ class _ErrorState extends StatelessWidget {
             const SizedBox(height: 12),
             OutlinedButton.icon(
               onPressed: () {
-                context.read<EnhancedProjectBloc>().add(
+                context.read<ProjectBloc>().add(
                   const LoadProjectsRequested(
                     query: ProjectsQuery(
                       pageSize: 1000, // Load up to 1000 projects to show all
@@ -283,10 +260,7 @@ class _ErrorState extends StatelessWidget {
               icon: const Icon(Icons.refresh, size: 16),
               label: const Text('Try Again'),
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 textStyle: Theme.of(context).textTheme.bodySmall,
               ),
             ),
@@ -305,11 +279,7 @@ class _ErrorState extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.error_outline,
-              size: 20,
-              color: Theme.of(context).colorScheme.error,
-            ),
+            Icon(Icons.error_outline, size: 20, color: Theme.of(context).colorScheme.error),
             const SizedBox(height: 3),
             Text(
               'Failed to load',
@@ -324,10 +294,9 @@ class _ErrorState extends StatelessWidget {
             Flexible(
               child: Text(
                 message,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  fontSize: 11,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 11),
                 textAlign: TextAlign.center,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -338,7 +307,7 @@ class _ErrorState extends StatelessWidget {
               height: 22,
               child: OutlinedButton(
                 onPressed: () {
-                  context.read<EnhancedProjectBloc>().add(
+                  context.read<ProjectBloc>().add(
                     const LoadProjectsRequested(
                       query: ProjectsQuery(
                         pageSize: 1000, // Load up to 1000 projects to show all
@@ -348,10 +317,7 @@ class _ErrorState extends StatelessWidget {
                   );
                 },
                 style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 1,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                   minimumSize: const Size(0, 22),
                   textStyle: const TextStyle(fontSize: 10),
                 ),
@@ -377,31 +343,23 @@ class _ErrorState extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    Icons.error_outline,
-                    size: 12,
-                    color: Theme.of(context).colorScheme.error,
-                  ),
+                  Icon(Icons.error_outline, size: 12, color: Theme.of(context).colorScheme.error),
                   const SizedBox(width: 4),
                   SizedBox(
                     height: 18,
                     child: OutlinedButton(
                       onPressed: () {
-                        context.read<EnhancedProjectBloc>().add(
+                        context.read<ProjectBloc>().add(
                           const LoadProjectsRequested(
                             query: ProjectsQuery(
-                              pageSize:
-                                  1000, // Load up to 1000 projects to show all
+                              pageSize: 1000, // Load up to 1000 projects to show all
                               pageNumber: 1,
                             ),
                           ),
                         );
                       },
                       style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 4,
-                          vertical: 0,
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
                         minimumSize: const Size(0, 18),
                         textStyle: const TextStyle(fontSize: 7),
                       ),
@@ -414,11 +372,7 @@ class _ErrorState extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    Icons.error_outline,
-                    size: 16,
-                    color: Theme.of(context).colorScheme.error,
-                  ),
+                  Icon(Icons.error_outline, size: 16, color: Theme.of(context).colorScheme.error),
                   const SizedBox(height: 2),
                   Flexible(
                     child: Text(
@@ -438,21 +392,17 @@ class _ErrorState extends StatelessWidget {
                     height: 20,
                     child: OutlinedButton(
                       onPressed: () {
-                        context.read<EnhancedProjectBloc>().add(
+                        context.read<ProjectBloc>().add(
                           const LoadProjectsRequested(
                             query: ProjectsQuery(
-                              pageSize:
-                                  1000, // Load up to 1000 projects to show all
+                              pageSize: 1000, // Load up to 1000 projects to show all
                               pageNumber: 1,
                             ),
                           ),
                         );
                       },
                       style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 0,
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
                         minimumSize: const Size(0, 20),
                         textStyle: const TextStyle(fontSize: 9),
                       ),
@@ -468,7 +418,7 @@ class _ErrorState extends StatelessWidget {
 
 /// Project list widget
 class _ProjectList extends StatelessWidget {
-  final List<EnhancedProject> projects;
+  final List<Project> projects;
 
   const _ProjectList({required this.projects});
 
@@ -476,7 +426,7 @@ class _ProjectList extends StatelessWidget {
   Widget build(BuildContext context) {
     return RefreshIndicator(
       onRefresh: () async {
-        context.read<EnhancedProjectBloc>().add(
+        context.read<ProjectBloc>().add(
           const LoadProjectsRequested(
             query: ProjectsQuery(
               pageSize: 1000, // Load up to 1000 projects to show all
@@ -497,7 +447,7 @@ class _ProjectList extends StatelessWidget {
           return AnimatedContainer(
             duration: Duration(milliseconds: 200 + (index * 50)),
             curve: Curves.easeOutCubic,
-            child: EnhancedProjectCard(
+            child: ProjectCard(
               project: project,
               onTap: () {
                 context.push('/projects/${project.projectId}');

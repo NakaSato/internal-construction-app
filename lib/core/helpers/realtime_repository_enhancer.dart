@@ -163,7 +163,7 @@ class RealtimeRepositoryEnhancer<T extends RealtimeUpdate> {
 }
 
 /// Mixin to easily add real-time capabilities to any repository
-mixin RealtimeEnhancedRepositoryMixin<T extends RealtimeUpdate> {
+mixin RealtimeRepositoryMixin<T extends RealtimeUpdate> {
   late final RealtimeRepositoryEnhancer<T> _realtimeEnhancer;
 
   /// Endpoint name for this repository - must be implemented by the repository
