@@ -43,7 +43,7 @@ class AuthInterceptor extends Interceptor {
             duration: Duration(seconds: 3),
           ),
         );
-        
+
         // Navigate to login
         context.go(AppRoutes.login);
       }

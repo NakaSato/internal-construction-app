@@ -151,11 +151,11 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i320.SignalRService>(
       () => _i320.SignalRService(gh<_i666.SecureStorageService>()),
     );
-    gh.lazySingleton<_i301.RealtimeService>(
-      () => _i301.RealtimeService(gh<_i666.SecureStorageService>()),
-    );
     gh.lazySingleton<_i53.UnifiedRealtimeApiService>(
       () => _i53.UnifiedRealtimeApiService(gh<_i666.SecureStorageService>()),
+    );
+    gh.lazySingleton<_i301.RealtimeService>(
+      () => _i301.RealtimeService(gh<_i666.SecureStorageService>()),
     );
     gh.lazySingleton<_i761.UniversalRealtimeHandler>(
       () => _i761.UniversalRealtimeHandler(gh<_i320.SignalRService>()),

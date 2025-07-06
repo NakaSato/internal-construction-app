@@ -111,7 +111,7 @@ class _EnhancedProjectListScreenState extends State<EnhancedProjectListScreen> {
 
     // Clear any existing project data
     if (mounted) {
-      context.read<EnhancedProjectBloc>().add(const ClearProjectsRequested());
+      context.read<EnhancedProjectBloc>().add(RefreshProjectsWithCacheClear(query: const ProjectsQuery()));
     }
   }
 
