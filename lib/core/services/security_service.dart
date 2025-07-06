@@ -152,7 +152,7 @@ class SecurityService {
     await _secureStorage.write(key: _lastLoginAttemptKey, value: DateTime.now().toIso8601String());
 
     if (newAttempts >= _maxLoginAttempts) {
-      final lockoutUntil = DateTime.now().add(Duration(minutes: _lockoutDurationMinutes));
+      final lockoutUntil = DateTime.now().add(const Duration(minutes: _lockoutDurationMinutes));
       await _secureStorage.write(key: _lockoutUntilKey, value: lockoutUntil.toIso8601String());
 
       await _logSecurityEvent(
@@ -206,7 +206,7 @@ class SecurityService {
     final lastActivity = DateTime.tryParse(lastActivityStr);
     if (lastActivity == null) return true;
 
-    final sessionTimeout = Duration(minutes: _sessionTimeoutMinutes);
+    const sessionTimeout = Duration(minutes: _sessionTimeoutMinutes);
     return DateTime.now().difference(lastActivity) > sessionTimeout;
   }
 
