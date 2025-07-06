@@ -26,6 +26,16 @@ lib/core/api/api_client.dart
 
 ---
 
+## Quick Start
+
+### 🔐 Authentication First
+All API endpoints require authentication. Start here:
+- **[Authentication & User Management](./authentication.md)** - Login, user registration, and role-based access
+
+### 📋 Core APIs
+
+---
+
 ## 🔐 Authentication API
 
 ### Endpoints

@@ -27,13 +27,13 @@ import '../../features/authentication/domain/repositories/auth_repository.dart'
 import '../../features/authentication/infrastructure/auth_repository_factory.dart'
     as _i202;
 import '../../features/calendar/application/calendar_management_bloc.dart'
-    as _i185;
+    as _i907;
 import '../../features/calendar/domain/repositories/calendar_management_repository.dart'
-    as _i646;
+    as _i28;
 import '../../features/calendar/infrastructure/repositories/api_calendar_management_repository.dart'
-    as _i43;
+    as _i312;
 import '../../features/calendar/infrastructure/services/calendar_api_service.dart'
-    as _i1036;
+    as _i918;
 import '../../features/daily_reports/data/repositories/api_daily_report_repository.dart'
     as _i50;
 import '../../features/daily_reports/data/repositories/realtime_daily_report_repository.dart'
@@ -42,25 +42,26 @@ import '../../features/daily_reports/domain/repositories/daily_report_repository
     as _i137;
 import '../../features/daily_reports/infrastructure/services/daily_reports_api_service.dart'
     as _i975;
-import '../../features/projects/application/project_bloc.dart' as _i1062;
+import '../../features/projects/application/project_bloc.dart' as _i488;
 import '../../features/projects/data/datasources/project_api_service.dart'
-    as _i421;
+    as _i706;
 import '../../features/projects/data/repositories/api_project_repository.dart'
-    as _i677;
+    as _i585;
 import '../../features/projects/data/repositories/realtime_api_project_repository.dart'
-    as _i619;
+    as _i1043;
 import '../../features/projects/domain/repositories/project_repository.dart'
-    as _i475;
-import '../../features/task/data/repositories/api_task_repository.dart' as _i14;
+    as _i338;
+import '../../features/task/data/repositories/api_task_repository.dart'
+    as _i560;
 import '../../features/task/data/repositories/realtime_task_repository.dart'
-    as _i201;
-import '../../features/task/domain/repositories/task_repository.dart' as _i585;
+    as _i883;
+import '../../features/task/domain/repositories/task_repository.dart' as _i81;
 import '../../features/task/infrastructure/datasources/task_remote_datasource.dart'
-    as _i518;
+    as _i154;
 import '../../features/task/infrastructure/datasources/task_remote_datasource_impl.dart'
-    as _i495;
+    as _i88;
 import '../../features/task/infrastructure/repositories/task_repository_impl.dart'
-    as _i337;
+    as _i1070;
 import '../../features/wbs/domain/repositories/wbs_repository.dart' as _i528;
 import '../../features/wbs/domain/usecases/wbs_usecases.dart' as _i572;
 import '../../features/wbs/infrastructure/repositories/wbs_repository_impl.dart'
@@ -78,7 +79,9 @@ import '../network/dio_client.dart' as _i667;
 import '../network/network_info.dart' as _i932;
 import '../services/realtime_api_streams.dart' as _i826;
 import '../services/realtime_service.dart' as _i301;
+import '../services/security_service.dart' as _i337;
 import '../services/signalr_service.dart' as _i320;
+import '../services/token_service.dart' as _i227;
 import '../services/unified_realtime_api_service.dart' as _i53;
 import '../services/universal_realtime_handler.dart' as _i761;
 import '../storage/secure_storage_service.dart' as _i666;
@@ -103,12 +106,6 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<String>(() => externalDependenciesModule.baseUrl);
     gh.lazySingleton<_i361.Dio>(() => networkModule.dio());
-    gh.factory<_i518.TaskRemoteDataSource>(
-      () => _i495.TaskRemoteDataSourceImpl(
-        client: gh<_i361.Dio>(),
-        baseUrl: gh<String>(),
-      ),
-    );
     gh.factory<_i932.NetworkInfo>(() => _i932.NetworkInfoImpl());
     gh.lazySingleton<_i503.WorkCalendarRepository>(
       () => _i743.ApiWorkCalendarRepository(gh<_i361.Dio>()),
@@ -126,6 +123,12 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i528.WbsRepository>(
       () => _i1011.WbsRepositoryImpl(gh<_i66.WBSApiService>()),
     );
+    gh.factory<_i154.TaskRemoteDataSource>(
+      () => _i88.TaskRemoteDataSourceImpl(
+        client: gh<_i361.Dio>(),
+        baseUrl: gh<String>(),
+      ),
+    );
     gh.lazySingleton<_i742.AuthRepository>(
       () => _i410.ApiAuthRepository(
         gh<_i1066.AuthApiService>(),
@@ -136,14 +139,23 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i975.DailyReportsApiService>(
       () => _i975.DailyReportsApiService(gh<_i557.ApiClient>()),
     );
-    gh.factory<_i421.ProjectApiService>(
-      () => _i421.ProjectApiService(gh<_i361.Dio>(), baseUrl: gh<String>()),
+    gh.factory<_i706.ProjectApiService>(
+      () => _i706.ProjectApiService(gh<_i361.Dio>(), baseUrl: gh<String>()),
     );
-    gh.factory<_i1036.CalendarApiService>(
-      () => _i1036.CalendarApiService(gh<_i361.Dio>(), baseUrl: gh<String>()),
+    gh.factory<_i1070.TaskRepositoryImpl>(
+      () => _i1070.TaskRepositoryImpl(
+        remoteDataSource: gh<_i154.TaskRemoteDataSource>(),
+        networkInfo: gh<_i932.NetworkInfo>(),
+      ),
+    );
+    gh.factory<_i918.CalendarApiService>(
+      () => _i918.CalendarApiService(gh<_i361.Dio>(), baseUrl: gh<String>()),
     );
     gh.factory<_i937.WorkCalendarBloc>(
       () => _i937.WorkCalendarBloc(gh<_i503.WorkCalendarRepository>()),
+    );
+    gh.factory<_i560.ApiTaskRepository>(
+      () => _i560.ApiTaskRepository(gh<_i1070.TaskRepositoryImpl>()),
     );
     gh.lazySingleton<_i320.SignalRService>(
       () => _i320.SignalRService(gh<_i666.SecureStorageService>()),
@@ -160,15 +172,6 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i50.ApiDailyReportRepository>(
       () => _i50.ApiDailyReportRepository(gh<_i975.DailyReportsApiService>()),
     );
-    gh.factory<_i337.TaskRepositoryImpl>(
-      () => _i337.TaskRepositoryImpl(
-        remoteDataSource: gh<_i518.TaskRemoteDataSource>(),
-        networkInfo: gh<_i932.NetworkInfo>(),
-      ),
-    );
-    gh.factory<_i677.ApiProjectRepository>(
-      () => _i677.ApiProjectRepository(gh<_i421.ProjectApiService>()),
-    );
     gh.lazySingleton<_i202.AuthRepositoryFactory>(
       () => _i202.AuthRepositoryFactory(
         gh<_i742.AuthRepository>(instanceName: 'api'),
@@ -178,10 +181,6 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i580.AuthRepositoryFactory(
         gh<_i742.AuthRepository>(instanceName: 'api'),
       ),
-    );
-    gh.lazySingleton<_i646.CalendarManagementRepository>(
-      () =>
-          _i43.ApiCalendarManagementRepository(gh<_i1036.CalendarApiService>()),
     );
     gh.factory<_i572.GetProjectWbs>(
       () => _i572.GetProjectWbs(gh<_i528.WbsRepository>()),
@@ -201,38 +200,51 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i572.DeleteWbsTask>(
       () => _i572.DeleteWbsTask(gh<_i528.WbsRepository>()),
     );
-    gh.factory<_i475.ProjectRepository>(
-      () => _i619.RealtimeProjectRepositoryWrapper(
-        gh<_i677.ApiProjectRepository>(),
+    gh.lazySingleton<_i227.TokenService>(
+      () =>
+          _i227.TokenService(gh<_i666.SecureStorageService>(), gh<_i361.Dio>()),
+    );
+    gh.factory<_i585.ApiProjectRepository>(
+      () => _i585.ApiProjectRepository(gh<_i706.ProjectApiService>()),
+    );
+    gh.factory<_i338.ProjectRepository>(
+      () => _i1043.RealtimeProjectRepositoryWrapper(
+        gh<_i585.ApiProjectRepository>(),
       ),
       registerFor: {_dev, _prod},
     );
-    gh.factory<_i185.CalendarManagementBloc>(
-      () => _i185.CalendarManagementBloc(
-        gh<_i646.CalendarManagementRepository>(),
+    gh.lazySingleton<_i28.CalendarManagementRepository>(
+      () =>
+          _i312.ApiCalendarManagementRepository(gh<_i918.CalendarApiService>()),
+    );
+    gh.factory<_i907.CalendarManagementBloc>(
+      () =>
+          _i907.CalendarManagementBloc(gh<_i28.CalendarManagementRepository>()),
+    );
+    gh.factory<_i488.ProjectBloc>(
+      () => _i488.ProjectBloc(
+        repository: gh<_i338.ProjectRepository>(),
+        signalRService: gh<_i320.SignalRService>(),
       ),
+    );
+    gh.factory<_i81.TaskRepository>(
+      () => _i883.RealtimeTaskRepositoryWrapper(gh<_i560.ApiTaskRepository>()),
+      registerFor: {_dev, _prod},
     );
     gh.lazySingleton<_i826.RealtimeApiStreams>(
       () => _i826.RealtimeApiStreams(gh<_i53.UnifiedRealtimeApiService>()),
     );
-    gh.factory<_i14.ApiTaskRepository>(
-      () => _i14.ApiTaskRepository(gh<_i337.TaskRepositoryImpl>()),
-    );
-    gh.factory<_i585.TaskRepository>(
-      () => _i201.RealtimeTaskRepositoryWrapper(gh<_i14.ApiTaskRepository>()),
-      registerFor: {_dev, _prod},
+    gh.lazySingleton<_i337.SecurityService>(
+      () => _i337.SecurityService(
+        gh<_i227.TokenService>(),
+        gh<_i666.SecureStorageService>(),
+      ),
     );
     gh.factory<_i137.DailyReportRepository>(
       () => _i112.RealtimeDailyReportRepositoryWrapper(
         gh<_i50.ApiDailyReportRepository>(),
       ),
       registerFor: {_dev, _prod},
-    );
-    gh.factory<_i1062.ProjectBloc>(
-      () => _i1062.ProjectBloc(
-        repository: gh<_i475.ProjectRepository>(),
-        signalRService: gh<_i320.SignalRService>(),
-      ),
     );
     gh.factory<_i153.AuthCubit>(
       () => _i153.AuthCubit(gh<_i202.AuthRepositoryFactory>()),

@@ -13,7 +13,7 @@ import 'core/navigation/app_router.dart';
 // Feature imports - Authentication
 import 'features/authentication/application/auth_bloc.dart';
 import 'features/authentication/application/auth_event.dart';
-import 'features/authentication/application/auth_state.dart';
+import 'features/authentication/application/auth_state.dart' as auth;
 
 // Feature imports - Authorization
 import 'features/authorization/application/authorization_bloc.dart';
@@ -26,6 +26,10 @@ import 'features/projects/application/project_bloc.dart';
 
 // Feature imports - Work Calendar
 import 'features/work_calendar/application/work_calendar_bloc.dart';
+
+// Security and token management
+import 'core/services/token_service.dart';
+import 'core/services/security_service.dart';
 
 /// The main application widget that configures the Flutter app.
 ///
@@ -47,7 +51,7 @@ class ConstructionApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: _createBlocProviders(),
-      child: BlocListener<AuthBloc, AuthState>(
+      child: BlocListener<AuthBloc, auth.AuthState>(
         listener: _handleGlobalAuthChanges,
         child: MaterialApp.router(
           title: _appTitle,
@@ -78,15 +82,69 @@ class ConstructionApp extends StatelessWidget {
   /// Handles global authentication state changes.
   ///
   /// This listener responds to authentication events that affect
-  /// the entire application state.
-  void _handleGlobalAuthChanges(BuildContext context, AuthState state) {
-    if (state is AuthUnauthenticated) {
-      // Clear any cached data when user logs out
-      _clearApplicationCache();
-    } else if (state is AuthAuthenticated) {
-      // Initialize user-specific services when user logs in
+  /// the entire application state and security posture.
+  void _handleGlobalAuthChanges(BuildContext context, auth.AuthState state) {
+    final securityService = getIt<SecurityService>();
+
+    if (state is auth.AuthUnauthenticated) {
+      // Secure logout and cleanup when user logs out
+      _performSecureLogout(securityService);
+    } else if (state is auth.AuthAuthenticated) {
+      // Initialize security session and user-specific services
+      _initializeSecuritySession(securityService);
       _initializeUserServices();
+    } else if (state is auth.AuthFailure) {
+      // Handle authentication errors securely
+      _handleAuthError(state, securityService);
     }
+  }
+
+  /// Performs secure logout with comprehensive cleanup
+  Future<void> _performSecureLogout(SecurityService securityService) async {
+    if (kDebugMode) {
+      debugPrint('🔒 [SECURITY] Performing secure logout...');
+    }
+
+    try {
+      await securityService.secureLogout();
+      _clearApplicationCache();
+
+      if (kDebugMode) {
+        debugPrint('✅ [SECURITY] Secure logout completed');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ [SECURITY] Error during secure logout: $e');
+      }
+    }
+  }
+
+  /// Initializes security session for authenticated user
+  Future<void> _initializeSecuritySession(SecurityService securityService) async {
+    if (kDebugMode) {
+      debugPrint('🔐 [SECURITY] Initializing security session...');
+    }
+
+    try {
+      await securityService.startSecuritySession();
+      if (kDebugMode) {
+        debugPrint('✅ [SECURITY] Security session initialized');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ [SECURITY] Error initializing security session: $e');
+      }
+    }
+  }
+
+  /// Handles authentication errors with security considerations
+  void _handleAuthError(auth.AuthFailure state, SecurityService securityService) {
+    if (kDebugMode) {
+      debugPrint('🚨 [SECURITY] Authentication error: ${state.message}');
+    }
+
+    // Record failed login attempt for rate limiting
+    securityService.recordFailedLoginAttempt();
   }
 
   /// Clears application cache when user logs out.
@@ -322,9 +380,53 @@ class _AppWrapperState extends State<_AppWrapper> with WidgetsBindingObserver {
 
   /// Called when app resumes from background.
   void _onAppResumed() {
-    // Refresh critical data, re-establish connections
     if (kDebugMode) {
       debugPrint('🔄 [APP] Resuming - refreshing critical data');
+    }
+
+    // Refresh tokens and update security session when app resumes
+    _refreshTokensOnResume();
+  }
+
+  /// Refresh authentication tokens when app resumes from background
+  Future<void> _refreshTokensOnResume() async {
+    try {
+      final tokenService = getIt<TokenService>();
+      final securityService = getIt<SecurityService>();
+
+      // Check if we have valid tokens
+      final isValid = await tokenService.isTokenValid();
+      if (!isValid) {
+        // Try to refresh the token
+        final refreshResult = await tokenService.refreshToken();
+        if (!refreshResult.isSuccess) {
+          // If refresh fails, user needs to re-authenticate
+          if (kDebugMode) {
+            debugPrint('� [SECURITY] Token refresh failed on resume');
+          }
+          // Trigger logout through auth bloc
+          final authBloc = getIt<AuthBloc>();
+          authBloc.add(const AuthSignOutRequested());
+          return;
+        }
+      }
+
+      // Update last activity for session management
+      await securityService.updateLastActivity();
+
+      // Check if session has timed out
+      final isTimedOut = await securityService.isSessionTimedOut();
+      if (isTimedOut) {
+        if (kDebugMode) {
+          debugPrint('🚨 [SECURITY] Session timed out');
+        }
+        final authBloc = getIt<AuthBloc>();
+        authBloc.add(const AuthSignOutRequested());
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ [SECURITY] Error refreshing tokens on resume: $e');
+      }
     }
   }
 

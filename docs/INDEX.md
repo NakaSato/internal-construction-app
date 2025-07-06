@@ -33,8 +33,9 @@ Completed implementation summaries and historical documentation.
 - [Feature Development Guide](./development/feature_development.md)
 
 ### For API Integration
-- [API Reference](./api/README.md)
-- [Environment Configuration](./api/environment_configuration.md)
+- [API Reference](./api/README.md) - Complete API documentation
+- [Authentication & User Management](./api/authentication.md) - Login, registration, and security
+- [Environment Configuration](./api/environment_configuration.md) - API setup and configuration
 - [Real-time Features](./api/signalr_real_time_notifications.md)
 - [WBS API Integration](./api/wbs_api_reference.md)
 

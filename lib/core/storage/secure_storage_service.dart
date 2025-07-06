@@ -53,6 +53,21 @@ class SecureStorageService {
     await _secureStorage.delete(key: _userKey);
   }
 
+  /// Read any value by key
+  Future<String?> read({required String key}) async {
+    return await _secureStorage.read(key: key);
+  }
+
+  /// Write any value by key
+  Future<void> write({required String key, required String value}) async {
+    await _secureStorage.write(key: key, value: value);
+  }
+
+  /// Delete any value by key
+  Future<void> delete({required String key}) async {
+    await _secureStorage.delete(key: key);
+  }
+
   /// Clear all stored data
   Future<void> clearAll() async {
     await _secureStorage.deleteAll();
