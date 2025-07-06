@@ -1,8 +1,26 @@
 # Testing Scripts
 
-This directory contains various testing scripts for the Flutter Solar Project Management app.
+This directory contains various testing scripts organized by category to help validate different aspects of the Flutter Solar Project Management application.
 
-## 📁 Directory Contents
+## 📁 Directory Structure
+
+```
+scripts/testing/
+├── README.md                    # This file
+├── api/                        # API testing scripts
+│   ├── test_api_config.sh      # API configuration tests
+│   ├── debug_flutter_api.sh    # API debugging tools
+│   └── test_production_users.sh # Production user tests
+├── realtime/                   # Real-time feature tests
+│   ├── test_signalr_connection.sh # SignalR connectivity
+│   ├── test_signalr_auto_refresh.sh # Auto-refresh testing
+│   └── test_project_deletion_realtime.sh # Real-time events
+└── features/                   # Feature-specific tests
+    ├── test_cache_clearing.sh  # Cache management tests
+    ├── test_401_handling.sh    # Error handling tests
+    ├── test_401_comprehensive.sh # Comprehensive auth tests
+    └── test_project_detail_fallback.sh # UI fallback tests
+```
 
 ### 🔐 Authentication Testing
 - [test_401_handling.sh](./test_401_handling.sh) - Tests 401 unauthorized response handling
