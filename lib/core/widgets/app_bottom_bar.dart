@@ -54,7 +54,7 @@ class CustomBottomBar extends StatelessWidget {
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10),
+          padding: const EdgeInsets.symmetric(vertical: 8),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
@@ -125,9 +125,9 @@ class CustomBottomBar extends StatelessWidget {
           AnimatedContainer(
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeOutCirc,
-            width: isSelected ? 12 : 0,
+            width: isSelected ? 10 : 0,
             height: 2,
-            margin: const EdgeInsets.only(bottom: 4),
+            margin: const EdgeInsets.only(bottom: 3),
             decoration: BoxDecoration(
               color: isSelected ? selectedColor : Colors.transparent,
               borderRadius: BorderRadius.circular(2),
@@ -140,7 +140,7 @@ class CustomBottomBar extends StatelessWidget {
                 duration: const Duration(milliseconds: 200),
                 curve: Curves.easeInOut,
                 padding: EdgeInsets.all(isSelected ? 2 : 0),
-                child: Icon(icon, color: isSelected ? selectedColor : unselectedColor, size: isSelected ? 22 : 20),
+                child: Icon(icon, color: isSelected ? selectedColor : unselectedColor, size: isSelected ? 20 : 18),
               ),
               if (hasNotification)
                 Positioned(
@@ -161,14 +161,14 @@ class CustomBottomBar extends StatelessWidget {
                 ),
             ],
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 3),
           Text(
             label,
             style: TextStyle(
               color: isSelected ? selectedColor : unselectedColor,
-              fontSize: 12,
+              fontSize: 9,
               fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-              letterSpacing: 0.2,
+              letterSpacing: 0.1,
             ),
           ),
         ],
