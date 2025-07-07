@@ -2,7 +2,10 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:injectable/injectable.dart';
+import 'package:flutter/foundation.dart';
 
+import '../../../../core/di/injection.dart';
+import '../../../../core/services/realtime_api_streams.dart';
 import '../../../core/error/failures.dart';
 import '../../domain/entities/notification.dart';
 import '../../domain/entities/notifications_response.dart';
@@ -16,9 +19,11 @@ class NotificationCubit extends Cubit<NotificationState> {
   final NotificationRepository _repository;
   StreamSubscription? _notificationStreamSubscription;
   StreamSubscription? _unreadCountStreamSubscription;
+  StreamSubscription? _appFocusSubscription;
 
   NotificationCubit(this._repository) : super(NotificationInitial()) {
     _initialize();
+    _setupAppFocusListener();
   }
 
   Future<void> _initialize() async {
@@ -49,6 +54,11 @@ class NotificationCubit extends Cubit<NotificationState> {
 
     // Fetch notification statistics
     await _fetchStatistics();
+
+    // Refresh notifications when app regains focus
+    if (!kIsWeb) {
+      _addFocusListener();
+    }
   }
 
   void _handleNewNotification(AppNotification notification) {
@@ -299,10 +309,55 @@ class NotificationCubit extends Cubit<NotificationState> {
     }
   }
 
+  /// Set up app focus listener to refresh data when app comes back to foreground
+  void _setupAppFocusListener() {
+    _appFocusSubscription?.cancel();
+    
+    try {
+      final realtimeStreams = getIt<RealtimeApiStreams>();
+      
+      _appFocusSubscription = realtimeStreams.appFocusStream.listen((hasFocus) {
+        if (kDebugMode) {
+          debugPrint('📱 NotificationCubit: App focus returned, refreshing notifications');
+        }
+        
+        // Refresh notifications when app focus returns
+        loadAllNotifications();
+      });
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ NotificationCubit: Failed to setup app focus listener: $e');
+      }
+    }
+  }
+
+  void _addFocusListener() {
+    // This method will be called when the app regains focus
+    // We can use it to refresh notifications if needed
+    final focusNode = FocusNode();
+    focusNode.addListener(() {
+      if (focusNode.hasFocus) {
+        // App has regained focus
+        // Refresh notifications
+        fetchNotifications(refresh: true);
+      }
+    });
+
+    // Add the focus node to the widget tree
+    // so that it can receive focus events
+    // This is a workaround to listen to app focus changes
+    // In a real app, you might want to use a more robust solution
+    // like a dedicated service or manager for app lifecycle events
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      focusNode.requestFocus();
+    });
+  }
+
   @override
   Future<void> close() {
     _notificationStreamSubscription?.cancel();
     _unreadCountStreamSubscription?.cancel();
+    _appFocusSubscription?.cancel();
     return super.close();
   }
 }

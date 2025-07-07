@@ -6,9 +6,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'common/common.dart';
 
 // Core theme and navigation
-import 'core/theme/solar_app_theme.dart';
+import 'core/theme/app_theme.dart';
 import 'core/di/injection.dart';
 import 'core/navigation/app_router.dart';
+import 'core/services/realtime_api_streams.dart'; // Add this import for RealtimeApiStreams
 
 // Feature imports - Authentication
 import 'features/authentication/application/auth_bloc.dart';
@@ -23,6 +24,7 @@ import 'features/daily_reports/application/cubits/daily_reports_cubit.dart';
 
 // Feature imports - Project Management
 import 'features/projects/application/project_bloc.dart';
+import 'features/projects/domain/entities/project_api_models.dart';
 
 // Feature imports - Work Calendar
 import 'features/work_calendar/application/work_calendar_bloc.dart';
@@ -286,16 +288,25 @@ class _AppWrapper extends StatefulWidget {
 }
 
 class _AppWrapperState extends State<_AppWrapper> with WidgetsBindingObserver {
+  // Flag to track if dashboard needs refresh after focus change
+  bool _needsDashboardRefresh = false;
+
+  // Flag to track if we're navigating between project screens
+  bool _isInProjectDetailView = false;
+  DateTime? _lastProjectDetailVisit;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _logAppLifecycle('App Initialized');
+    _setupNavigationListener();
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    AppRouter.router.routeInformationProvider.removeListener(_handleRouteChange);
     super.dispose();
   }
 
@@ -337,7 +348,222 @@ class _AppWrapperState extends State<_AppWrapper> with WidgetsBindingObserver {
     if (kDebugMode) {
       debugPrint('🔍 [APP] Focus changed: $hasFocus');
     }
-    // Could be used for analytics or accessibility features
+
+    if (!hasFocus) {
+      // When focus leaves the app (e.g., during account switching)
+      if (kDebugMode) {
+        debugPrint('🔍 [APP] Focus lost - preparing for potential account switch');
+      }
+
+      // Mark dashboard as needing refresh when focus returns
+      _markDashboardForRefresh();
+    } else {
+      // When focus returns to the app, trigger a comprehensive refresh
+      // Delay slightly to ensure UI is ready
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (kDebugMode) {
+          debugPrint('🔄 [APP] Focus returned - triggering comprehensive refresh');
+        }
+
+        // Notify all listeners that app focus has returned - can be used by screens to refresh data
+        getIt<RealtimeApiStreams>().notifyAppFocusReturned();
+
+        // Check auth state to ensure we're still authenticated
+        if (mounted) {
+          context.read<AuthBloc>().add(const AuthCheckRequested());
+
+          // Force refresh project dashboard after auth check
+          _forceRefreshDashboard();
+        }
+      });
+    }
+  }
+
+  /// Marks the dashboard as needing refresh when focus returns
+  void _markDashboardForRefresh() {
+    _needsDashboardRefresh = true;
+    if (kDebugMode) {
+      debugPrint('🏗️ [APP] Dashboard marked for refresh on next focus return');
+    }
+  }
+
+  /// Force refreshes the project dashboard when needed
+  /// [fromDetailView] indicates if refresh is triggered from returning from detail view
+  void _forceRefreshDashboard({bool fromDetailView = false}) {
+    if (!_needsDashboardRefresh && !fromDetailView) return;
+
+    try {
+      if (kDebugMode) {
+        final reason = fromDetailView ? 'returning from detail view' : 'focus return';
+        debugPrint('🏗️ [APP] Forcing project dashboard refresh after $reason');
+      }
+
+      // Reset the flag
+      _needsDashboardRefresh = false;
+
+      // Force data refresh through project bloc
+      final projectBloc = context.read<ProjectBloc>();
+
+      // First clear any cached data to ensure fresh API results
+      projectBloc.add(const RefreshProjectsWithCacheClear());
+
+      // Short delay to ensure cache clear happens first
+      Future.delayed(const Duration(milliseconds: 50), () {
+        if (!mounted) return;
+
+        // Use smart refresh approach based on the trigger source
+        if (fromDetailView) {
+          // When returning from detail, we want to maintain visual continuity
+          // Skip loading state for a smoother user experience
+          projectBloc.add(
+            const LoadProjectsRequested(
+              forceRefresh: true,
+              skipLoadingState: true, // Don't show loading indicator for smoother UX
+            ),
+          );
+        } else {
+          // For focus returns or account switches, do a complete refresh
+          // but still try to maintain visual continuity
+          projectBloc.add(
+            const LoadProjectsRequested(
+              forceRefresh: true,
+              skipLoadingState: true, // Smoother UX for focus returns
+            ),
+          );
+        }
+      });
+
+      if (kDebugMode) {
+        debugPrint('✅ [APP] Project dashboard refresh triggered successfully');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ [APP] Error refreshing project dashboard: $e');
+      }
+    }
+  }
+
+  /// Setup navigation listener to track screen transitions
+  void _setupNavigationListener() {
+    Future.delayed(Duration.zero, () {
+      // Listen to router changes after the widget tree is built
+      AppRouter.router.routeInformationProvider.addListener(_handleRouteChange);
+    });
+  }
+
+  /// Handle route changes to detect navigation between project screens
+  void _handleRouteChange() {
+    if (!mounted) return;
+
+    final location = AppRouter.router.routeInformationProvider.value.uri.path;
+
+    // Check if we're entering or leaving a project detail view
+    final isProjectDetail = location.contains('/projects/') && !location.endsWith('/projects');
+
+    if (isProjectDetail && !_isInProjectDetailView) {
+      // We're entering a project detail view
+      _isInProjectDetailView = true;
+      _lastProjectDetailVisit = DateTime.now();
+      if (kDebugMode) {
+        debugPrint('🚶 [APP] Entered project detail view: $location');
+      }
+    } else if (!isProjectDetail && _isInProjectDetailView) {
+      // We're returning from a project detail view to another screen
+      _isInProjectDetailView = false;
+
+      if (kDebugMode) {
+        debugPrint('🔙 [APP] Returning from project detail view to: $location');
+      }
+
+      // If we're going back to the projects list, refresh the data
+      if (location.endsWith('/projects') || location == '/') {
+        _handleReturnFromProjectDetail();
+      }
+    }
+  }
+
+  /// Handle return from project detail view
+  void _handleReturnFromProjectDetail() {
+    // Get the current location to extract recently viewed project ID
+    final location = AppRouter.router.routeInformationProvider.value.uri.path;
+    final recentProjectId = _extractProjectIdFromRoute(location);
+
+    // Calculate time since last visit (to avoid excessive refreshes)
+    final now = DateTime.now();
+    final timeSinceVisit = _lastProjectDetailVisit != null
+        ? now.difference(_lastProjectDetailVisit!)
+        : const Duration(seconds: 0);
+
+    // Always refresh when returning from detail view, but with different approaches:
+    // 1. For quick navigations (< 0.5s): Use skipLoadingState to avoid visual flicker
+    // 2. For normal navigations: Clear cache and get fresh data
+    if (kDebugMode) {
+      debugPrint(
+        '🔄 [APP] Refreshing project data after returning from detail view (time since visit: ${timeSinceVisit.inMilliseconds}ms)',
+      );
+    }
+
+    try {
+      final projectBloc = context.read<ProjectBloc>();
+
+      // If it's a very quick navigation, use the specialized event
+      if (timeSinceVisit.inMilliseconds < 500) {
+        projectBloc.add(RefreshProjectsAfterDetailView(recentProjectId: recentProjectId));
+      } else {
+        // For longer navigations, force a cache clear and full refresh
+        // First clear cache to ensure fresh data
+        projectBloc.add(const RefreshProjectsWithCacheClear());
+
+        // Then trigger a refresh that shows the projects immediately (skip loading state)
+        Future.delayed(const Duration(milliseconds: 50), () {
+          if (mounted) {
+            projectBloc.add(const LoadProjectsRequested(skipLoadingState: true, forceRefresh: true));
+          }
+        });
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ [APP] Error dispatching refresh event: $e');
+      }
+      // Fallback to general refresh
+      _forceRefreshDashboard(fromDetailView: true);
+    }
+  }
+
+  /// Refresh the currently viewed project detail
+  /// [location] The current route path
+  void _refreshCurrentProjectDetail(String location) {
+    try {
+      // Extract project ID from the route
+      final projectId = _extractProjectIdFromRoute(location);
+
+      if (projectId != null) {
+        if (kDebugMode) {
+          debugPrint('🔄 [APP] Refreshing details for project: $projectId');
+        }
+
+        // Get project bloc and dispatch appropriate event
+        final projectBloc = context.read<ProjectBloc>();
+        projectBloc.add(LoadProjectDetailsRequested(projectId: projectId));
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ [APP] Error refreshing project detail: $e');
+      }
+    }
+  }
+
+  /// Extract project ID from a route path
+  /// Returns null if cannot extract
+  String? _extractProjectIdFromRoute(String route) {
+    // Pattern: /projects/{projectId} or /projects/{projectId}/something
+    final projectDetailPattern = RegExp(r'/projects/([^/]+)');
+    final match = projectDetailPattern.firstMatch(route);
+
+    if (match != null && match.groupCount >= 1) {
+      return match.group(1);
+    }
+    return null;
   }
 
   /// Handles app lifecycle state changes.
@@ -386,6 +612,50 @@ class _AppWrapperState extends State<_AppWrapper> with WidgetsBindingObserver {
 
     // Use session validation service for comprehensive session management
     _validateSessionOnResume();
+
+    // Get current route to make intelligent refresh decisions
+    final currentLocation = AppRouter.router.routeInformationProvider.value.uri.path;
+    final isProjectsList = currentLocation.endsWith('/projects') || currentLocation == '/';
+    final isProjectDetail = currentLocation.contains('/projects/') && !currentLocation.endsWith('/projects');
+
+    // Mark the dashboard for refresh to ensure it will be refreshed when viewed
+    _markDashboardForRefresh();
+
+    // Account for potential account switches or data changes while in background
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (!mounted) return;
+
+      if (kDebugMode) {
+        debugPrint('📍 [APP] Resuming at location: $currentLocation');
+      }
+
+      try {
+        // If on projects list, aggressively refresh to ensure fresh data after resume
+        if (isProjectsList) {
+          final projectBloc = context.read<ProjectBloc>();
+
+          // Clear cache first to ensure fresh data
+          projectBloc.add(const RefreshProjectsWithCacheClear());
+
+          // Then immediately trigger a load with skipLoadingState for smoother UX
+          Future.delayed(const Duration(milliseconds: 50), () {
+            if (mounted) {
+              projectBloc.add(const LoadProjectsRequested(forceRefresh: true, skipLoadingState: true));
+            }
+          });
+        } else if (isProjectDetail) {
+          // If we're on project detail, refresh with special logic
+          _refreshCurrentProjectDetail(currentLocation);
+        }
+
+        // Notify all streams that app focus has returned
+        getIt<RealtimeApiStreams>().notifyAppFocusReturned();
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('❌ [APP] Error during app resume refresh: $e');
+        }
+      }
+    });
   }
 
   /// Validate session when app resumes from background using SessionValidationService
@@ -397,11 +667,11 @@ class _AppWrapperState extends State<_AppWrapper> with WidgetsBindingObserver {
       await sessionValidationService.onAppResume();
 
       if (kDebugMode) {
-        debugPrint('✅ [SECURITY] Session validation on resume completed');
+        debugPrint('[SECURITY] Session validation on resume completed');
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('❌ [SECURITY] Error validating session on resume: $e');
+        debugPrint('[SECURITY] Error validating session on resume: $e');
       }
     }
   }
@@ -410,7 +680,7 @@ class _AppWrapperState extends State<_AppWrapper> with WidgetsBindingObserver {
   void _onAppPaused() {
     // Update activity and save state when app goes to background
     if (kDebugMode) {
-      debugPrint('⏸️ [APP] Pausing - updating activity and saving state');
+      debugPrint('[APP] Pausing - updating activity and saving state');
     }
 
     _updateActivityOnPause();
@@ -425,11 +695,11 @@ class _AppWrapperState extends State<_AppWrapper> with WidgetsBindingObserver {
       await sessionValidationService.onAppPause();
 
       if (kDebugMode) {
-        debugPrint('✅ [SECURITY] Activity updated on pause');
+        debugPrint('[SECURITY] Activity updated on pause');
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('❌ [SECURITY] Error updating activity on pause: $e');
+        debugPrint('[SECURITY] Error updating activity on pause: $e');
       }
     }
   }
@@ -438,7 +708,7 @@ class _AppWrapperState extends State<_AppWrapper> with WidgetsBindingObserver {
   void _onAppDetached() {
     // Final cleanup, save critical data
     if (kDebugMode) {
-      debugPrint('🛑 [APP] Detaching - final cleanup');
+      debugPrint('[APP] Detaching - final cleanup');
     }
   }
 
@@ -451,7 +721,7 @@ class _AppWrapperState extends State<_AppWrapper> with WidgetsBindingObserver {
   /// Logs app lifecycle events.
   void _logAppLifecycle(String event) {
     if (kDebugMode) {
-      debugPrint('📱 [LIFECYCLE] $event');
+      debugPrint('[LIFECYCLE] $event');
     }
     // In production, send to analytics
   }

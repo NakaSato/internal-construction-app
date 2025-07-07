@@ -49,9 +49,7 @@ class NotificationListItem extends StatelessWidget {
                     Expanded(
                       child: Text(
                         notification.title,
-                        style: TextStyle(
-                          fontWeight: notification.isRead ? FontWeight.normal : FontWeight.bold,
-                        ),
+                        style: TextStyle(fontWeight: notification.isRead ? FontWeight.normal : FontWeight.bold),
                       ),
                     ),
                     _buildPriorityIndicator(),
@@ -63,10 +61,7 @@ class NotificationListItem extends StatelessWidget {
                     notification.message,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: Theme.of(context).textTheme.bodySmall?.color,
-                      fontSize: 14,
-                    ),
+                    style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color, fontSize: 14),
                   ),
                 ),
                 Row(
@@ -79,11 +74,7 @@ class NotificationListItem extends StatelessWidget {
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ),
-                    if (!notification.isRead)
-                      TextButton(
-                        onPressed: onMarkAsRead,
-                        child: const Text('Mark as read'),
-                      ),
+                    if (!notification.isRead) TextButton(onPressed: onMarkAsRead, child: const Text('Mark as read')),
                   ],
                 ),
               ],
@@ -124,7 +115,7 @@ class NotificationListItem extends StatelessWidget {
         iconData = Icons.business;
         iconColor = Colors.indigo;
         break;
-      case NotificationType.taskAssignment:
+      case NotificationType.taskAssigned: // Fixed from taskAssignment to taskAssigned
       case NotificationType.taskCreated:
       case NotificationType.taskStatusChanged:
       case NotificationType.taskOverdue:
@@ -166,16 +157,9 @@ class NotificationListItem extends StatelessWidget {
         iconData = Icons.work;
         iconColor = Colors.deepOrange;
         break;
-      default:
-        iconData = Icons.notifications;
-        iconColor = Colors.blue;
     }
 
-    return Icon(
-      iconData,
-      color: iconColor,
-      size: 24,
-    );
+    return Icon(iconData, color: iconColor, size: 24);
   }
 
   Widget _buildPriorityIndicator() {
@@ -212,21 +196,14 @@ class NotificationListItem extends StatelessWidget {
         ),
         child: Text(
           label,
-          style: TextStyle(
-            color: color,
-            fontSize: 10,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold),
         ),
       );
     } else {
       return Container(
         width: 12,
         height: 12,
-        decoration: BoxDecoration(
-          color: color,
-          shape: BoxShape.circle,
-        ),
+        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
       );
     }
   }

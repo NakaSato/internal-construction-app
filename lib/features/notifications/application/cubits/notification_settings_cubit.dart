@@ -2,7 +2,7 @@ import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:injectable/injectable.dart';
 
-import '../../../core/error/failures.dart';
+import '../../../../core/errors/failures.dart';
 import '../../domain/entities/notification_settings.dart';
 import '../../domain/repositories/notification_repository.dart';
 
@@ -36,10 +36,8 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
       final result = await _repository.updateNotificationSettings(updatedSettings);
 
       result.fold(
-        (failure) => emit(NotificationSettingsError(
-          _mapFailureToMessage(failure),
-          currentSettings: currentState.settings,
-        )),
+        (failure) =>
+            emit(NotificationSettingsError(_mapFailureToMessage(failure), currentSettings: currentState.settings)),
         (settings) => emit(NotificationSettingsLoaded(settings)),
       );
     }
@@ -49,9 +47,7 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
   Future<void> toggleEmailNotifications(bool enabled) async {
     if (state is NotificationSettingsLoaded) {
       final currentState = state as NotificationSettingsLoaded;
-      final updatedSettings = currentState.settings.copyWith(
-        emailNotifications: enabled,
-      );
+      final updatedSettings = currentState.settings.copyWith(emailNotifications: enabled);
       await updateSettings(updatedSettings);
     }
   }
@@ -60,9 +56,7 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
   Future<void> togglePushNotifications(bool enabled) async {
     if (state is NotificationSettingsLoaded) {
       final currentState = state as NotificationSettingsLoaded;
-      final updatedSettings = currentState.settings.copyWith(
-        pushNotifications: enabled,
-      );
+      final updatedSettings = currentState.settings.copyWith(pushNotifications: enabled);
       await updateSettings(updatedSettings);
     }
   }
@@ -71,9 +65,7 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
   Future<void> toggleSmsNotifications(bool enabled) async {
     if (state is NotificationSettingsLoaded) {
       final currentState = state as NotificationSettingsLoaded;
-      final updatedSettings = currentState.settings.copyWith(
-        smsNotifications: enabled,
-      );
+      final updatedSettings = currentState.settings.copyWith(smsNotifications: enabled);
       await updateSettings(updatedSettings);
     }
   }
@@ -83,12 +75,13 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
     if (state is NotificationSettingsLoaded) {
       final currentState = state as NotificationSettingsLoaded;
       final currentQuietHours = currentState.settings.quietHours;
-      
+
       QuietHoursSettings? updatedQuietHours;
-      
+
       if (enabled) {
         // Enable with default settings if not configured before
-        updatedQuietHours = currentQuietHours?.copyWith(enabled: true) ?? 
+        updatedQuietHours =
+            currentQuietHours?.copyWith(enabled: true) ??
             QuietHoursSettings(
               enabled: true,
               startTime: '22:00',
@@ -100,11 +93,9 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
         // Disable existing settings
         updatedQuietHours = currentQuietHours.copyWith(enabled: false);
       }
-      
-      final updatedSettings = currentState.settings.copyWith(
-        quietHours: updatedQuietHours,
-      );
-      
+
+      final updatedSettings = currentState.settings.copyWith(quietHours: updatedQuietHours);
+
       await updateSettings(updatedSettings);
     }
   }
@@ -113,9 +104,7 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
   Future<void> updateQuietHours(QuietHoursSettings quietHours) async {
     if (state is NotificationSettingsLoaded) {
       final currentState = state as NotificationSettingsLoaded;
-      final updatedSettings = currentState.settings.copyWith(
-        quietHours: quietHours,
-      );
+      final updatedSettings = currentState.settings.copyWith(quietHours: quietHours);
       await updateSettings(updatedSettings);
     }
   }
@@ -125,28 +114,35 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
     if (state is NotificationSettingsLoaded) {
       final currentState = state as NotificationSettingsLoaded;
       final currentDigest = currentState.settings.digestSettings;
-      
+
       DigestSettings? updatedDigest;
-      
+
       if (enabled) {
         // Enable with default settings if not configured before
-        updatedDigest = currentDigest?.copyWith(enabled: true) ?? 
-            DigestSettings(
-              enabled: true,
-              frequency: 'daily',
-              time: '08:00',
-              timezone: 'Asia/Bangkok',
-              includeLowPriority: false,
-            );
+        if (currentDigest != null) {
+          // Ensure all required fields have values
+          updatedDigest = currentDigest.copyWith(
+            enabled: true,
+            frequency: currentDigest.frequency.isEmpty ? 'daily' : currentDigest.frequency,
+            time: currentDigest.time ?? '08:00',
+          );
+        } else {
+          // Create new settings with defaults
+          updatedDigest = DigestSettings(
+            enabled: true,
+            frequency: 'daily',
+            time: '08:00',
+            timezone: 'Asia/Bangkok',
+            includeLowPriority: false,
+          );
+        }
       } else if (currentDigest != null) {
         // Disable existing settings
         updatedDigest = currentDigest.copyWith(enabled: false);
       }
-      
-      final updatedSettings = currentState.settings.copyWith(
-        digestSettings: updatedDigest,
-      );
-      
+
+      final updatedSettings = currentState.settings.copyWith(digestSettings: updatedDigest);
+
       await updateSettings(updatedSettings);
     }
   }
@@ -155,40 +151,33 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
   Future<void> updateDigestSettings(DigestSettings digestSettings) async {
     if (state is NotificationSettingsLoaded) {
       final currentState = state as NotificationSettingsLoaded;
-      final updatedSettings = currentState.settings.copyWith(
-        digestSettings: digestSettings,
-      );
+      final updatedSettings = currentState.settings.copyWith(digestSettings: digestSettings);
       await updateSettings(updatedSettings);
     }
   }
 
   /// Update notification type preference
-  Future<void> updateTypePreference(
-    String notificationType, 
-    NotificationTypePreference preference,
-  ) async {
+  Future<void> updateTypePreference(String notificationType, NotificationTypePreference preference) async {
     if (state is NotificationSettingsLoaded) {
       final currentState = state as NotificationSettingsLoaded;
-      final currentPreferences = Map<String, NotificationTypePreference>.from(
-        currentState.settings.preferences,
-      );
-      
+      final currentPreferences = Map<String, NotificationTypePreference>.from(currentState.settings.preferences);
+
       currentPreferences[notificationType] = preference;
-      
-      final updatedSettings = currentState.settings.copyWith(
-        preferences: currentPreferences,
-      );
-      
+
+      final updatedSettings = currentState.settings.copyWith(preferences: currentPreferences);
+
       await updateSettings(updatedSettings);
     }
   }
 
   /// Map failure to user-friendly message
-  String _mapFailureToMessage(Failure failure) {
+  String _mapFailureToMessage(Object? failure) {
     if (failure is ServerFailure) {
       return failure.message;
     } else if (failure is NetworkFailure) {
       return 'Network error. Please check your connection.';
+    } else if (failure is Failure) {
+      return failure.message;
     } else {
       return 'Unexpected error occurred. Please try again.';
     }

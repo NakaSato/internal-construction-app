@@ -8,6 +8,7 @@ import '../../../features/projects/presentation/widgets/project_card.dart';
 import '../../permissions/presentation/widgets/permission_widgets.dart';
 
 /// Project list section with loading, empty, and error states
+/// Uses composition pattern with smaller, focused components
 class ProjectListSection extends StatefulWidget {
   const ProjectListSection({super.key});
 
@@ -21,167 +22,256 @@ class _ProjectListSectionState extends State<ProjectListSection> {
     super.initState();
     // Load projects if not already loaded
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final state = context.read<ProjectBloc>().state;
-      if (state is! ProjectsLoaded && state is! ProjectLoading) {
-        context.read<ProjectBloc>().add(
-          const LoadProjectsRequested(
-            query: ProjectsQuery(
-              pageSize: 1000, // Load up to 1000 projects to show all
-              pageNumber: 1,
-            ),
-          ),
-        );
-      }
+      _loadInitialProjectsIfNeeded();
     });
+  }
+
+  /// Helper method to load initial projects if needed
+  void _loadInitialProjectsIfNeeded() {
+    final state = context.read<ProjectBloc>().state;
+    if (state is! ProjectsLoaded && state is! ProjectLoading) {
+      context.read<ProjectBloc>().add(
+        const LoadProjectsRequested(
+          query: ProjectsQuery(
+            pageSize: 1000, // Load up to 1000 projects to show all
+            pageNumber: 1,
+          ),
+        ),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return const Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Header section with title and create button
-        _buildHeader(context),
-        const SizedBox(height: 16),
-
-        // Content section - Use the shared ProjectBloc instance from app level
-        BlocBuilder<ProjectBloc, ProjectState>(
-          builder: (context, state) {
-            if (state is ProjectLoading) {
-              return const _LoadingState();
-            } else if (state is ProjectsLoaded) {
-              final allProjects = state.projectsResponse.items;
-
-              if (allProjects.isEmpty) {
-                return const _EmptyState();
-              }
-
-              return _ProjectList(projects: allProjects);
-            } else if (state is ProjectError) {
-              return _ErrorState(message: state.message);
-            }
-
-            return const SizedBox.shrink();
-          },
-        ),
+        _ProjectListHeader(),
+        SizedBox(height: 16),
+        // Content section - Uses the shared ProjectBloc instance from app level
+        _ProjectListContent(),
       ],
     );
   }
+}
 
-  /// Build header with title and create button
-  Widget _buildHeader(BuildContext context) {
+/// Dedicated header component for project list
+/// Uses const constructor for better performance
+class _ProjectListHeader extends StatelessWidget {
+  const _ProjectListHeader();
+
+  @override
+  Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          'Projects',
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: Theme.of(context).colorScheme.onSurface,
-          ),
-        ),
+        const _SectionTitle(),
         // Permission-aware Create Project button
-        PermissionBuilder(
-          resource: 'projects',
-          action: 'create',
-          fallback: const SizedBox.shrink(),
-          loading: const SizedBox.shrink(),
-          builder: (context, hasPermission) {
-            if (!hasPermission) {
-              return const SizedBox.shrink();
-            }
-
-            return FilledButton.icon(
-              onPressed: () {
-                context.push('/projects/create');
-              },
-              icon: const Icon(Icons.add, size: 18),
-              label: const Text('Create Project'),
-              style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                textStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
-              ),
-            );
-          },
-        ),
+        const _CreateProjectButton(),
       ],
+    );
+  }
+}
+
+/// Dedicated content component for project list
+/// Uses BlocBuilder for reactive UI
+class _ProjectListContent extends StatelessWidget {
+  const _ProjectListContent();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<ProjectBloc, ProjectState>(
+      builder: (context, state) {
+        if (state is ProjectLoading) {
+          return const _LoadingState();
+        } else if (state is ProjectsLoaded) {
+          final allProjects = state.projectsResponse.items;
+
+          if (allProjects.isEmpty) {
+            return const _EmptyState();
+          }
+
+          return _ProjectList(projects: allProjects);
+        } else if (state is ProjectError) {
+          return _ErrorState(message: state.message);
+        }
+
+        return const SizedBox.shrink();
+      },
+    );
+  }
+
+  // _buildHeader has been replaced with _ProjectListHeader class
+}
+
+/// Dedicated section title component
+/// Uses const constructor for better performance
+class _SectionTitle extends StatelessWidget {
+  const _SectionTitle();
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Text(
+      'Projects',
+      style: textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w600, color: colorScheme.onSurface),
+    );
+  }
+}
+
+/// Dedicated create project button component
+/// Uses const constructor for better performance
+class _CreateProjectButton extends StatelessWidget {
+  const _CreateProjectButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return PermissionBuilder(
+      resource: 'projects',
+      action: 'create',
+      fallback: const SizedBox.shrink(),
+      loading: const SizedBox.shrink(),
+      builder: (context, hasPermission) {
+        if (!hasPermission) {
+          return const SizedBox.shrink();
+        }
+
+        return _ActionButton(onPressed: () => context.push('/projects/create'), label: 'Create Project');
+      },
+    );
+  }
+}
+
+/// Reusable action button component
+/// Uses const constructor for better performance
+class _ActionButton extends StatelessWidget {
+  final VoidCallback onPressed;
+  final String label;
+
+  const _ActionButton({required this.onPressed, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return FilledButton.icon(
+      onPressed: onPressed,
+      icon: const Icon(Icons.add, size: 18),
+      label: Text(label),
+      style: FilledButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        textStyle: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+      ),
     );
   }
 }
 
 /// Loading state widget
+/// Optimized with const constructors and broken down into smaller focused components
 class _LoadingState extends StatelessWidget {
   const _LoadingState();
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 200,
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(
-              width: 32,
-              height: 32,
-              child: CircularProgressIndicator(
-                strokeWidth: 3,
-                valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Loading projects...',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
-            ),
-          ],
+    return const SizedBox(height: 200, child: Center(child: _LoadingIndicator()));
+  }
+}
+
+/// Dedicated loading indicator component
+/// Uses const constructor for better performance
+class _LoadingIndicator extends StatelessWidget {
+  const _LoadingIndicator();
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        SizedBox(
+          width: 32,
+          height: 32,
+          child: CircularProgressIndicator(
+            strokeWidth: 3,
+            valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
+          ),
         ),
-      ),
+        const SizedBox(height: 16),
+        Text('Loading projects...', style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant)),
+      ],
     );
   }
 }
 
 /// Empty state widget
+/// Uses composition pattern with smaller, focused components
 class _EmptyState extends StatelessWidget {
   const _EmptyState();
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainerHighest,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(Icons.folder_open_outlined, size: 20, color: Theme.of(context).colorScheme.onSurfaceVariant),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'No projects yet',
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
+    return const Center(child: _EmptyStateContent());
+  }
+}
+
+/// Dedicated content for the empty state
+/// Uses const constructor for better performance
+class _EmptyStateContent extends StatelessWidget {
+  const _EmptyStateContent();
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        // Icon container
+        _EmptyStateIcon(color: colorScheme.surfaceContainerHighest, iconColor: colorScheme.onSurfaceVariant),
+        const SizedBox(height: 8),
+        // Title
+        Text(
+          'No projects yet',
+          style: textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600, color: colorScheme.onSurface),
+        ),
+        const SizedBox(height: 2),
+        // Subtitle
+        Flexible(
+          child: Text(
             'Projects will appear here once they are created',
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+            style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
             textAlign: TextAlign.center,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
-        ],
-      ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Dedicated icon component for empty state
+/// Uses const constructor for better performance
+class _EmptyStateIcon extends StatelessWidget {
+  final Color color;
+  final Color iconColor;
+
+  const _EmptyStateIcon({required this.color, required this.iconColor});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+      child: Icon(Icons.folder_open_outlined, size: 20, color: iconColor),
     );
   }
 }
@@ -429,6 +519,8 @@ class _ErrorState extends StatelessWidget {
 }
 
 /// Project list widget
+/// Project list widget
+/// Optimized with const constructors and broken down into smaller components
 class _ProjectList extends StatelessWidget {
   final List<Project> projects;
 
@@ -441,7 +533,7 @@ class _ProjectList extends StatelessWidget {
         // Use cache-clearing refresh for fresh data
         context.read<ProjectBloc>().add(
           const RefreshProjectsWithCacheClear(
-            query: ProjectsQuery(
+            query: const ProjectsQuery(
               pageSize: 1000, // Load up to 1000 projects to show all
               pageNumber: 1,
             ),
@@ -450,25 +542,54 @@ class _ProjectList extends StatelessWidget {
         // Wait a bit for the refresh to complete
         await Future.delayed(const Duration(milliseconds: 300));
       },
-      child: ListView.separated(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: projects.length,
-        separatorBuilder: (context, index) => const SizedBox.shrink(),
-        itemBuilder: (context, index) {
-          final project = projects[index];
-          return AnimatedContainer(
-            duration: Duration(milliseconds: 200 + (index * 50)),
-            curve: Curves.easeOutCubic,
-            child: ProjectCard(
-              project: project,
-              onTap: () {
-                context.push('/projects/${project.projectId}');
-              },
-            ),
-          );
-        },
-      ),
+      child: _ProjectListView(projects: projects),
     );
   }
 }
+
+/// Dedicated list view component for projects
+/// Uses const constructor for better performance
+class _ProjectListView extends StatelessWidget {
+  final List<Project> projects;
+
+  const _ProjectListView({required this.projects});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: projects.length,
+      itemBuilder: (context, index) {
+        final project = projects[index];
+        return _AnimatedProjectCard(
+          project: project,
+          index: index,
+          onTap: () => context.push('/projects/${project.projectId}'),
+        );
+      },
+    );
+  }
+}
+
+/// Dedicated animated project card component
+/// Extracts animation logic from the list builder
+class _AnimatedProjectCard extends StatelessWidget {
+  final Project project;
+  final int index;
+  final VoidCallback onTap;
+
+  const _AnimatedProjectCard({required this.project, required this.index, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: Duration(milliseconds: 300 + (index * 50)),
+      curve: Curves.easeOutCubic,
+      margin: const EdgeInsets.only(bottom: 16),
+      child: ProjectCard(project: project, onTap: onTap, index: index),
+    );
+  }
+}
+
+// _EnhancedProjectCard class was moved to project_card.dart

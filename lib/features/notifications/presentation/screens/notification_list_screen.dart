@@ -3,12 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../application/cubits/notification_cubit.dart';
 import '../../domain/entities/notification.dart';
-import '../widgets/notification_filter_bar.dart';
-import '../widgets/notification_empty_state.dart';
 import '../widgets/notification_details_sheet.dart';
 import '../widgets/error_state_widget.dart';
 import '../widgets/notification_list_view.dart';
-import '../helpers/notification_icons.dart';
+import 'notification_settings_screen.dart';
 
 /// Screen for displaying and managing notifications
 class NotificationListScreen extends StatefulWidget {
@@ -20,7 +18,7 @@ class NotificationListScreen extends StatefulWidget {
 
 class _NotificationListScreenState extends State<NotificationListScreen> {
   final _scrollController = ScrollController();
-  
+
   @override
   void initState() {
     super.initState();
@@ -38,14 +36,8 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
           PopupMenuButton<String>(
             onSelected: _handleMenuSelection,
             itemBuilder: (BuildContext context) => [
-              const PopupMenuItem<String>(
-                value: 'settings',
-                child: Text('Notification Settings'),
-              ),
-              const PopupMenuItem<String>(
-                value: 'refresh',
-                child: Text('Refresh'),
-              ),
+              const PopupMenuItem<String>(value: 'settings', child: Text('Notification Settings')),
+              const PopupMenuItem<String>(value: 'refresh', child: Text('Refresh')),
             ],
           ),
         ],
@@ -111,36 +103,31 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
     // Navigate if action URL is present
     if (notification.actionUrl != null) {
       // TODO: Navigate to the specified route
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Navigating to: ${notification.actionUrl}')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Navigating to: ${notification.actionUrl}')));
     }
 
     // Show details
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => _buildNotificationDetailsSheet(notification),
-    );
+    showModalBottomSheet(context: context, builder: (context) => _buildNotificationDetailsSheet(notification));
   }
 
   Widget _buildNotificationDetailsSheet(AppNotification notification) {
     return NotificationDetailsSheet(
       notification: notification,
       onDelete: () => _deleteNotification(notification.id),
-      onNavigateToAction: notification.actionUrl != null ? () {
-        // TODO: Navigate to action URL
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Navigating to: ${notification.actionUrl}'),
-          ),
-        );
-      } : null,
+      onNavigateToAction: notification.actionUrl != null
+          ? () {
+              // TODO: Navigate to action URL
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text('Navigating to: ${notification.actionUrl}')));
+            }
+          : null,
     );
   }
 
   void _deleteNotification(String id) {
     final cubit = context.read<NotificationCubit>();
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: const Text('Notification deleted'),
@@ -154,17 +141,14 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
         ),
       ),
     );
-    
+
     cubit.deleteNotification(id);
   }
 
   void _handleMenuSelection(String value) {
     switch (value) {
       case 'settings':
-        // TODO: Navigate to notification settings
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Opening notification settings')),
-        );
+        Navigator.of(context).push(MaterialPageRoute(builder: (context) => const NotificationSettingsScreen()));
         break;
       case 'refresh':
         context.read<NotificationCubit>().fetchNotifications(refresh: true);
@@ -186,79 +170,5 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     super.dispose();
-  }
-
-  IconData _getIconForType(NotificationType type) {
-    switch (type) {
-      case NotificationType.info:
-        return Icons.info_outline;
-      case NotificationType.warning:
-        return Icons.warning_amber_outlined;
-      case NotificationType.error:
-        return Icons.error_outline;
-      case NotificationType.success:
-        return Icons.check_circle_outline;
-      case NotificationType.projectUpdate:
-      case NotificationType.projectStatusChanged:
-      case NotificationType.projectCreated:
-      case NotificationType.projectDeleted:
-      case NotificationType.projectLocationUpdated:
-        return Icons.business;
-      case NotificationType.taskAssignment:
-      case NotificationType.taskCreated:
-      case NotificationType.taskStatusChanged:
-      case NotificationType.taskOverdue:
-      case NotificationType.taskCompleted:
-        return Icons.task_alt;
-      case NotificationType.reportSubmission:
-      case NotificationType.dailyReportSubmitted:
-      case NotificationType.weeklyReportSubmitted:
-      case NotificationType.reportApproved:
-      case NotificationType.reportRejected:
-        return Icons.summarize;
-      case NotificationType.systemMaintenance:
-      case NotificationType.systemAnnouncement:
-      case NotificationType.maintenanceScheduled:
-      case NotificationType.securityAlert:
-        return Icons.settings;
-      case NotificationType.approval:
-      case NotificationType.userRoleChanged:
-        return Icons.verified_user;
-      case NotificationType.calendarEventReminder:
-      case NotificationType.calendarEventCreated:
-      case NotificationType.eventConflict:
-      case NotificationType.resourceConflict:
-        return Icons.event;
-      case NotificationType.workRequestCreated:
-      case NotificationType.workRequestApproved:
-      case NotificationType.workRequestCompleted:
-      case NotificationType.weeklyWorkRequestCreated:
-        return Icons.work;
-      default:
-        return Icons.notifications;
-    }
-  }
-
-  Color _getColorForPriority(NotificationPriority priority) {
-    switch (priority) {
-      case NotificationPriority.critical:
-        return Colors.red;
-      case NotificationPriority.high:
-        return Colors.orange;
-      case NotificationPriority.medium:
-        return Colors.blue;
-      case NotificationPriority.low:
-        return Colors.grey;
-      default:
-        return Colors.blue;
-    }
-  }
-
-  String _formatDate(DateTime? dateTime) {
-    if (dateTime == null) return 'N/A';
-    
-    // For simplicity, using a basic formatter
-    // In a real app, use intl package for proper date formatting
-    return '${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')} ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
   }
 }

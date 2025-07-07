@@ -36,12 +36,13 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
 
   // Enhanced real-time system variables
   StreamSubscription<RealtimeProjectUpdate>? _realtimeApiSubscription;
+  StreamSubscription? _appFocusSubscription; // App focus event subscription
   late final RealtimeApiStreams _realtimeApiStreams;
+  _AppLifecycleObserver? _lifecycleObserver; // App lifecycle observer
   bool _isRealtimeConnected = false;
 
   // Live reload interval (30 seconds)
   static const Duration _refreshInterval = Duration(seconds: 30);
-
   @override
   void initState() {
     super.initState();
@@ -55,17 +56,57 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
     // Listen for authentication state changes throughout the app lifecycle
     _setupAuthenticationListener();
 
-    // Check if we're coming back from a project detail screen
+    // Enhanced logic for initializing or refreshing data when screen becomes visible
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final currentState = context.read<ProjectBloc>().state;
-      if (currentState is ProjectsLoaded) {
-        debugPrint('🔍 Project List: Already has projects data, no need to refresh');
-      } else {
-        debugPrint('🔍 Project List: No current projects data, initializing');
-        // Check authentication and start if authenticated
-        _checkAuthAndInitializeIfAuthenticated();
+      _initializeOrRefreshData();
+
+      // Check route arguments for navigation context
+      final args = ModalRoute.of(context)?.settings.arguments;
+      if (args == 'fromAccountSwitch') {
+        debugPrint('🔄 Project List: Account switch detected - forcing data refresh');
+        _forceRefreshWithCacheClear();
       }
     });
+
+    // Set up app lifecycle observer for refresh on resume
+    _setupAppLifecycleListener();
+
+    // Listen for app-wide focus events from RealtimeApiStreams
+    _appFocusSubscription = _realtimeApiStreams.appFocusStream.listen((hasFocus) {
+      if (!mounted) return;
+      if (hasFocus) {
+        debugPrint('🌟 Project List: App focus returned - refreshing data');
+        _silentRefresh();
+      }
+    });
+  }
+
+  /// Initialize or refresh data based on current state
+  void _initializeOrRefreshData() {
+    final currentState = context.read<ProjectBloc>().state;
+
+    if (currentState is ProjectsLoaded) {
+      // Check if we have data already, but refresh if it's older than 30 seconds
+      // ProjectsResponse doesn't have a timestamp, so we'll use a simple approach
+      debugPrint('🔍 Project List: Has projects data, refreshing silently to ensure it\'s up to date');
+      _silentRefresh();
+    } else {
+      debugPrint('🔍 Project List: No current projects data, initializing');
+      // Check authentication and start if authenticated
+      _checkAuthAndInitializeIfAuthenticated();
+    }
+  }
+
+  /// Set up app lifecycle observer
+  void _setupAppLifecycleListener() {
+    _lifecycleObserver = _AppLifecycleObserver(
+      onResume: () {
+        if (!mounted) return;
+        debugPrint('🌟 Project List: App lifecycle resumed - refreshing data');
+        _silentRefresh();
+      },
+    );
+    WidgetsBinding.instance.addObserver(_lifecycleObserver!);
   }
 
   /// Set up authentication state listener to handle login/logout
@@ -107,6 +148,29 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
     // Initialize both real-time systems
     _checkAuthAndInitializeRealtime();
     _initializeRealtime();
+
+    // Initialize app focus listener to refresh data when app focus returns
+    _initializeAppFocusListener();
+  }
+
+  /// Initialize app focus listener to refresh projects when app focus returns
+  void _initializeAppFocusListener() {
+    // Cancel any existing subscription
+    _appFocusSubscription?.cancel();
+
+    // Subscribe to app focus events
+    _appFocusSubscription = _realtimeApiStreams.appFocusStream.listen((hasFocus) {
+      if (!mounted) return;
+
+      debugPrint('📱 Project List: App focus returned, refreshing projects data');
+
+      // Refresh projects data when focus returns
+      _forceRefreshWithCacheClear();
+    });
+
+    if (kDebugMode) {
+      debugPrint('📱 Project List: App focus listener initialized');
+    }
   }
 
   /// Clean up services when user is unauthenticated
@@ -116,6 +180,10 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
       _refreshTimer?.cancel();
       _isLiveReloadEnabled = false;
     }
+
+    // Cancel app focus subscription
+    _appFocusSubscription?.cancel();
+    _appFocusSubscription = null;
 
     // Disconnect real-time services
     _disconnectRealtime();
@@ -354,6 +422,13 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
     _stopLiveReload();
     _stopLiveApiUpdates();
     _authSubscription?.cancel();
+    _appFocusSubscription?.cancel();
+
+    // Remove lifecycle observer
+    if (_lifecycleObserver != null) {
+      WidgetsBinding.instance.removeObserver(_lifecycleObserver!);
+      _lifecycleObserver = null;
+    }
 
     // Stop enhanced real-time updates
     context.read<ProjectBloc>().add(const StopProjectRealtimeUpdates());
@@ -447,10 +522,12 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
   void _onSearchChanged(String searchTerm) {
     if (searchTerm.isEmpty) {
       // Load all projects if search is empty
-      context.read<ProjectBloc>().add(LoadProjectsRequested(
-        query: _currentQuery,
-        skipLoadingState: true, // Skip loading state for better UX during search
-      ));
+      context.read<ProjectBloc>().add(
+        LoadProjectsRequested(
+          query: _currentQuery,
+          skipLoadingState: true, // Skip loading state for better UX during search
+        ),
+      );
     } else {
       // Search projects with current filters
       context.read<ProjectBloc>().add(SearchProjectsRequested(searchTerm: searchTerm, filters: _currentQuery));
@@ -467,11 +544,13 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
     if (searchTerm.isNotEmpty) {
       context.read<ProjectBloc>().add(SearchProjectsRequested(searchTerm: searchTerm, filters: newQuery));
     } else {
-      context.read<ProjectBloc>().add(LoadProjectsRequested(
-        query: newQuery,
-        skipLoadingState: false, // Show loading state when applying filters
-        forceRefresh: true,      // Always get fresh data when filters change
-      ));
+      context.read<ProjectBloc>().add(
+        LoadProjectsRequested(
+          query: newQuery,
+          skipLoadingState: false, // Show loading state when applying filters
+          forceRefresh: true, // Always get fresh data when filters change
+        ),
+      );
     }
   }
 
@@ -543,13 +622,28 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
       debugPrint('🔄 ProjectListScreen: Force refreshing projects with cache clear');
     }
 
+    // Check authentication state before refreshing
+    final authState = context.read<AuthBloc>().state;
+    if (authState is! AuthAuthenticated) {
+      debugPrint('⚠️ ProjectListScreen: Cannot refresh - user not authenticated');
+      return;
+    }
+
     // Show refresh indicator
     setState(() {
       _isRefreshing = true;
     });
 
-    // Use the dedicated event that clears cache first
-    context.read<ProjectBloc>().add(const RefreshProjectsWithCacheClear());
+    try {
+      // Use the dedicated event that clears cache first
+      context.read<ProjectBloc>().add(const RefreshProjectsWithCacheClear());
+
+      if (kDebugMode) {
+        debugPrint('✅ ProjectListScreen: Refresh with cache clear initiated');
+      }
+    } catch (e) {
+      debugPrint('❌ ProjectListScreen: Error refreshing projects: $e');
+    }
 
     // Hide the refresh indicator after a delay
     Future.delayed(const Duration(seconds: 1), () {
@@ -564,87 +658,138 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
+      backgroundColor: Theme.of(context).colorScheme.background,
       body: Column(
         children: [
-          // App Header
-          const ProjectAppHeader(),
+          // App Header with subtle elevation
+          Container(
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              boxShadow: [
+                BoxShadow(
+                  color: Theme.of(context).colorScheme.shadow.withOpacity(0.05),
+                  offset: const Offset(0, 2),
+                  blurRadius: 6,
+                  spreadRadius: 0,
+                ),
+              ],
+            ),
+            child: const ProjectAppHeader(),
+          ),
 
           // Search and Filter Bar with Real-time Status
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.surface,
-              boxShadow: [
-                BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4, offset: const Offset(0, 2)),
-              ],
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2))],
             ),
             child: Column(
               children: [
                 // Real-time connection status
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  margin: const EdgeInsets.only(bottom: 12),
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  margin: const EdgeInsets.only(bottom: 16),
                   decoration: BoxDecoration(
                     color: _isRealtimeConnected
-                        ? Colors.green.withValues(alpha: 0.1)
-                        : Colors.grey.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: _isRealtimeConnected ? Colors.green : Colors.grey, width: 1),
+                        ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3)
+                        : Theme.of(context).colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 6, offset: const Offset(0, 2)),
+                    ],
                   ),
                   child: Row(
-                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Icon(
-                        _isRealtimeConnected ? Icons.wifi : Icons.wifi_off,
-                        color: _isRealtimeConnected ? Colors.green : Colors.grey,
-                        size: 16,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        _isRealtimeConnected ? 'Live Updates Active' : 'Real-time Offline',
-                        style: TextStyle(
-                          color: _isRealtimeConnected ? Colors.green.shade700 : Colors.grey.shade600,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      // Force refresh button
-                      InkWell(
-                        onTap: _forceRefreshWithCacheClear,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: Colors.blue.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(4),
-                            border: Border.all(color: Colors.blue, width: 1),
+                      // Status indicator
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Animated pulsing dot
+                          AnimatedContainer(
+                            duration: const Duration(milliseconds: 1000),
+                            height: 10,
+                            width: 10,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: _isRealtimeConnected
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Theme.of(context).colorScheme.outline,
+                              boxShadow: _isRealtimeConnected
+                                  ? [
+                                      BoxShadow(
+                                        color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
+                                        blurRadius: 8,
+                                        spreadRadius: 1,
+                                      ),
+                                    ]
+                                  : null,
+                            ),
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.refresh, color: Colors.blue, size: 12),
-                              const SizedBox(width: 4),
-                              Text(
-                                'Force Refresh',
-                                style: TextStyle(color: Colors.blue, fontSize: 10, fontWeight: FontWeight.w600),
-                              ),
-                            ],
+                          const SizedBox(width: 8),
+                          Icon(
+                            _isRealtimeConnected ? Icons.wifi : Icons.wifi_off,
+                            color: _isRealtimeConnected
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context).colorScheme.outline,
+                            size: 18,
                           ),
-                        ),
+                          const SizedBox(width: 8),
+                          Text(
+                            _isRealtimeConnected ? 'Live Updates Active' : 'Real-time Offline',
+                            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                              color: _isRealtimeConnected
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Theme.of(context).colorScheme.onSurfaceVariant,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
                       ),
 
-                      if (_isSilentRefreshing) ...[
-                        const SizedBox(width: 8),
-                        SizedBox(
-                          width: 12,
-                          height: 12,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: _isRealtimeConnected ? Colors.green : Colors.grey,
+                      // Controls
+                      Row(
+                        children: [
+                          // Force refresh button
+                          ElevatedButton.icon(
+                            onPressed: _forceRefreshWithCacheClear,
+                            icon: Icon(
+                              Icons.refresh_rounded,
+                              size: 16,
+                              color: Theme.of(context).colorScheme.onPrimaryContainer,
+                            ),
+                            label: Text(
+                              'Refresh',
+                              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                                color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              elevation: 0,
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
                           ),
-                        ),
-                      ],
+
+                          if (_isSilentRefreshing) ...[
+                            const SizedBox(width: 12),
+                            SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
                     ],
                   ),
                 ),
@@ -656,105 +801,171 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
                       children: [
                         // Project Count Badge
                         if (projectState is ProjectsLoaded) ...[
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                             decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.primaryContainer,
+                              color: Theme.of(context).colorScheme.secondaryContainer,
                               borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: Theme.of(context).colorScheme.primary, width: 1),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.folder_outlined, size: 16, color: Theme.of(context).colorScheme.primary),
-                                const SizedBox(width: 6),
-                                Text(
-                                  '${projectState.projectsResponse.totalCount}',
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: Theme.of(context).colorScheme.primary,
-                                    fontWeight: FontWeight.bold,
+                                Container(
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context).colorScheme.secondary.withOpacity(0.2),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    Icons.folder_rounded,
+                                    size: 14,
+                                    color: Theme.of(context).colorScheme.secondary,
                                   ),
                                 ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  projectState.projectsResponse.totalCount == 1 ? 'project' : 'projects',
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: Theme.of(context).colorScheme.primary,
-                                    fontWeight: FontWeight.w600,
+                                const SizedBox(width: 8),
+                                RichText(
+                                  text: TextSpan(
+                                    children: [
+                                      TextSpan(
+                                        text: '${projectState.projectsResponse.totalCount} ',
+                                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                          color: Theme.of(context).colorScheme.secondary,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      TextSpan(
+                                        text: projectState.projectsResponse.totalCount == 1 ? 'project' : 'projects',
+                                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                          color: Theme.of(context).colorScheme.secondary,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: 16),
                         ],
 
                         // Live Reload Status Badge
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                           decoration: BoxDecoration(
                             color: _isLiveReloadEnabled
-                                ? Theme.of(context).colorScheme.secondaryContainer
+                                ? Theme.of(context).colorScheme.tertiaryContainer
                                 : Theme.of(context).colorScheme.surfaceContainerHighest,
                             borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: _isLiveReloadEnabled
-                                  ? Theme.of(context).colorScheme.secondary
-                                  : Theme.of(context).colorScheme.outline,
-                              width: 1,
-                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.04),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(
-                                _isLiveReloadEnabled ? Icons.wifi : Icons.wifi_off,
-                                size: 16,
-                                color: _isLiveReloadEnabled
-                                    ? Theme.of(context).colorScheme.secondary
-                                    : Theme.of(context).colorScheme.onSurfaceVariant,
+                              AnimatedContainer(
+                                duration: const Duration(milliseconds: 300),
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: _isLiveReloadEnabled
+                                      ? Theme.of(context).colorScheme.tertiary.withOpacity(0.2)
+                                      : Theme.of(context).colorScheme.surfaceContainerHigh,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  _isLiveReloadEnabled ? Icons.sync : Icons.sync_disabled,
+                                  size: 14,
+                                  color: _isLiveReloadEnabled
+                                      ? Theme.of(context).colorScheme.tertiary
+                                      : Theme.of(context).colorScheme.onSurfaceVariant,
+                                ),
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                _isLiveReloadEnabled ? 'Live Updates: ON' : 'Live Updates: OFF',
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                'Auto Updates',
+                                style: Theme.of(context).textTheme.labelLarge?.copyWith(
                                   color: _isLiveReloadEnabled
-                                      ? Theme.of(context).colorScheme.secondary
+                                      ? Theme.of(context).colorScheme.tertiary
                                       : Theme.of(context).colorScheme.onSurfaceVariant,
-                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                               if (_isSilentRefreshing) ...[
                                 const SizedBox(width: 8),
                                 SizedBox(
-                                  width: 12,
-                                  height: 12,
+                                  width: 14,
+                                  height: 14,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.secondary),
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      _isLiveReloadEnabled
+                                          ? Theme.of(context).colorScheme.tertiary
+                                          : Theme.of(context).colorScheme.onSurfaceVariant,
+                                    ),
                                   ),
                                 ),
                               ],
-                              const SizedBox(width: 8),
+                              const SizedBox(width: 12),
+                              // Enhanced toggle switch
                               GestureDetector(
                                 onTap: _toggleLiveReload,
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 300),
+                                  width: 48,
+                                  height: 24,
+                                  padding: const EdgeInsets.all(2),
                                   decoration: BoxDecoration(
-                                    color: _isLiveReloadEnabled
-                                        ? Theme.of(context).colorScheme.secondary
-                                        : Theme.of(context).colorScheme.outline,
                                     borderRadius: BorderRadius.circular(12),
+                                    color: _isLiveReloadEnabled
+                                        ? Theme.of(context).colorScheme.tertiary
+                                        : Theme.of(context).colorScheme.surfaceVariant,
                                   ),
-                                  child: Text(
-                                    _isLiveReloadEnabled ? 'ON' : 'OFF',
-                                    style: TextStyle(
-                                      color: _isLiveReloadEnabled
-                                          ? Theme.of(context).colorScheme.onSecondary
-                                          : Theme.of(context).colorScheme.surface,
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                  child: Stack(
+                                    children: [
+                                      AnimatedPositioned(
+                                        duration: const Duration(milliseconds: 300),
+                                        curve: Curves.easeInOut,
+                                        left: _isLiveReloadEnabled ? 24 : 0,
+                                        top: 0,
+                                        bottom: 0,
+                                        width: 22,
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: Theme.of(context).colorScheme.surface,
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withOpacity(0.1),
+                                                blurRadius: 2,
+                                                spreadRadius: 0.5,
+                                              ),
+                                            ],
+                                          ),
+                                          child: Center(
+                                            child: Icon(
+                                              _isLiveReloadEnabled ? Icons.check : Icons.close,
+                                              size: 12,
+                                              color: _isLiveReloadEnabled
+                                                  ? Theme.of(context).colorScheme.tertiary
+                                                  : Theme.of(context).colorScheme.outline,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ),
@@ -766,40 +977,94 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
                   },
                 ),
 
-                const SizedBox(height: 12),
+                const SizedBox(height: 20),
 
-                ProjectSearchBar(
-                  controller: _searchController,
-                  onChanged: _onSearchChanged,
-                  onFilterTap: _showFilterBottomSheet,
-                  hintText: 'Search projects by name, client, or address...',
-                  onClearSearch: () {
-                    // Reload all projects when search is cleared
-                    context.read<ProjectBloc>().add(LoadProjectsRequested(query: _currentQuery));
-                  },
-                  showActiveFilters: _currentQuery.hasActiveFilters,
-                  activeFilterCount: _currentQuery.activeFilterCount,
-                  currentQuery: _currentQuery,
-                  onQueryChanged: (newQuery) {
-                    setState(() {
-                      _currentQuery = newQuery;
-                    });
+                // Enhanced search bar with elegant styling
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    color: Theme.of(context).colorScheme.surfaceContainerLowest,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Theme.of(context).colorScheme.shadow.withOpacity(0.04),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: ProjectSearchBar(
+                      controller: _searchController,
+                      onChanged: _onSearchChanged,
+                      onFilterTap: _showFilterBottomSheet,
+                      hintText: 'Search projects by name, client, or address...',
+                      onClearSearch: () {
+                        // Reload all projects when search is cleared
+                        context.read<ProjectBloc>().add(LoadProjectsRequested(query: _currentQuery));
+                      },
+                      showActiveFilters: _currentQuery.hasActiveFilters,
+                      activeFilterCount: _currentQuery.activeFilterCount,
+                      currentQuery: _currentQuery,
+                      onQueryChanged: (newQuery) {
+                        setState(() {
+                          _currentQuery = newQuery;
+                        });
 
-                    // Apply the new query immediately
-                    context.read<ProjectBloc>().add(LoadProjectsRequested(query: newQuery));
-                  },
+                        // Apply the new query immediately
+                        context.read<ProjectBloc>().add(LoadProjectsRequested(query: newQuery));
+                      },
+                    ),
+                  ),
                 ),
               ],
             ),
           ),
 
-          // Project List
-          Expanded(child: ProjectListContent(onRefresh: _onRefresh)),
+          // Project List with enhanced styling
+          Expanded(
+            child: Container(
+              margin: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerLowest,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Theme.of(context).colorScheme.shadow.withOpacity(0.03),
+                    blurRadius: 8,
+                    offset: const Offset(0, -2),
+                  ),
+                ],
+              ),
+              clipBehavior: Clip.antiAlias, // Ensures content respects the border radius
+              child: ProjectListContent(onRefresh: _onRefresh),
+            ),
+          ),
         ],
       ),
 
-      // Floating Action Button for creating new projects
-      floatingActionButton: const ProjectFloatingActionButton(),
+      // Floating Action Button with enhanced styling
+      floatingActionButton: Container(
+        margin: const EdgeInsets.only(bottom: 16, right: 8),
+        child: const ProjectFloatingActionButton(),
+      ),
     );
+  }
+}
+
+/// Observer class to handle app lifecycle events
+class _AppLifecycleObserver extends WidgetsBindingObserver {
+  final VoidCallback onResume;
+
+  _AppLifecycleObserver({required this.onResume});
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    if (state == AppLifecycleState.resumed) {
+      // App has resumed from background
+      onResume();
+    }
   }
 }

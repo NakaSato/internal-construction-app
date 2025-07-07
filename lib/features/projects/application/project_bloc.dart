@@ -196,6 +196,17 @@ class StopProjectRealtimeUpdates extends ProjectEvent {
   const StopProjectRealtimeUpdates();
 }
 
+/// Event for refreshing projects when returning from detail view
+class RefreshProjectsAfterDetailView extends ProjectEvent {
+  const RefreshProjectsAfterDetailView({this.recentProjectId});
+
+  /// The ID of the project that was just viewed
+  final String? recentProjectId;
+
+  @override
+  List<Object?> get props => [recentProjectId];
+}
+
 /// States for Project BLoC
 abstract class ProjectState extends Equatable {
   const ProjectState();
@@ -287,6 +298,7 @@ class ProjectBloc extends Bloc<ProjectEvent, ProjectState> {
     on<ProjectRealtimeUpdateReceived>(_onProjectRealtimeUpdateReceived);
     on<StartProjectRealtimeUpdates>(_onStartProjectRealtimeUpdates);
     on<StopProjectRealtimeUpdates>(_onStopProjectRealtimeUpdates);
+    on<RefreshProjectsAfterDetailView>(_onRefreshProjectsAfterDetailView);
 
     // Listen to real-time events
     _realtimeSubscription = _signalRService.eventStream.listen(_handleRealtimeEvent);
@@ -851,6 +863,56 @@ class ProjectBloc extends Bloc<ProjectEvent, ProjectState> {
           emit(const ProjectError(message: 'Project was deleted'));
         }
         break;
+    }
+  }
+
+  /// Handler for refreshing projects after returning from a detail view
+  Future<void> _onRefreshProjectsAfterDetailView(
+    RefreshProjectsAfterDetailView event,
+    Emitter<ProjectState> emit,
+  ) async {
+    try {
+      if (kDebugMode) {
+        debugPrint('🔄 Refreshing projects after returning from detail view');
+      }
+
+      // Get current state
+      final currentState = state;
+
+      // If we're already loading, don't initiate another load
+      if (currentState is ProjectLoading) {
+        return;
+      }
+
+      // For better UX, skip the loading state - keep showing current data while refreshing
+      if (currentState is ProjectsLoaded) {
+        // Keep showing current data while fetching fresh data
+        final query = const ProjectsQuery(); // Use default query for now
+
+        // Fetch fresh projects without clearing the cache
+        final projectsResponse = await _repository.getAllProjects(query);
+
+        // If we have a recently viewed project ID, we can track it or enhance UX here
+        if (event.recentProjectId != null && kDebugMode) {
+          debugPrint('Recently viewed project: ${event.recentProjectId}');
+          // Future enhancement: Could modify response to highlight recently viewed project
+        }
+
+        emit(ProjectsLoaded(projectsResponse: projectsResponse));
+      } else {
+        // If no data is currently loaded, show loading state and fetch
+        emit(const ProjectLoading());
+
+        final query = const ProjectsQuery();
+        final projectsResponse = await _repository.getAllProjects(query);
+
+        emit(ProjectsLoaded(projectsResponse: projectsResponse));
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ Error refreshing projects after detail view: $e');
+      }
+      // Don't emit error state for better UX - just keep current state
     }
   }
 

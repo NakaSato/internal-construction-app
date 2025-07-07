@@ -137,8 +137,24 @@ class RealtimeApiStreams {
   /// Check if real-time service is connected
   bool get isConnected => _unifiedService.isConnected;
 
-  /// Dispose all resources
+  /// App focus stream controller
+  final StreamController<bool> _appFocusStreamController = 
+      StreamController<bool>.broadcast();
+      
+  /// Stream to notify when app focus returns
+  Stream<bool> get appFocusStream => _appFocusStreamController.stream;
+
+  /// Notify that app focus has returned
+  void notifyAppFocusReturned() {
+    if (kDebugMode) {
+      debugPrint('📱 RealtimeApiStreams: Notifying app focus returned');
+    }
+    _appFocusStreamController.add(true);
+  }
+  
+  /// Closes all stream controllers
   void dispose() {
+    _appFocusStreamController.close();
     _unifiedService.dispose();
   }
 }

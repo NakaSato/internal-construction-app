@@ -5,7 +5,7 @@ import '../../application/calendar_management_bloc.dart';
 import '../../application/calendar_management_event.dart';
 import '../../application/calendar_management_state.dart';
 import '../../domain/entities/calendar_event.dart';
-import '../../../../core/theme/solar_app_theme.dart';
+import '../../../../core/theme/app_theme.dart';
 
 /// Modern schedule screen with beautiful Material Design 3 UI
 ///

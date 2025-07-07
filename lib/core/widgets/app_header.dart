@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../features/authentication/domain/entities/user.dart';
-import '../theme/solar_app_theme.dart';
+import '../theme/app_theme.dart';
 
 // MARK: - Constants
 class _AppHeaderConstants {
@@ -451,36 +451,8 @@ class _AppHeaderState extends State<AppHeader> with SingleTickerProviderStateMix
   Widget _buildNotificationIcon(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(right: _AppHeaderConstants.notificationIconRightSpacing),
-      child: TweenAnimationBuilder<double>(
-        duration: _AppHeaderConstants.scaleAnimationDuration,
-        tween: Tween(begin: 0.0, end: 1.0),
-        curve: Curves.easeOutBack,
-        builder: (context, value, child) {
-          return Transform.scale(
-            scale: _AppHeaderConstants.scaleAnimationStart + (_AppHeaderConstants.scaleAnimationRange * value),
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                _buildNotificationButton(context),
-                if (widget.showNotificationBadge && widget.notificationCount > 0) 
-                  _buildNotificationBadge(context),
-                // Add pulse animation for active notifications
-                if (widget.showNotificationBadge && widget.notificationCount > 0)
-                  _buildNotificationPulse(context),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildNotificationButton(BuildContext context) {
-    final hasNotifications = widget.showNotificationBadge && widget.notificationCount > 0;
-    
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
+      // Use GestureDetector at the highest level to ensure the whole area is tappable
+      child: GestureDetector(
         onTap: () {
           HapticFeedback.lightImpact();
           if (widget.onNotificationTap != null) {
@@ -489,23 +461,49 @@ class _AppHeaderState extends State<AppHeader> with SingleTickerProviderStateMix
             _showNotificationSnackBar(context);
           }
         },
-        borderRadius: BorderRadius.circular(_AppHeaderConstants.iconBorderRadius),
+        behavior: HitTestBehavior.opaque, // Ensures tap works on transparent areas
+        child: TweenAnimationBuilder<double>(
+          duration: _AppHeaderConstants.scaleAnimationDuration,
+          tween: Tween(begin: 0.0, end: 1.0),
+          curve: Curves.easeOutBack,
+          builder: (context, value, child) {
+            return Transform.scale(
+              scale: _AppHeaderConstants.scaleAnimationStart + (_AppHeaderConstants.scaleAnimationRange * value),
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  _buildNotificationButton(context),
+                  if (widget.showNotificationBadge && widget.notificationCount > 0) _buildNotificationBadge(context),
+                  // Add pulse animation for active notifications
+                  if (widget.showNotificationBadge && widget.notificationCount > 0) _buildNotificationPulse(context),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNotificationButton(BuildContext context) {
+    final hasNotifications = widget.showNotificationBadge && widget.notificationCount > 0;
+
+    // No tap handling here since we moved it to the parent container
+    return Padding(
+      padding: const EdgeInsets.all(4.0), // Add extra padding to increase tap target
+      child: Material(
+        color: Colors.transparent,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.all(_AppHeaderConstants.iconPadding),
           decoration: _buildNotificationIconDecoration(context, hasNotifications),
           child: AnimatedSwitcher(
             duration: _AppHeaderConstants.notificationIconAnimationDuration,
-            transitionBuilder: (child, animation) => ScaleTransition(
-              scale: animation,
-              child: child,
-            ),
+            transitionBuilder: (child, animation) => ScaleTransition(scale: animation, child: child),
             child: Icon(
-              hasNotifications
-                  ? Icons.notifications_active_rounded
-                  : Icons.notifications_outlined,
+              hasNotifications ? Icons.notifications_active_rounded : Icons.notifications_outlined,
               key: ValueKey(hasNotifications),
-              color: hasNotifications 
+              color: hasNotifications
                   ? Theme.of(context).colorScheme.primary
                   : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
               size: _AppHeaderConstants.iconSize,
@@ -519,32 +517,33 @@ class _AppHeaderState extends State<AppHeader> with SingleTickerProviderStateMix
   /// Build notification pulse animation for active notifications
   Widget _buildNotificationPulse(BuildContext context) {
     return Positioned.fill(
-      child: TweenAnimationBuilder<double>(
-        duration: _AppHeaderConstants.pulseAnimationDuration,
-        tween: Tween(begin: 0.0, end: 1.0),
-        curve: Curves.easeOut,
-        builder: (context, pulseValue, child) {
-          return Transform.scale(
-            scale: 1.0 + (pulseValue * 0.3),
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(_AppHeaderConstants.iconBorderRadius),
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.primary.withValues(
-                    alpha: (1.0 - pulseValue) * 0.4,
+      child: IgnorePointer(
+        // Make sure the pulse doesn't interfere with tap gestures
+        child: TweenAnimationBuilder<double>(
+          duration: _AppHeaderConstants.pulseAnimationDuration,
+          tween: Tween(begin: 0.0, end: 1.0),
+          curve: Curves.easeOut,
+          builder: (context, pulseValue, child) {
+            return Transform.scale(
+              scale: 1.0 + (pulseValue * 0.3),
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(_AppHeaderConstants.iconBorderRadius),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.primary.withValues(alpha: (1.0 - pulseValue) * 0.4),
+                    width: 2,
                   ),
-                  width: 2,
                 ),
               ),
-            ),
-          );
-        },
-        onEnd: () {
-          // Restart the animation for continuous pulse
-          if (mounted && widget.showNotificationBadge && widget.notificationCount > 0) {
-            setState(() {});
-          }
-        },
+            );
+          },
+          onEnd: () {
+            // Restart the animation for continuous pulse
+            if (mounted && widget.showNotificationBadge && widget.notificationCount > 0) {
+              setState(() {});
+            }
+          },
+        ),
       ),
     );
   }
@@ -657,10 +656,7 @@ class _AppHeaderState extends State<AppHeader> with SingleTickerProviderStateMix
             context.colorScheme.primaryContainer.withValues(alpha: 0.1),
           ],
         ),
-        border: Border.all(
-          color: context.colorScheme.primary.withValues(alpha: 0.3),
-          width: 1,
-        ),
+        border: Border.all(color: context.colorScheme.primary.withValues(alpha: 0.3), width: 1),
         boxShadow: [
           BoxShadow(
             color: context.colorScheme.primary.withValues(alpha: 0.2),
@@ -677,10 +673,7 @@ class _AppHeaderState extends State<AppHeader> with SingleTickerProviderStateMix
   BoxDecoration _buildBadgeDecoration(BuildContext context) {
     return BoxDecoration(
       gradient: LinearGradient(
-        colors: [
-          context.colorScheme.error,
-          context.colorScheme.error.withValues(alpha: 0.9)
-        ],
+        colors: [context.colorScheme.error, context.colorScheme.error.withValues(alpha: 0.9)],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ),
@@ -693,11 +686,7 @@ class _AppHeaderState extends State<AppHeader> with SingleTickerProviderStateMix
           offset: const Offset(0, 3),
           spreadRadius: 1,
         ),
-        BoxShadow(
-          color: context.colorScheme.error.withValues(alpha: 0.2),
-          blurRadius: 4,
-          offset: const Offset(0, 1),
-        ),
+        BoxShadow(color: context.colorScheme.error.withValues(alpha: 0.2), blurRadius: 4, offset: const Offset(0, 1)),
       ],
     );
   }
@@ -907,12 +896,12 @@ class _AppHeaderState extends State<AppHeader> with SingleTickerProviderStateMix
     final message = widget.showNotificationBadge && widget.notificationCount > 0
         ? 'You have ${widget.notificationCount} notification${widget.notificationCount > 1 ? 's' : ''}'
         : 'No new notifications';
-    
+
     _showSnackBar(
-      context, 
+      context,
       icon: widget.showNotificationBadge && widget.notificationCount > 0
-          ? Icons.notifications_active_rounded 
-          : Icons.notifications_outlined, 
+          ? Icons.notifications_active_rounded
+          : Icons.notifications_outlined,
       message: message,
     );
   }

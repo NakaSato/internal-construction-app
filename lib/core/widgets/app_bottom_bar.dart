@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:salomon_bottom_bar/salomon_bottom_bar.dart';
-import '../theme/solar_app_theme.dart';
 
+/// A simplified bottom navigation bar that matches the design in the mockup
 class CustomBottomBar extends StatelessWidget {
   /// Creates a CustomBottomBar
   const CustomBottomBar({
@@ -12,6 +11,7 @@ class CustomBottomBar extends StatelessWidget {
     this.selectedItemColor,
     this.unselectedItemColor,
     this.margin,
+    this.hasNotification = false,
   });
 
   /// The index of the currently selected item
@@ -32,48 +32,144 @@ class CustomBottomBar extends StatelessWidget {
   /// Margin around the bottom bar
   final EdgeInsets? margin;
 
+  /// Whether to show notification indicator on profile
+  final bool hasNotification;
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    final selected = selectedItemColor ?? colorScheme.primary;
+    final unselected = unselectedItemColor ?? colorScheme.onSurfaceVariant.withOpacity(0.7);
+
     return Container(
-      margin: margin ?? const EdgeInsets.all(SolarSpacing.sm),
-      decoration: SolarDecorations.createCardDecoration(
-        color: backgroundColor ?? context.colorScheme.surface,
-        elevation: 2,
-        borderRadius: SolarBorderRadius.xl,
+      decoration: BoxDecoration(
+        color: backgroundColor ?? Colors.white,
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, -1), spreadRadius: 1),
+        ],
+        border: Border(top: BorderSide(color: Colors.grey.withOpacity(0.15), width: 0.5)),
       ),
-      child: SalomonBottomBar(
-        currentIndex: currentIndex,
-        onTap: onTap,
-        selectedItemColor: selectedItemColor ?? context.colorScheme.primary,
-        unselectedItemColor: unselectedItemColor ?? context.colorScheme.onSurfaceVariant,
-        margin: const EdgeInsets.symmetric(horizontal: SolarSpacing.sm, vertical: SolarSpacing.sm),
-        items: [
-          /// Dashboard
-          SalomonBottomBarItem(
-            icon: const Icon(Icons.dashboard_outlined),
-            activeIcon: const Icon(Icons.dashboard),
-            title: const Text('Home'),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildNavItem(
+                context: context,
+                icon: currentIndex == 0 ? Icons.home : Icons.home_outlined,
+                label: 'Home',
+                isSelected: currentIndex == 0,
+                selectedColor: selected,
+                unselectedColor: unselected,
+                onTap: () => onTap(0),
+              ),
+              _buildNavItem(
+                context: context,
+                icon: currentIndex == 1 ? Icons.build : Icons.build_outlined,
+                label: 'Works',
+                isSelected: currentIndex == 1,
+                selectedColor: selected,
+                unselectedColor: unselected,
+                onTap: () => onTap(1),
+              ),
+              _buildNavItem(
+                context: context,
+                icon: currentIndex == 2 ? Icons.approval : Icons.approval_outlined,
+                label: 'Approvals',
+                isSelected: currentIndex == 2,
+                selectedColor: selected,
+                unselectedColor: unselected,
+                onTap: () => onTap(2),
+              ),
+              _buildNavItem(
+                context: context,
+                icon: currentIndex == 3 ? Icons.person : Icons.person_outline_rounded,
+                label: 'Me',
+                isSelected: currentIndex == 3,
+                selectedColor: selected,
+                unselectedColor: unselected,
+                onTap: () => onTap(3),
+                hasNotification: hasNotification,
+              ),
+            ],
           ),
+        ),
+      ),
+    );
+  }
 
-          /// Calendar
-          SalomonBottomBarItem(
-            icon: const Icon(Icons.calendar_today_outlined),
-            activeIcon: const Icon(Icons.calendar_today),
-            title: const Text('Calendar'),
+  /// Builds a single navigation item
+  Widget _buildNavItem({
+    required BuildContext context,
+    required IconData icon,
+    required String label,
+    required bool isSelected,
+    required Color selectedColor,
+    required Color unselectedColor,
+    required VoidCallback onTap,
+    bool hasNotification = false,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      splashColor: Colors.transparent,
+      highlightColor: Colors.transparent,
+      customBorder: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Subtle indicator dot for selected item
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOutCirc,
+            width: isSelected ? 12 : 0,
+            height: 2,
+            margin: const EdgeInsets.only(bottom: 4),
+            decoration: BoxDecoration(
+              color: isSelected ? selectedColor : Colors.transparent,
+              borderRadius: BorderRadius.circular(2),
+            ),
           ),
-
-          /// Work Request Approvals
-          SalomonBottomBarItem(
-            icon: const Icon(Icons.approval_outlined),
-            activeIcon: const Icon(Icons.approval),
-            title: const Text('Approvals'),
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeInOut,
+                padding: EdgeInsets.all(isSelected ? 2 : 0),
+                child: Icon(icon, color: isSelected ? selectedColor : unselectedColor, size: isSelected ? 22 : 20),
+              ),
+              if (hasNotification)
+                Positioned(
+                  top: -2,
+                  right: -4,
+                  child: Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 1.2),
+                      boxShadow: [
+                        BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 1, offset: const Offset(0, 1)),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
           ),
-
-          /// Profile
-          SalomonBottomBarItem(
-            icon: const Icon(Icons.person_outline),
-            activeIcon: const Icon(Icons.person),
-            title: const Text('Profile'),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? selectedColor : unselectedColor,
+              fontSize: 12,
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              letterSpacing: 0.2,
+            ),
           ),
         ],
       ),
