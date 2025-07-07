@@ -33,6 +33,7 @@ class UnifiedRealtimeApiService {
   static const String authEndpoint = 'auth';
   static const String calendarEndpoint = 'calendar';
   static const String wbsEndpoint = 'wbs';
+  static const String notificationsEndpoint = 'notifications';
   static const String authorizationEndpoint = 'authorization';
   static const String workCalendarEndpoint = 'work-calendar';
   static const String calendarManagementEndpoint = 'calendar-management';

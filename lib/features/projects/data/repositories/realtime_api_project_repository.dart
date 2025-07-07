@@ -94,7 +94,23 @@ class RealtimeProjectRepositoryWrapper with RealtimeApiMixin implements ProjectR
     if (kDebugMode) {
       debugPrint('🗑️ RealtimeProjectRepositoryWrapper.deleteProject called with real-time notifications');
     }
-    return await _baseRepository.deleteProject(id);
+    
+    try {
+      // Send deletion request to the base repository
+      await _baseRepository.deleteProject(id);
+      
+      // Verify deletion was successful on the backend
+      bool isDeleted = await _baseRepository.verifyProjectDeleted(id);
+      
+      if (isDeleted && kDebugMode) {
+        debugPrint('✅ RealtimeProjectRepositoryWrapper: Project $id deletion confirmed on backend');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ RealtimeProjectRepositoryWrapper: Error during project deletion: $e');
+      }
+      rethrow;
+    }
   }
 
   @override
@@ -148,6 +164,14 @@ class RealtimeProjectRepositoryWrapper with RealtimeApiMixin implements ProjectR
       debugPrint('🗑️ RealtimeProjectRepositoryWrapper: Clearing project cache');
     }
     return await _baseRepository.clearProjectCache();
+  }
+
+  @override
+  Future<bool> verifyProjectDeleted(String id) async {
+    if (kDebugMode) {
+      debugPrint('🔍 RealtimeProjectRepositoryWrapper.verifyProjectDeleted: Verifying project deletion for ID: $id');
+    }
+    return await _baseRepository.verifyProjectDeleted(id);
   }
 
   @override

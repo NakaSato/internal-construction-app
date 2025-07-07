@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injection.dart';
@@ -29,6 +30,7 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
   Timer? _refreshTimer;
   bool _isLiveReloadEnabled = true;
   bool _isSilentRefreshing = false;
+  bool _isRefreshing = false;
   late final UniversalRealtimeHandler _realtimeHandler;
   StreamSubscription? _authSubscription;
 
@@ -53,8 +55,17 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
     // Listen for authentication state changes throughout the app lifecycle
     _setupAuthenticationListener();
 
-    // Check authentication and start if authenticated
-    _checkAuthAndInitializeIfAuthenticated();
+    // Check if we're coming back from a project detail screen
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final currentState = context.read<ProjectBloc>().state;
+      if (currentState is ProjectsLoaded) {
+        debugPrint('🔍 Project List: Already has projects data, no need to refresh');
+      } else {
+        debugPrint('🔍 Project List: No current projects data, initializing');
+        // Check authentication and start if authenticated
+        _checkAuthAndInitializeIfAuthenticated();
+      }
+    });
   }
 
   /// Set up authentication state listener to handle login/logout
@@ -123,8 +134,16 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
     // Then load fresh data from API
     Future.delayed(const Duration(milliseconds: 100), () {
       if (mounted) {
-        context.read<ProjectBloc>().add(const LoadProjectsRequested());
-        debugPrint('🚀 Project List: Initial load with fresh API data');
+        // Use skipLoadingState based on whether we're coming from project detail
+        final bool comingFromDetail = ModalRoute.of(context)?.settings.arguments == 'fromProjectDetail';
+        context.read<ProjectBloc>().add(
+          LoadProjectsRequested(
+            query: _currentQuery,
+            skipLoadingState: comingFromDetail, // Skip loading state when returning from detail
+            forceRefresh: false,
+          ),
+        );
+        debugPrint('🚀 Project List: Initial load with fresh API data (skipLoadingState: $comingFromDetail)');
       }
     });
   }
@@ -428,7 +447,10 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
   void _onSearchChanged(String searchTerm) {
     if (searchTerm.isEmpty) {
       // Load all projects if search is empty
-      context.read<ProjectBloc>().add(LoadProjectsRequested(query: _currentQuery));
+      context.read<ProjectBloc>().add(LoadProjectsRequested(
+        query: _currentQuery,
+        skipLoadingState: true, // Skip loading state for better UX during search
+      ));
     } else {
       // Search projects with current filters
       context.read<ProjectBloc>().add(SearchProjectsRequested(searchTerm: searchTerm, filters: _currentQuery));
@@ -445,7 +467,11 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
     if (searchTerm.isNotEmpty) {
       context.read<ProjectBloc>().add(SearchProjectsRequested(searchTerm: searchTerm, filters: newQuery));
     } else {
-      context.read<ProjectBloc>().add(LoadProjectsRequested(query: newQuery));
+      context.read<ProjectBloc>().add(LoadProjectsRequested(
+        query: newQuery,
+        skipLoadingState: false, // Show loading state when applying filters
+        forceRefresh: true,      // Always get fresh data when filters change
+      ));
     }
   }
 
@@ -484,8 +510,14 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
           // Perform search with fresh data from API
           context.read<ProjectBloc>().add(SearchProjectsRequested(searchTerm: searchTerm, filters: _currentQuery));
         } else {
-          // Load all projects with fresh data from API
-          context.read<ProjectBloc>().add(LoadProjectsRequested(query: _currentQuery));
+          // Load all projects with fresh data from API, but preserve state
+          context.read<ProjectBloc>().add(
+            LoadProjectsRequested(
+              query: _currentQuery,
+              skipLoadingState: true, // Skip loading state to prevent flickering
+              forceRefresh: true, // But still force a data refresh
+            ),
+          );
         }
       }
 
@@ -503,6 +535,30 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
         _startLiveApiUpdates();
       }
     }
+  }
+
+  /// Force refresh that clears cache and shows loading indicator
+  void _forceRefreshWithCacheClear() {
+    if (kDebugMode) {
+      debugPrint('🔄 ProjectListScreen: Force refreshing projects with cache clear');
+    }
+
+    // Show refresh indicator
+    setState(() {
+      _isRefreshing = true;
+    });
+
+    // Use the dedicated event that clears cache first
+    context.read<ProjectBloc>().add(const RefreshProjectsWithCacheClear());
+
+    // Hide the refresh indicator after a delay
+    Future.delayed(const Duration(seconds: 1), () {
+      if (mounted) {
+        setState(() {
+          _isRefreshing = false;
+        });
+      }
+    });
   }
 
   @override
@@ -553,6 +609,31 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
                           fontWeight: FontWeight.w500,
                         ),
                       ),
+                      const SizedBox(width: 8),
+                      // Force refresh button
+                      InkWell(
+                        onTap: _forceRefreshWithCacheClear,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(color: Colors.blue, width: 1),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.refresh, color: Colors.blue, size: 12),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Force Refresh',
+                                style: TextStyle(color: Colors.blue, fontSize: 10, fontWeight: FontWeight.w600),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
                       if (_isSilentRefreshing) ...[
                         const SizedBox(width: 8),
                         SizedBox(

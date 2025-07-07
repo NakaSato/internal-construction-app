@@ -31,10 +31,7 @@ class ProjectLoaded extends ProjectState {
   List<Object?> get props => [projects, isRefreshing];
 
   ProjectLoaded copyWith({List<Project>? projects, bool? isRefreshing}) {
-    return ProjectLoaded(
-      projects: projects ?? this.projects,
-      isRefreshing: isRefreshing ?? this.isRefreshing,
-    );
+    return ProjectLoaded(projects: projects ?? this.projects, isRefreshing: isRefreshing ?? this.isRefreshing);
   }
 }
 
@@ -103,14 +100,13 @@ class ProjectError extends ProjectState {
 
 /// State when a project operation is successful
 class ProjectOperationSuccess extends ProjectState {
-  const ProjectOperationSuccess({
-    required this.message,
-    required this.projects,
-  });
+  const ProjectOperationSuccess({required this.message, this.project, this.wasDeleted = false, this.projectId});
 
   final String message;
-  final List<Project> projects;
+  final Project? project;
+  final bool wasDeleted;
+  final String? projectId;
 
   @override
-  List<Object?> get props => [message, projects];
+  List<Object?> get props => [message, project, wasDeleted, projectId];
 }

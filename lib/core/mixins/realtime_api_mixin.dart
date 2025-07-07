@@ -51,6 +51,9 @@ mixin RealtimeApiMixin {
       case 'calendar-management':
         stream = realtimeStreams.calendarManagementStream as Stream<T>;
         break;
+      case 'notifications':
+        stream = realtimeStreams.notificationsStream as Stream<T>;
+        break;
       default:
         if (kDebugMode) {
           debugPrint('⚠️ RealtimeApiMixin: Unknown endpoint: $endpointName');

@@ -59,7 +59,7 @@ class MockNotificationRepository implements NotificationRepository {
         id: '2',
         title: 'New Task Assigned',
         message: 'You have been assigned to install panels on Building C.',
-        type: NotificationType.taskAssignment,
+        type: NotificationType.taskAssigned,
         createdAt: now.subtract(const Duration(hours: 2)),
         isRead: false,
         actionUrl: '/tasks/building-c',

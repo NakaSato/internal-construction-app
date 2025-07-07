@@ -573,4 +573,41 @@ class ApiProjectRepository implements ProjectRepository {
   void _resetCacheBypass() {
     _bypassCache = false;
   }
+
+  /// Debug helper to check project deletion handling
+  @override
+  Future<bool> verifyProjectDeleted(String id) async {
+    if (kDebugMode) {
+      debugPrint('🔍 [API_REPO] Verifying project deletion for ID: $id');
+    }
+
+    try {
+      // Try to get the project to see if it still exists
+      await _apiService.getProject(id);
+
+      // If we get here, the project still exists
+      if (kDebugMode) {
+        debugPrint('⚠️ [API_REPO] Project still exists in the backend: $id');
+      }
+      return false;
+    } on DioException catch (e) {
+      // Check if it's a 404 (project not found), which confirms deletion
+      if (e.response?.statusCode == 404) {
+        if (kDebugMode) {
+          debugPrint('✅ [API_REPO] Confirmed project was deleted: $id');
+        }
+        return true;
+      } else {
+        if (kDebugMode) {
+          debugPrint('❌ [API_REPO] Error checking project deletion: ${e.message}');
+        }
+        return false;
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ [API_REPO] Unexpected error checking project deletion: $e');
+      }
+      return false;
+    }
+  }
 }

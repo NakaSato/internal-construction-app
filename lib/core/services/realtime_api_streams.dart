@@ -4,6 +4,7 @@ import 'package:injectable/injectable.dart';
 
 import 'unified_realtime_api_service.dart';
 import '../../features/projects/domain/entities/project_api_models.dart';
+import '../../features/notifications/data/models/realtime_notification_update.dart';
 
 /// Real-time data streams for all API endpoints
 /// Provides typed streams and helper methods for each endpoint
@@ -67,6 +68,21 @@ class RealtimeApiStreams {
   Stream<RealtimeWbsUpdate> get wbsStream => _unifiedService
       .getEndpointStream(UnifiedRealtimeApiService.wbsEndpoint)
       .map((data) => RealtimeWbsUpdate.fromJson(data))
+      .handleError((error) {
+        if (kDebugMode) {
+          debugPrint('❌ RealtimeApiStreams: WBS stream error: $error');
+        }
+      });
+      
+  /// Notifications real-time stream
+  Stream<RealtimeNotificationUpdate> get notificationsStream => _unifiedService
+      .getEndpointStream(UnifiedRealtimeApiService.notificationsEndpoint)
+      .map((data) => RealtimeNotificationUpdate.fromJson(data))
+      .handleError((error) {
+        if (kDebugMode) {
+          debugPrint('❌ RealtimeApiStreams: Notifications stream error: $error');
+        }
+      })
       .handleError((error) {
         if (kDebugMode) {
           debugPrint('❌ RealtimeApiStreams: WBS stream error: $error');

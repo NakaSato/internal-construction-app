@@ -45,25 +45,67 @@ class ProjectListContent extends StatelessWidget {
       onRefresh: () async => onRefresh(),
       child: ListView.builder(
         padding: const EdgeInsets.all(20),
-        itemCount: projectsResponse.items.length + 1, // +1 for pagination info
+        itemCount: projectsResponse.items.length + 2, // +1 for pagination info, +1 for total projects badge
         itemBuilder: (context, index) {
-          if (index == projectsResponse.items.length) {
+          if (index == 0) {
+            // Add prominent total projects badge at the top
+            return _buildTotalProjectsBadge(context, projectsResponse);
+          } else if (index == projectsResponse.items.length + 1) {
             return _buildPaginationInfo(context, projectsResponse);
           }
 
-          final project = projectsResponse.items[index];
+          final project = projectsResponse.items[index - 1]; // Adjust for the badge at index 0
           return Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             margin: const EdgeInsets.only(bottom: 32),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 8, offset: const Offset(0, 2)),
-              ],
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 2))],
             ),
-            child: ProjectCard(project: project, onTap: () => context.push('/projects/${project.projectId}')),
+            child: ProjectCard(
+              project: project,
+              onTap: () => context.push('/projects/${project.projectId}', extra: {'fromList': true}),
+            ),
           );
         },
+      ),
+    );
+  }
+
+  /// Build a prominent badge showing total project count
+  Widget _buildTotalProjectsBadge(BuildContext context, ProjectsResponse projectsResponse) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.primaryContainer,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 6, offset: const Offset(0, 3))],
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.insights_rounded, color: Theme.of(context).colorScheme.primary, size: 32),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Total Projects',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w500),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${projectsResponse.totalCount} projects in total',
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

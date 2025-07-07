@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../domain/entities/notification.dart';
+import '../helpers/notification_icons.dart';
 
 /// Card widget for displaying a single notification
 class NotificationCard extends StatelessWidget {
@@ -28,7 +29,7 @@ class NotificationCard extends StatelessWidget {
           ? theme.colorScheme.primaryContainer.withValues(alpha: 0.1)
           : theme.colorScheme.surface,
       child: ListTile(
-        leading: _buildNotificationIcon(theme),
+        leading: _buildNotificationIcon(context, theme),
         title: Text(
           notification.title,
           style: theme.textTheme.titleMedium?.copyWith(
@@ -62,56 +63,11 @@ class NotificationCard extends StatelessWidget {
     );
   }
 
-  Widget _buildNotificationIcon(ThemeData theme) {
-    IconData iconData;
-    Color iconColor;
-
-    switch (notification.type) {
-      case NotificationType.info:
-        iconData = Icons.info_outline;
-        iconColor = theme.colorScheme.primary;
-        break;
-      case NotificationType.warning:
-        iconData = Icons.warning_amber_outlined;
-        iconColor = Colors.orange;
-        break;
-      case NotificationType.error:
-        iconData = Icons.error_outline;
-        iconColor = theme.colorScheme.error;
-        break;
-      case NotificationType.success:
-        iconData = Icons.check_circle_outline;
-        iconColor = Colors.green;
-        break;
-      case NotificationType.projectUpdate:
-        iconData = Icons.business_outlined;
-        iconColor = theme.colorScheme.secondary;
-        break;
-      case NotificationType.taskAssignment:
-        iconData = Icons.assignment_outlined;
-        iconColor = theme.colorScheme.tertiary;
-        break;
-      case NotificationType.reportSubmission:
-        iconData = Icons.description_outlined;
-        iconColor = Colors.blue;
-        break;
-      case NotificationType.systemMaintenance:
-        iconData = Icons.build_outlined;
-        iconColor = Colors.grey;
-        break;
-      case NotificationType.approval:
-        iconData = Icons.approval_outlined;
-        iconColor = Colors.purple;
-        break;
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: iconColor.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Icon(iconData, color: iconColor, size: 24),
+  Widget _buildNotificationIcon(BuildContext context, ThemeData theme) {
+    return NotificationIcons.buildIconContainer(
+      context,
+      notification.type,
+      notification.priority,
     );
   }
 
@@ -139,19 +95,6 @@ class NotificationCard extends StatelessWidget {
   }
 
   String _formatTimestamp(DateTime timestamp) {
-    final now = DateTime.now();
-    final difference = now.difference(timestamp);
-
-    if (difference.inMinutes < 1) {
-      return 'Just now';
-    } else if (difference.inHours < 1) {
-      return '${difference.inMinutes}m ago';
-    } else if (difference.inDays < 1) {
-      return '${difference.inHours}h ago';
-    } else if (difference.inDays < 7) {
-      return '${difference.inDays}d ago';
-    } else {
-      return '${timestamp.day}/${timestamp.month}/${timestamp.year}';
-    }
+    return NotificationIcons.formatTimestamp(timestamp);
   }
 }

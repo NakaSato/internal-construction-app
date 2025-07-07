@@ -111,4 +111,11 @@ abstract class ProjectRepository {
     Duration updateInterval = const Duration(seconds: 10),
     bool includeDeltas = false,
   });
+
+  /// Debug helper to verify a project was deleted on the backend
+  ///
+  /// **🔒 Requires**: Any authenticated user
+  ///
+  /// Returns true if the project has been confirmed deleted
+  Future<bool> verifyProjectDeleted(String id);
 }

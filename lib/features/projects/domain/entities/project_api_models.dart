@@ -307,7 +307,7 @@ class ProjectsResponse extends Equatable {
 class ProjectsQuery extends Equatable {
   const ProjectsQuery({
     this.pageNumber = 1,
-    this.pageSize = 10,
+    this.pageSize = 200, // Increased from 10 to show more projects by default
     this.managerId,
     this.status,
     this.sortBy,

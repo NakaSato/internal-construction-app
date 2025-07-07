@@ -20,13 +20,15 @@ abstract class ProjectEvent extends Equatable {
 }
 
 class LoadProjectsRequested extends ProjectEvent {
-  const LoadProjectsRequested({this.query, this.userRole});
+  const LoadProjectsRequested({this.query, this.userRole, this.skipLoadingState = false, this.forceRefresh = false});
 
   final ProjectsQuery? query;
   final String? userRole;
+  final bool skipLoadingState;
+  final bool forceRefresh;
 
   @override
-  List<Object?> get props => [query, userRole];
+  List<Object?> get props => [query, userRole, skipLoadingState, forceRefresh];
 }
 
 class SearchProjectsRequested extends ProjectEvent {
@@ -229,13 +231,15 @@ class ProjectDetailsLoaded extends ProjectState {
 }
 
 class ProjectOperationSuccess extends ProjectState {
-  const ProjectOperationSuccess({required this.message, this.project});
+  const ProjectOperationSuccess({required this.message, this.project, this.wasDeleted = false, this.projectId});
 
   final String message;
   final Project? project;
+  final bool wasDeleted;
+  final String? projectId;
 
   @override
-  List<Object?> get props => [message, project];
+  List<Object?> get props => [message, project, wasDeleted, projectId];
 }
 
 class ProjectStatisticsLoaded extends ProjectState {
@@ -294,7 +298,13 @@ class ProjectBloc extends Bloc<ProjectEvent, ProjectState> {
   StreamSubscription<ProjectsResponse>? _liveUpdateSubscription;
 
   Future<void> _onLoadProjectsRequested(LoadProjectsRequested event, Emitter<ProjectState> emit) async {
-    emit(const ProjectLoading());
+    // Check if we already have loaded projects to prevent unnecessary loading state
+    final currentState = state;
+    final bool skipLoadingState = event.skipLoadingState || (currentState is ProjectsLoaded && !event.forceRefresh);
+
+    if (!skipLoadingState) {
+      emit(const ProjectLoading());
+    }
 
     try {
       final projectsResponse = await _repository.getAllProjects(event.query ?? const ProjectsQuery());
@@ -390,7 +400,9 @@ class ProjectBloc extends Bloc<ProjectEvent, ProjectState> {
     try {
       await _repository.deleteProject(event.projectId);
 
-      emit(const ProjectOperationSuccess(message: 'Project deleted successfully'));
+      emit(
+        ProjectOperationSuccess(message: 'Project deleted successfully', wasDeleted: true, projectId: event.projectId),
+      );
     } catch (e) {
       emit(ProjectError(message: 'Failed to delete project', details: e.toString()));
     }
@@ -428,16 +440,23 @@ class ProjectBloc extends Bloc<ProjectEvent, ProjectState> {
 
   /// Handle real-time event stream
   void _handleRealtimeEvent(RealtimeEvent event) {
+    if (kDebugMode) {
+      debugPrint('🔔 [PROJECT_BLOC] Received real-time event: ${event.type}');
+      debugPrint('🔔 [PROJECT_BLOC] Event data: ${event.data}');
+    }
+
     switch (event.type) {
       case RealtimeEventType.projectUpdated:
         final projectData = event.data['project'] as Map<String, dynamic>?;
         if (projectData != null) {
           try {
             final project = Project.fromJson(projectData);
+            if (kDebugMode) {
+              debugPrint('✅ [PROJECT_BLOC] Processing real-time project update for: ${project.projectName}');
+            }
             add(RealTimeProjectUpdateReceived(project: project));
           } catch (e) {
-            // Log error but don't break the app
-            print('Error parsing real-time project update: $e');
+            debugPrint('❌ [PROJECT_BLOC] Error parsing real-time project update: $e');
           }
         }
         break;
@@ -446,20 +465,32 @@ class ProjectBloc extends Bloc<ProjectEvent, ProjectState> {
         if (projectData != null) {
           try {
             final project = Project.fromJson(projectData);
+            if (kDebugMode) {
+              debugPrint('✅ [PROJECT_BLOC] Processing real-time project creation for: ${project.projectName}');
+            }
             add(RealTimeProjectCreatedReceived(project: project));
           } catch (e) {
-            print('Error parsing real-time project creation: $e');
+            debugPrint('❌ [PROJECT_BLOC] Error parsing real-time project creation: $e');
           }
         }
         break;
       case RealtimeEventType.projectDeleted:
         final projectId = event.data['projectId'] as String?;
         if (projectId != null) {
+          if (kDebugMode) {
+            debugPrint('✅ [PROJECT_BLOC] Processing real-time project deletion for ID: $projectId');
+          }
+          // Handle project deletion with high priority
           add(RealTimeProjectDeletedReceived(projectId: projectId));
+        } else {
+          debugPrint('❌ [PROJECT_BLOC] Missing projectId in deletion event');
         }
         break;
       default:
         // Handle other event types if needed
+        if (kDebugMode) {
+          debugPrint('ℹ️ [PROJECT_BLOC] Unhandled real-time event type: ${event.type}');
+        }
         break;
     }
   }
@@ -536,37 +567,80 @@ class ProjectBloc extends Bloc<ProjectEvent, ProjectState> {
     RealTimeProjectDeletedReceived event,
     Emitter<ProjectState> emit,
   ) async {
+    if (kDebugMode) {
+      debugPrint('🗑️ [PROJECT_BLOC] Processing real-time project deletion for ID: ${event.projectId}');
+    }
+
     final currentState = state;
+
+    // Verify the project was actually deleted on the backend (diagnostic step)
+    bool wasDeleted = false;
+    try {
+      wasDeleted = await _repository.verifyProjectDeleted(event.projectId);
+      if (kDebugMode) {
+        debugPrint('🔍 [PROJECT_BLOC] Project deletion verification: ${wasDeleted ? "CONFIRMED" : "NOT CONFIRMED"}');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('⚠️ [PROJECT_BLOC] Error verifying project deletion: $e');
+      }
+      // Continue anyway, as we should trust the SignalR event
+    }
 
     // Remove from the list if we're currently showing projects
     if (currentState is ProjectsLoaded) {
+      if (kDebugMode) {
+        debugPrint('📊 [PROJECT_BLOC] Current project count: ${currentState.projectsResponse.items.length}');
+        debugPrint('📊 [PROJECT_BLOC] Removing project ID: ${event.projectId} from UI');
+      }
+
       final updatedProjects = currentState.projectsResponse.items
           .where((project) => project.projectId != event.projectId)
           .toList();
 
+      final newTotalCount = currentState.projectsResponse.totalCount - 1;
+      final newTotalPages = calculateTotalPages(newTotalCount, currentState.projectsResponse.pageSize);
+      final currentPage = currentState.projectsResponse.pageNumber;
+
       final updatedResponse = ProjectsResponse(
         items: updatedProjects,
-        totalCount: currentState.projectsResponse.totalCount - 1,
-        totalPages: currentState.projectsResponse.totalPages,
-        pageNumber: currentState.projectsResponse.pageNumber,
+        totalCount: newTotalCount, // Reduce count by 1
+        totalPages: newTotalPages,
+        pageNumber: currentPage,
         pageSize: currentState.projectsResponse.pageSize,
-        hasNextPage: currentState.projectsResponse.hasNextPage,
-        hasPreviousPage: currentState.projectsResponse.hasPreviousPage,
-        metadata: currentState.projectsResponse.metadata,
+        hasPreviousPage: currentPage > 1,
+        hasNextPage: currentPage < newTotalPages,
       );
+
+      if (kDebugMode) {
+        debugPrint('✅ [PROJECT_BLOC] Updated UI after real-time project deletion for ID: ${event.projectId}');
+        debugPrint('📊 [PROJECT_BLOC] New project count: ${updatedProjects.length}');
+      }
 
       emit(ProjectsLoaded(projectsResponse: updatedResponse));
     }
 
-    // Navigate back if we're showing deleted project details
+    // If we're showing details for the deleted project, go back to list
     if (currentState is ProjectDetailsLoaded && currentState.project.projectId == event.projectId) {
+      if (kDebugMode) {
+        debugPrint('🚀 [PROJECT_BLOC] Currently viewing deleted project, returning to list');
+      }
+
+      // First emit a deletion notification
       emit(
-        const ProjectError(
-          message: 'This project has been deleted',
-          details: 'The project you were viewing has been deleted by another user.',
+        ProjectOperationSuccess(
+          message: 'Project was deleted by another user',
+          wasDeleted: true,
+          projectId: event.projectId,
         ),
       );
     }
+  }
+
+  /// Helper method to calculate total pages
+  int calculateTotalPages(int itemCount, int pageSize) {
+    if (pageSize <= 0) return 1;
+    return (itemCount / pageSize).ceil();
   }
 
   Future<void> _onRefreshProjectsWithCacheClear(RefreshProjectsWithCacheClear event, Emitter<ProjectState> emit) async {

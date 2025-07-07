@@ -29,11 +29,52 @@ class ProjectAppHeader extends StatelessWidget {
         return BlocBuilder<ProjectBloc, ProjectState>(
           builder: (context, projectState) {
             String subtitle = 'Manage solar installation projects';
+            int projectCount = 0;
+
             if (projectState is ProjectsLoaded) {
-              final count = projectState.projectsResponse.totalCount;
-              subtitle = 'Manage solar installation projects • $count project${count != 1 ? 's' : ''}';
+              projectCount = projectState.projectsResponse.totalCount;
+              subtitle = 'Manage solar installation projects';
             }
-            return AppHeader(title: 'Project Management', subtitle: subtitle, user: user);
+
+            return Stack(
+              children: [
+                // Base AppHeader
+                AppHeader(title: 'Project Management', subtitle: subtitle, user: user),
+
+                // Project count badge overlay
+                if (projectState is ProjectsLoaded)
+                  Positioned(
+                    top: 54,
+                    right: 16,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primaryContainer,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Theme.of(context).colorScheme.primary, width: 2),
+                        boxShadow: [
+                          BoxShadow(color: Colors.black.withOpacity(0.15), blurRadius: 6, offset: const Offset(0, 3)),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.bar_chart_rounded, size: 18, color: Theme.of(context).colorScheme.primary),
+                          const SizedBox(width: 6),
+                          Text(
+                            '$projectCount Total Project${projectCount != 1 ? 's' : ''}',
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onPrimaryContainer,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            );
           },
         );
       },
