@@ -1,40 +1,76 @@
 <!-- Use this file to provide workspace-specific custom instructions to Copilot. For more details, visit https://code.visualstudio.com/docs/copilot/copilot-customization#_use-a-githubcopilotinstructionsmd-file -->
 
-# Flutter Architecture App - Copilot Instructions
+# Solar Project Management App - Copilot Instructions
 
 ## Project Overview
-This is a medium-sized Flutter application following Feature-First architecture with Clean Architecture principles. The app includes authentication, image upload, work calendar features, and project management capabilities.
+This is a comprehensive Flutter application for managing solar installation projects. It follows Feature-First architecture with Clean Architecture principles, providing a robust platform for project management, team collaboration, and real-time notifications.
+
+### Application Features
+- **Project Management**: Create, track, and manage solar installation projects
+- **Team Collaboration**: Role-based access control and team coordination
+- **Real-time Notifications**: Push notifications and in-app messaging
+- **Work Calendar**: Schedule management and task tracking
+- **Image Upload**: Document management and progress photos
+- **Authentication**: Secure user authentication with role management
+- **Dashboard Analytics**: Project statistics and progress tracking
+- **Account Management**: Multi-account switching and user profiles
 
 ### Tech Stack
-- **Frontend**: Flutter 3.x with Material Design 3
-- **State Management**: BLoC/Cubit pattern with flutter_bloc
-- **Routing**: go_router for declarative navigation
+- **Frontend**: Flutter 3.24+ with Material Design 3
+- **State Management**: BLoC/Cubit pattern with flutter_bloc ^8.1.3
+- **Routing**: go_router ^12.1.1 for declarative navigation
 - **Architecture**: Clean Architecture + Feature-First organization
-- **Backend Integration**: RESTful APIs with dio
-- **Local Storage**: flutter_secure_storage for sensitive data
+- **Backend Integration**: RESTful APIs with dio ^5.3.2
+- **Local Storage**: flutter_secure_storage ^9.0.0 for sensitive data
+- **Dependency Injection**: get_it ^7.6.4 service locator pattern
+- **Functional Programming**: dartz ^0.10.1 for Either types
+- **Value Equality**: equatable ^2.0.5 for state comparison
+- **Image Handling**: image_picker ^1.0.4 for media selection
+- **Calendar UI**: syncfusion_flutter_calendar ^23.1.36
+- **Testing**: flutter_test, mockito, bloc_test for comprehensive testing
 
 ## Architecture Guidelines
 
 ### Feature-First Organization
 ```
-lib/features/
-├── authentication/
-│   ├── domain/
-│   │   ├── entities/
-│   │   ├── repositories/
-│   │   └── usecases/
-│   ├── infrastructure/
-│   │   ├── datasources/
-│   │   ├── models/
-│   │   └── repositories/
-│   ├── application/
-│   │   ├── blocs/
-│   │   ├── cubits/
-│   │   └── events/
-│   └── presentation/
-│       ├── screens/
-│       ├── widgets/
-│       └── pages/
+lib/
+├── app.dart                    # Main app wrapper with focus/navigation listeners
+├── main.dart                   # App entry point and dependency setup
+├── core/                       # Shared utilities and widgets
+│   ├── constants/              # App-wide constants
+│   ├── error/                  # Error handling and failure types
+│   ├── network/                # API client configuration
+│   ├── theme/                  # Material 3 theme configuration
+│   ├── utils/                  # Helper utilities
+│   └── widgets/                # Reusable UI components
+│       ├── app_header.dart     # Common app header with notifications
+│       ├── app_bottom_bar.dart # Custom bottom navigation
+│       └── dashboard/          # Dashboard-specific components
+├── features/
+│   ├── authentication/
+│   │   ├── domain/
+│   │   │   ├── entities/       # Core business objects
+│   │   │   ├── repositories/   # Abstract repository interfaces
+│   │   │   └── usecases/       # Business logic use cases
+│   │   ├── infrastructure/
+│   │   │   ├── datasources/    # Remote and local data sources
+│   │   │   ├── models/         # Data transfer objects
+│   │   │   └── repositories/   # Repository implementations
+│   │   ├── application/
+│   │   │   ├── blocs/          # Complex state management
+│   │   │   ├── cubits/         # Simple state management
+│   │   │   └── events/         # Event definitions
+│   │   └── presentation/
+│   │       ├── screens/        # Full screen widgets
+│   │       ├── widgets/        # Feature-specific components
+│   │       └── pages/          # Page-level components
+│   ├── projects/               # Project management feature
+│   ├── notifications/          # Real-time notifications
+│   ├── calendar/               # Work scheduling
+│   └── profile/                # User profile and settings
+└── shared/                     # Cross-feature shared code
+    ├── dependency_injection/   # Service locator setup
+    └── routing/                # App routing configuration
 ```
 
 ### Core Principles
@@ -50,6 +86,9 @@ lib/features/
 - Use const constructors wherever possible for performance
 - Implement proper key usage for widget identity
 - Follow Material Design 3 principles for consistent UI
+- Prefer StatelessWidget over StatefulWidget when possible
+- Break down large widgets into smaller, focused components
+- Use responsive design patterns for different screen sizes
 
 ## State Management Patterns
 
@@ -179,6 +218,9 @@ Widget _buildResponsiveLayout(BuildContext context) {
 - Implement custom animations with AnimationController for complex scenarios
 - Follow Material motion guidelines for duration and curves
 - Add meaningful transitions between screens
+- Consider performance impact of animations on lower-end devices
+- Use appropriate easing curves for natural motion
+- Keep animation durations reasonable (200-300ms for UI feedback)
 
 ## Key Dependencies & Usage
 
@@ -291,6 +333,72 @@ testWidgets('AuthScreen should show loading indicator when signing in', (tester)
 });
 ```
 
+## Testing Best Practices
+
+### Widget Testing Patterns
+```dart
+// Test with BLoC providers
+testWidgets('should display project list when loaded', (tester) async {
+  final mockProjectBloc = MockProjectBloc();
+  
+  when(() => mockProjectBloc.state).thenReturn(
+    ProjectLoaded(projects: [mockProject]),
+  );
+  
+  await tester.pumpWidget(
+    MaterialApp(
+      home: BlocProvider<ProjectBloc>.value(
+        value: mockProjectBloc,
+        child: const ProjectListScreen(),
+      ),
+    ),
+  );
+  
+  expect(find.byType(ProjectCard), findsOneWidget);
+  expect(find.text(mockProject.name), findsOneWidget);
+});
+```
+
+### BLoC Testing
+```dart
+// Test BLoC events and states
+blocTest<ProjectBloc, ProjectState>(
+  'should emit ProjectLoaded when ProjectLoadRequested is added',
+  build: () => ProjectBloc(mockRepository),
+  act: (bloc) => bloc.add(ProjectLoadRequested()),
+  expect: () => [
+    ProjectLoading(),
+    ProjectLoaded(projects: mockProjects),
+  ],
+  verify: () {
+    verify(() => mockRepository.getProjects()).called(1);
+  },
+);
+```
+
+### Integration Testing
+```dart
+// End-to-end user flows
+testWidgets('complete project creation flow', (tester) async {
+  await tester.pumpWidget(MyApp());
+  
+  // Navigate to project creation
+  await tester.tap(find.byIcon(Icons.add));
+  await tester.pumpAndSettle();
+  
+  // Fill form
+  await tester.enterText(find.byKey(Key('project_name_field')), 'Test Project');
+  await tester.enterText(find.byKey(Key('project_description_field')), 'Description');
+  
+  // Submit
+  await tester.tap(find.byKey(Key('create_project_button')));
+  await tester.pumpAndSettle();
+  
+  // Verify success
+  expect(find.text('Project created successfully'), findsOneWidget);
+});
+```
+
 ## Security & Performance
 
 ### Security Best Practices
@@ -308,6 +416,42 @@ testWidgets('AuthScreen should show loading indicator when signing in', (tester)
 - Use **ListView.builder** for long lists
 - **Dispose** controllers and subscriptions properly
 - Implement **pagination** for large data sets
+
+### Performance Best Practices
+- **Minimize rebuilds**: Use BlocSelector and BlocBuilder appropriately
+- **Optimize images**: Use cached_network_image for remote images
+- **Lazy loading**: Implement pagination for large datasets
+- **Memory management**: Dispose controllers and close streams
+- **Widget optimization**: Use RepaintBoundary for expensive widgets
+- **Build optimization**: Use const constructors and widgets
+- **State optimization**: Keep state classes lightweight and immutable
+
+### Build Optimization
+```dart
+// Good: Using const constructor
+const Card(
+  child: ListTile(
+    title: Text('Static Content'),
+  ),
+);
+
+// Good: Separating dynamic content
+class DynamicCard extends StatelessWidget {
+  const DynamicCard({super.key, required this.data});
+  
+  final String data;
+  
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: ListTile(
+        title: Text(data), // Only this rebuilds when data changes
+        trailing: const Icon(Icons.arrow_forward), // This stays const
+      ),
+    );
+  }
+}
+```
 
 ### Memory Management
 ```dart
@@ -434,24 +578,303 @@ flutter packages pub run build_runner build --delete-conflicting-outputs
 
 ---
 
-## Quick Reference Commands
+## Quick Reference
 
-### Flutter Commands
+### Essential Commands
 ```bash
+# Flutter Development
 flutter create --template app --platforms android,ios my_app
 flutter pub get
-flutter pub upgrade
+flutter pub upgrade --major-versions
 flutter analyze
-flutter test
+flutter test --coverage
 flutter build apk --release
 flutter build ios --release
-```
 
-### Code Analysis
-```bash
+# Code Generation
+flutter packages pub run build_runner build
+flutter packages pub run build_runner watch
+flutter packages pub run build_runner build --delete-conflicting-outputs
+
+# Code Quality
 dart analyze
 dart format .
 flutter test --coverage
+dart run import_sorter:main
 ```
 
-Remember: Always prioritize code readability, maintainability, and testability. When in doubt, favor explicit over implicit, and simple over complex.
+### Common Patterns Quick Reference
+```dart
+// BLoC Event Pattern
+abstract class ProjectEvent extends Equatable {
+  const ProjectEvent();
+  @override
+  List<Object> get props => [];
+}
+
+// Repository Pattern
+abstract class ProjectRepository {
+  Future<Either<Failure, List<Project>>> getProjects();
+  Future<Either<Failure, Project>> createProject(CreateProjectParams params);
+}
+
+// Use Case Pattern
+class GetProjectsUseCase {
+  const GetProjectsUseCase(this._repository);
+  final ProjectRepository _repository;
+  
+  Future<Either<Failure, List<Project>>> call() => _repository.getProjects();
+}
+```
+
+### Material 3 Color Usage
+```dart
+// Use semantic colors from theme
+final colors = Theme.of(context).colorScheme;
+Container(
+  color: colors.surface,
+  child: Text(
+    'Content',
+    style: TextStyle(color: colors.onSurface),
+  ),
+)
+```
+
+### Remember
+- **Code Quality**: Prioritize readability, maintainability, and testability
+- **Performance**: Use const constructors, lazy loading, and proper disposal
+- **Architecture**: Maintain clean separation between layers
+- **Testing**: Write comprehensive unit, widget, and integration tests
+- **User Experience**: Handle loading states, errors, and empty states gracefully
+- **Security**: Never hardcode sensitive data, use secure storage appropriately
+
+When in doubt, favor **explicit over implicit** and **simple over complex**.
+
+## Navigation & Routing Best Practices
+
+### Go Router Configuration
+```dart
+// Define routes with proper type safety
+final GoRouter router = GoRouter(
+  initialLocation: '/dashboard',
+  routes: [
+    GoRoute(
+      path: '/login',
+      name: 'login',
+      builder: (context, state) => const LoginScreen(),
+    ),
+    GoRoute(
+      path: '/dashboard',
+      name: 'dashboard',
+      builder: (context, state) => const DashboardScreen(),
+    ),
+    GoRoute(
+      path: '/projects/:id',
+      name: 'project-detail',
+      builder: (context, state) {
+        final projectId = state.pathParameters['id']!;
+        return ProjectDetailScreen(projectId: projectId);
+      },
+    ),
+  ],
+  redirect: (context, state) {
+    final isLoggedIn = context.read<AuthCubit>().state is AuthAuthenticated;
+    if (!isLoggedIn && state.matchedLocation != '/login') {
+      return '/login';
+    }
+    return null;
+  },
+);
+```
+
+### Navigation Patterns
+- Use named routes for better maintainability
+- Implement proper deep linking support
+- Handle navigation guards for authentication
+- Use context.go() for navigation replacement
+- Use context.push() for navigation stack addition
+- Implement proper back button handling
+
+## Solar Project Specific Patterns
+
+### Project Status Management
+```dart
+enum ProjectStatus {
+  planning,
+  approved,
+  inProgress,
+  completed,
+  onHold,
+  cancelled;
+
+  String get displayName {
+    switch (this) {
+      case ProjectStatus.planning:
+        return 'Planning';
+      case ProjectStatus.approved:
+        return 'Approved';
+      case ProjectStatus.inProgress:
+        return 'In Progress';
+      case ProjectStatus.completed:
+        return 'Completed';
+      case ProjectStatus.onHold:
+        return 'On Hold';
+      case ProjectStatus.cancelled:
+        return 'Cancelled';
+    }
+  }
+
+  Color get color {
+    switch (this) {
+      case ProjectStatus.planning:
+        return Colors.orange;
+      case ProjectStatus.approved:
+        return Colors.blue;
+      case ProjectStatus.inProgress:
+        return Colors.green;
+      case ProjectStatus.completed:
+        return Colors.teal;
+      case ProjectStatus.onHold:
+        return Colors.amber;
+      case ProjectStatus.cancelled:
+        return Colors.red;
+    }
+  }
+}
+```
+
+### Real-time Data Patterns
+```dart
+// Stream-based real-time updates
+class ProjectStreamRepository {
+  Stream<List<Project>> watchProjects() {
+    return _projectStream.map((data) => 
+      data.map((json) => Project.fromJson(json)).toList()
+    );
+  }
+  
+  Stream<Project> watchProject(String id) {
+    return _projectStream
+        .map((data) => data.firstWhere((p) => p['id'] == id))
+        .map((json) => Project.fromJson(json));
+  }
+}
+```
+
+### Role-Based Access Control
+```dart
+enum UserRole {
+  admin,
+  projectManager,
+  technician,
+  viewer;
+
+  bool canEditProject() {
+    return this == admin || this == projectManager;
+  }
+
+  bool canViewFinancials() {
+    return this == admin || this == projectManager;
+  }
+
+  bool canManageTeam() {
+    return this == admin;
+  }
+}
+```
+
+## Data Refresh & Synchronization
+
+### App Focus & Navigation Listeners
+```dart
+// Implement in app.dart for global state management
+class _AppWrapperState extends State<AppWrapper> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // Trigger data refresh when app comes to foreground
+      context.read<ProjectBloc>().add(ProjectRefreshRequested());
+      context.read<NotificationCubit>().refreshNotifications();
+    }
+  }
+}
+```
+
+### Account Switch Data Refresh
+```dart
+// Handle account switching with proper data refresh
+class AccountSwitchHandler {
+  static Future<void> switchAccount(String accountId) async {
+    // Clear current data
+    await _clearCachedData();
+    
+    // Switch account context
+    await _authService.switchAccount(accountId);
+    
+    // Refresh all relevant data
+    _projectBloc.add(ProjectLoadRequested());
+    _notificationCubit.refreshNotifications();
+    _profileCubit.loadProfile();
+  }
+}
+```
+
+## Development Workflow
+
+### Code Quality Checklist
+- [ ] Follow naming conventions consistently
+- [ ] Use const constructors where possible
+- [ ] Implement proper error handling
+- [ ] Add meaningful comments for complex logic
+- [ ] Ensure null safety compliance
+- [ ] Test critical user flows
+- [ ] Optimize for performance
+- [ ] Follow Material Design 3 guidelines
+
+### Git Workflow
+```bash
+# Feature development
+git checkout -b feature/project-management
+git add .
+git commit -m "feat: add project creation functionality"
+git push origin feature/project-management
+
+# Code review and merge
+# Create PR, get approval, merge to main
+```
+
+### Debugging Tips
+- Use `debugPrint()` for development logging
+- Implement proper logging with different levels
+- Use Flutter Inspector for widget debugging
+- Profile performance with DevTools
+- Test on different screen sizes and orientations
+- Validate accessibility with screen readers
+
+### Environment Configuration
+```dart
+// Environment-specific configurations
+abstract class AppConfig {
+  static const String baseUrl = String.fromEnvironment(
+    'BASE_URL',
+    defaultValue: 'https://api.example.com',
+  );
+  
+  static const bool isDebug = bool.fromEnvironment(
+    'DEBUG_MODE',
+    defaultValue: false,
+  );
+}
+```
