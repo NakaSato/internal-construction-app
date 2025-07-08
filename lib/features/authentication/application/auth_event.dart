@@ -24,26 +24,6 @@ class AuthSignInRequested extends AuthEvent {
   List<Object?> get props => [username, password];
 }
 
-/// Event to register with user details
-class AuthRegisterRequested extends AuthEvent {
-  const AuthRegisterRequested({
-    required this.username,
-    required this.email,
-    required this.password,
-    required this.fullName,
-    required this.roleId,
-  });
-
-  final String username;
-  final String email;
-  final String password;
-  final String fullName;
-  final int roleId;
-
-  @override
-  List<Object?> get props => [username, email, password, fullName, roleId];
-}
-
 /// Event to send password reset email
 class AuthPasswordResetRequested extends AuthEvent {
   const AuthPasswordResetRequested({required this.email});

@@ -126,38 +126,51 @@ class InfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: SolarSpacing.sm),
-      elevation: 2,
-      color: backgroundColor ?? context.colorScheme.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(SolarBorderRadius.md),
-        side: BorderSide(color: context.colorScheme.outlineVariant.withValues(alpha: 0.3)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(SolarSpacing.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Card title with optional icon
-            _buildHeader(context),
+    return RepaintBoundary(
+      child: Card(
+        margin: const EdgeInsets.symmetric(vertical: SolarSpacing.sm),
+        elevation: 2,
+        color: backgroundColor ?? context.colorScheme.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(SolarBorderRadius.md),
+          side: BorderSide(
+            color: Color.alphaBlend(context.colorScheme.outlineVariant.withOpacity(0.3), Colors.transparent),
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(SolarSpacing.lg),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Card title with optional icon
+              _InfoCardHeader(title: title, icon: icon),
 
-            const SizedBox(height: SolarSpacing.md),
+              const SizedBox(height: SolarSpacing.md),
 
-            // Divider
-            _buildDivider(context),
+              // Divider
+              _InfoCardDivider(),
 
-            const SizedBox(height: SolarSpacing.md),
+              const SizedBox(height: SolarSpacing.md),
 
-            // Content
-            ...children,
-          ],
+              // Content
+              ...children,
+            ],
+          ),
         ),
       ),
     );
   }
+}
 
-  Widget _buildHeader(BuildContext context) {
+/// Optimized header widget for InfoCard
+class _InfoCardHeader extends StatelessWidget {
+  const _InfoCardHeader({required this.title, this.icon});
+
+  final String title;
+  final IconData? icon;
+
+  @override
+  Widget build(BuildContext context) {
     return Row(
       children: [
         if (icon != null) ...[
@@ -176,9 +189,18 @@ class InfoCard extends StatelessWidget {
       ],
     );
   }
+}
 
-  Widget _buildDivider(BuildContext context) {
-    return Container(height: 1, color: context.colorScheme.outlineVariant.withValues(alpha: 0.3));
+/// Optimized divider widget for InfoCard
+class _InfoCardDivider extends StatelessWidget {
+  const _InfoCardDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 1,
+      color: Color.alphaBlend(context.colorScheme.outlineVariant.withOpacity(0.3), Colors.transparent),
+    );
   }
 }
 

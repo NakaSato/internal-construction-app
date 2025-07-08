@@ -4,7 +4,7 @@ import 'package:dartz/dartz.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../../core/mixins/realtime_api_mixin.dart';
-import '../../../../core/error/failures.dart';
+import '../../../../core/errors/failures.dart';
 import '../models/realtime_notification_update.dart';
 import 'api_notification_repository.dart';
 import '../../domain/entities/notification.dart';
@@ -24,13 +24,9 @@ class RealtimeNotificationRepositoryWrapper with RealtimeApiMixin implements Not
   final ApiNotificationRepository _baseRepository;
 
   // Real-time update stream controllers
-  final StreamController<AppNotification> _notificationStreamController = 
-      StreamController<AppNotification>.broadcast();
-  
-  final StreamController<int> _unreadCountStreamController = 
-      StreamController<int>.broadcast();
-  
-  int _cachedUnreadCount = 0;
+  final StreamController<AppNotification> _notificationStreamController = StreamController<AppNotification>.broadcast();
+
+  final StreamController<int> _unreadCountStreamController = StreamController<int>.broadcast();
 
   @override
   String get endpointName => 'notifications';
@@ -38,7 +34,7 @@ class RealtimeNotificationRepositoryWrapper with RealtimeApiMixin implements Not
   /// Stream of real-time notification updates
   @override
   Stream<AppNotification> getNotificationStream() => _notificationStreamController.stream;
-  
+
   /// Stream of unread notification counts
   @override
   Stream<int> getUnreadCountStream() => _unreadCountStreamController.stream;
@@ -58,10 +54,10 @@ class RealtimeNotificationRepositoryWrapper with RealtimeApiMixin implements Not
   /// Handle incoming real-time updates
   void _handleRealtimeUpdate(RealtimeNotificationUpdate update) {
     if (kDebugMode) {
-      debugPrint('📡 RealtimeNotificationRepositoryWrapper: Received real-time update: ${update.type}');
+      debugPrint('📡 RealtimeNotificationRepositoryWrapper: Received real-time update: ${update.updateType}');
     }
 
-    switch (update.type) {
+    switch (update.updateType) {
       case RealtimeNotificationUpdateType.added:
       case RealtimeNotificationUpdateType.updated:
         if (update.notification != null) {
@@ -70,7 +66,6 @@ class RealtimeNotificationRepositoryWrapper with RealtimeApiMixin implements Not
         break;
       case RealtimeNotificationUpdateType.countChanged:
         if (update.unreadCount != null) {
-          _cachedUnreadCount = update.unreadCount!;
           _unreadCountStreamController.add(update.unreadCount!);
         }
         break;
@@ -110,7 +105,7 @@ class RealtimeNotificationRepositoryWrapper with RealtimeApiMixin implements Not
     // Add real-time notification flags
     // This approach mimics how the project repository adds real-time flags
     final result = await _baseRepository.markAsRead(notificationId);
-    
+
     return result;
   }
 
@@ -141,7 +136,9 @@ class RealtimeNotificationRepositoryWrapper with RealtimeApiMixin implements Not
   @override
   Future<Either<Failure, BulkNotificationResult>> deleteMultipleNotifications(List<String> notificationIds) async {
     if (kDebugMode) {
-      debugPrint('🗑️ RealtimeNotificationRepositoryWrapper.deleteMultipleNotifications called with real-time notifications');
+      debugPrint(
+        '🗑️ RealtimeNotificationRepositoryWrapper.deleteMultipleNotifications called with real-time notifications',
+      );
     }
     return await _baseRepository.deleteMultipleNotifications(notificationIds);
   }
@@ -153,7 +150,7 @@ class RealtimeNotificationRepositoryWrapper with RealtimeApiMixin implements Not
     }
     return await _baseRepository.getNotificationStatistics();
   }
-  
+
   @override
   Future<Either<Failure, NotificationSettings>> getNotificationSettings() async {
     if (kDebugMode) {
@@ -161,11 +158,9 @@ class RealtimeNotificationRepositoryWrapper with RealtimeApiMixin implements Not
     }
     return await _baseRepository.getNotificationSettings();
   }
-  
+
   @override
-  Future<Either<Failure, NotificationSettings>> updateNotificationSettings(
-    NotificationSettings settings,
-  ) async {
+  Future<Either<Failure, NotificationSettings>> updateNotificationSettings(NotificationSettings settings) async {
     if (kDebugMode) {
       debugPrint('⚙️ RealtimeNotificationRepositoryWrapper.updateNotificationSettings called with real-time support');
     }

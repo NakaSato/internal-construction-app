@@ -1,7 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:injectable/injectable.dart';
 
-import '../../../../core/error/failures.dart';
+import '../../../../core/errors/failures.dart';
 import '../../domain/entities/notification.dart';
 import '../../domain/entities/notification_settings.dart';
 import '../../domain/entities/notifications_response.dart';
@@ -12,7 +12,7 @@ import '../datasources/notification_remote_data_source.dart';
 @Injectable()
 class ApiNotificationRepository implements NotificationRepository {
   final NotificationRemoteDataSource _remoteDataSource;
-  
+
   ApiNotificationRepository(this._remoteDataSource);
 
   @override
@@ -96,7 +96,7 @@ class ApiNotificationRepository implements NotificationRepository {
       return Left(UnknownFailure(e.toString()));
     }
   }
-  
+
   @override
   Future<Either<Failure, NotificationSettings>> getNotificationSettings() async {
     try {
@@ -106,11 +106,9 @@ class ApiNotificationRepository implements NotificationRepository {
       return Left(UnknownFailure(e.toString()));
     }
   }
-  
+
   @override
-  Future<Either<Failure, NotificationSettings>> updateNotificationSettings(
-    NotificationSettings settings,
-  ) async {
+  Future<Either<Failure, NotificationSettings>> updateNotificationSettings(NotificationSettings settings) async {
     try {
       final updatedSettings = await _remoteDataSource.updateNotificationSettings(settings);
       return Right(updatedSettings);
@@ -118,13 +116,13 @@ class ApiNotificationRepository implements NotificationRepository {
       return Left(UnknownFailure(e.toString()));
     }
   }
-  
+
   @override
   Stream<AppNotification> getNotificationStream() {
     // Not implemented in the base repository
     throw UnimplementedError('Real-time notifications not available in base repository');
   }
-  
+
   @override
   Stream<int> getUnreadCountStream() {
     // Not implemented in the base repository

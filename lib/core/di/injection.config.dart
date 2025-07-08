@@ -13,6 +13,7 @@ import 'package:dio/dio.dart' as _i361;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart' as _i558;
 import 'package:get_it/get_it.dart' as _i174;
 import 'package:injectable/injectable.dart' as _i526;
+import 'package:shared_preferences/shared_preferences.dart' as _i460;
 
 import '../../features/authentication/application/auth_bloc.dart' as _i574;
 import '../../features/authentication/application/auth_cubit.dart' as _i153;
@@ -20,8 +21,6 @@ import '../../features/authentication/data/datasources/auth_api_service.dart'
     as _i1066;
 import '../../features/authentication/data/repositories/api_auth_repository.dart'
     as _i410;
-import '../../features/authentication/data/repositories/auth_repository_factory.dart'
-    as _i580;
 import '../../features/authentication/domain/repositories/auth_repository.dart'
     as _i742;
 import '../../features/authentication/infrastructure/auth_repository_factory.dart'
@@ -42,6 +41,20 @@ import '../../features/daily_reports/domain/repositories/daily_report_repository
     as _i137;
 import '../../features/daily_reports/infrastructure/services/daily_reports_api_service.dart'
     as _i975;
+import '../../features/notifications/application/cubits/notification_cubit.dart'
+    as _i359;
+import '../../features/notifications/application/cubits/notification_settings_cubit.dart'
+    as _i862;
+import '../../features/notifications/data/datasources/notification_remote_data_source.dart'
+    as _i757;
+import '../../features/notifications/data/repositories/api_notification_repository.dart'
+    as _i612;
+import '../../features/notifications/data/repositories/notification_repository_impl.dart'
+    as _i361;
+import '../../features/notifications/data/repositories/realtime_notification_repository_wrapper.dart'
+    as _i681;
+import '../../features/notifications/domain/repositories/notification_repository.dart'
+    as _i367;
 import '../../features/projects/application/project_bloc.dart' as _i488;
 import '../../features/projects/data/datasources/project_api_service.dart'
     as _i706;
@@ -85,25 +98,32 @@ import '../services/signalr_service.dart' as _i320;
 import '../services/token_service.dart' as _i227;
 import '../services/unified_realtime_api_service.dart' as _i53;
 import '../services/universal_realtime_handler.dart' as _i761;
+import '../storage/cache_service.dart' as _i796;
+import '../storage/preferences_service.dart' as _i636;
 import '../storage/secure_storage_service.dart' as _i666;
 import 'auth_module.dart' as _i784;
 import 'injection.dart' as _i464;
 
+const String _test = 'test';
 const String _dev = 'dev';
 const String _prod = 'prod';
 
 extension GetItInjectableX on _i174.GetIt {
   // initializes the registration of main-scope dependencies inside of GetIt
-  _i174.GetIt init({
+  Future<_i174.GetIt> init({
     String? environment,
     _i526.EnvironmentFilter? environmentFilter,
-  }) {
+  }) async {
     final gh = _i526.GetItHelper(this, environment, environmentFilter);
     final externalDependenciesModule = _$ExternalDependenciesModule();
     final networkModule = _$NetworkModule();
     final authModule = _$AuthModule();
     gh.lazySingleton<_i558.FlutterSecureStorage>(
       () => externalDependenciesModule.secureStorage,
+    );
+    await gh.lazySingletonAsync<_i460.SharedPreferences>(
+      () => externalDependenciesModule.sharedPreferences,
+      preResolve: true,
     );
     gh.lazySingleton<String>(() => externalDependenciesModule.baseUrl);
     gh.lazySingleton<_i361.Dio>(() => networkModule.dio());
@@ -124,6 +144,12 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i528.WbsRepository>(
       () => _i1011.WbsRepositoryImpl(gh<_i66.WBSApiService>()),
     );
+    gh.lazySingleton<_i636.PreferencesService>(
+      () => _i636.PreferencesService(gh<_i460.SharedPreferences>()),
+    );
+    gh.lazySingleton<_i796.CacheService>(
+      () => _i796.CacheService(gh<_i460.SharedPreferences>()),
+    );
     gh.factory<_i154.TaskRemoteDataSource>(
       () => _i88.TaskRemoteDataSourceImpl(
         client: gh<_i361.Dio>(),
@@ -137,11 +163,19 @@ extension GetItInjectableX on _i174.GetIt {
       ),
       instanceName: 'api',
     );
+    gh.lazySingleton<_i757.NotificationRemoteDataSource>(
+      () => _i757.NotificationRemoteDataSource(gh<_i557.ApiClient>()),
+    );
     gh.factory<_i975.DailyReportsApiService>(
       () => _i975.DailyReportsApiService(gh<_i557.ApiClient>()),
     );
     gh.factory<_i706.ProjectApiService>(
       () => _i706.ProjectApiService(gh<_i361.Dio>(), baseUrl: gh<String>()),
+    );
+    gh.factory<_i612.ApiNotificationRepository>(
+      () => _i612.ApiNotificationRepository(
+        gh<_i757.NotificationRemoteDataSource>(),
+      ),
     );
     gh.factory<_i1070.TaskRepositoryImpl>(
       () => _i1070.TaskRepositoryImpl(
@@ -154,6 +188,12 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i937.WorkCalendarBloc>(
       () => _i937.WorkCalendarBloc(gh<_i503.WorkCalendarRepository>()),
+    );
+    gh.factory<_i361.NotificationRepositoryImpl>(
+      () => _i361.NotificationRepositoryImpl(
+        gh<_i757.NotificationRemoteDataSource>(),
+      ),
+      registerFor: {_test},
     );
     gh.factory<_i560.ApiTaskRepository>(
       () => _i560.ApiTaskRepository(gh<_i1070.TaskRepositoryImpl>()),
@@ -178,10 +218,11 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i742.AuthRepository>(instanceName: 'api'),
       ),
     );
-    gh.lazySingleton<_i580.AuthRepositoryFactory>(
-      () => _i580.AuthRepositoryFactory(
-        gh<_i742.AuthRepository>(instanceName: 'api'),
+    gh.lazySingleton<_i367.NotificationRepository>(
+      () => _i681.RealtimeNotificationRepositoryWrapper(
+        gh<_i612.ApiNotificationRepository>(),
       ),
+      registerFor: {_dev, _prod},
     );
     gh.factory<_i572.GetProjectWbs>(
       () => _i572.GetProjectWbs(gh<_i528.WbsRepository>()),
@@ -208,6 +249,12 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i585.ApiProjectRepository>(
       () => _i585.ApiProjectRepository(gh<_i706.ProjectApiService>()),
     );
+    gh.factory<_i153.AuthCubit>(
+      () => _i153.AuthCubit(
+        gh<_i202.AuthRepositoryFactory>(),
+        gh<_i636.PreferencesService>(),
+      ),
+    );
     gh.factory<_i338.ProjectRepository>(
       () => _i1043.RealtimeProjectRepositoryWrapper(
         gh<_i585.ApiProjectRepository>(),
@@ -221,6 +268,12 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i907.CalendarManagementBloc>(
       () =>
           _i907.CalendarManagementBloc(gh<_i28.CalendarManagementRepository>()),
+    );
+    gh.factory<_i359.NotificationCubit>(
+      () => _i359.NotificationCubit(gh<_i367.NotificationRepository>()),
+    );
+    gh.factory<_i862.NotificationSettingsCubit>(
+      () => _i862.NotificationSettingsCubit(gh<_i367.NotificationRepository>()),
     );
     gh.lazySingleton<_i488.ProjectBloc>(
       () => _i488.ProjectBloc(
@@ -246,9 +299,6 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i50.ApiDailyReportRepository>(),
       ),
       registerFor: {_dev, _prod},
-    );
-    gh.factory<_i153.AuthCubit>(
-      () => _i153.AuthCubit(gh<_i202.AuthRepositoryFactory>()),
     );
     gh.factory<_i574.AuthBloc>(
       () => _i574.AuthBloc(

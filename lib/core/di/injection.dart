@@ -2,15 +2,12 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:injectable/injectable.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'injection.config.dart';
 import '../config/environment_config.dart' as app_env;
 import '../../features/projects/domain/repositories/project_repository.dart';
 import '../../features/authorization/config/authorization_di.dart';
-import '../../features/calendar/config/mock_calendar_management_di.dart';
-import '../../features/daily_reports/config/daily_reports_di.dart';
 import '../../features/work_calendar/config/mock_work_calendar_di.dart';
-import '../../features/wbs/config/wbs_di.dart';
-import 'api_services_registration.dart';
 
 final GetIt getIt = GetIt.instance;
 
@@ -27,6 +24,10 @@ String _getInjectableEnvironment() {
   };
 
   print('🔧 DI Environment mapping: $appEnv -> $injectableEnv');
+  
+  // Force debug output to verify the mapping
+  print('🔍 Injectable constants: dev=${Environment.dev}, prod=${Environment.prod}');
+  
   return injectableEnv;
 }
 
@@ -49,8 +50,8 @@ Future<void> initializeDependencies() async {
   // Configure authorization dependencies
   configureAuthorizationDependencies();
 
-  // Configure calendar management dependencies with mock implementations
-  configureCalendarManagementDependencies();
+  // Configure calendar management dependencies with mock implementations - disabled in favor of Injectable
+  // configureCalendarManagementDependencies();
 
   // Configure work calendar dependencies with mock implementations
   configureWorkCalendarDependencies();
@@ -60,14 +61,14 @@ Future<void> initializeDependencies() async {
   // ApiProjectRepository for production environments
   // await enhanced_di.setupDependencies(); // Disabled to avoid conflicts
 
-  // Configure daily reports dependencies
-  configureDailyReportsDependencies();
+  // Configure daily reports dependencies - disabled in favor of Injectable system
+  // configureDailyReportsDependencies();
 
-  // Configure WBS dependencies
-  WbsDI.configure(getIt);
+  // Configure WBS dependencies - disabled in favor of Injectable annotations
+  // WbsDI.configure(getIt);
 
-  // Register API services
-  ApiServicesRegistration.registerApiServices(getIt);
+  // Note: API services are now handled by Injectable system
+  // ApiServicesRegistration.registerApiServices(getIt); // Disabled to avoid conflicts
 }
 
 /// Log which repository implementation is being used for debugging
@@ -93,6 +94,10 @@ void _logRepositorySelection() {
 abstract class ExternalDependenciesModule {
   @lazySingleton
   FlutterSecureStorage get secureStorage => const FlutterSecureStorage();
+
+  @preResolve
+  @lazySingleton
+  Future<SharedPreferences> get sharedPreferences => SharedPreferences.getInstance();
 
   @lazySingleton
   String get baseUrl => app_env.EnvironmentConfig.apiBaseUrl;

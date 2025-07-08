@@ -3,17 +3,7 @@ import '../entities/user.dart';
 /// Abstract repository interface for authentication operations
 abstract class AuthRepository {
   /// Sign in with email and password
-  Future<User> signInWithEmailAndPassword({
-    required String email,
-    required String password,
-  });
-
-  /// Register a new user with email and password
-  Future<User> registerWithEmailAndPassword({
-    required String email,
-    required String password,
-    required String name,
-  });
+  Future<User> signInWithEmailAndPassword({required String email, required String password});
 
   /// Send password reset email
   Future<void> sendPasswordResetEmail(String email);
@@ -43,11 +33,7 @@ abstract class AuthRepository {
   Future<User> verifyEmail(String verificationCode);
 
   /// Update user profile
-  Future<User> updateProfile({
-    String? name,
-    String? phoneNumber,
-    String? profileImageUrl,
-  });
+  Future<User> updateProfile({String? name, String? phoneNumber, String? profileImageUrl});
 
   /// Delete user account
   Future<void> deleteAccount();

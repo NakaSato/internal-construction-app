@@ -13,6 +13,7 @@ import 'core/services/realtime_api_streams.dart'; // Add this import for Realtim
 
 // Feature imports - Authentication
 import 'features/authentication/application/auth_bloc.dart';
+import 'features/authentication/application/auth_cubit.dart';
 import 'features/authentication/application/auth_event.dart';
 import 'features/authentication/application/auth_state.dart' as auth;
 
@@ -24,7 +25,6 @@ import 'features/daily_reports/application/cubits/daily_reports_cubit.dart';
 
 // Feature imports - Project Management
 import 'features/projects/application/project_bloc.dart';
-import 'features/projects/domain/entities/project_api_models.dart';
 
 // Feature imports - Work Calendar
 import 'features/work_calendar/application/work_calendar_bloc.dart';
@@ -211,6 +211,11 @@ class ConstructionApp extends StatelessWidget {
 
   /// Adds standard providers with graceful failure handling.
   void _addStandardProviders(List<BlocProvider> providers) {
+    // AuthCubit for login screen - important but not critical
+    providers.add(
+      BlocProvider<AuthCubit>(create: (context) => _createBlocSafely<AuthCubit>(() => getIt<AuthCubit>(), 'AuthCubit')),
+    );
+
     // Work calendar - important but not critical
     providers.add(
       BlocProvider<WorkCalendarBloc>(

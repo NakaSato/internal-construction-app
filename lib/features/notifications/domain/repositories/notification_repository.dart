@@ -1,6 +1,6 @@
 import 'package:dartz/dartz.dart';
 
-import '../../../../core/error/failures.dart';
+import '../../../../core/errors/failures.dart';
 import '../entities/notification.dart';
 import '../entities/notification_settings.dart';
 import '../entities/notifications_response.dart';
@@ -22,31 +22,31 @@ class NotificationsQuery {
 
   /// The page number (1-based)
   final int pageNumber;
-  
+
   /// Number of items per page
   final int pageSize;
-  
+
   /// Filter by read status (null for both)
   final bool? isRead;
-  
+
   /// Filter by notification type
   final NotificationType? type;
-  
+
   /// Filter by notification priority
   final NotificationPriority? priority;
-  
+
   /// Filter by category
   final String? category;
-  
+
   /// Filter by start date (created on or after)
   final DateTime? startDate;
-  
+
   /// Filter by end date (created on or before)
   final DateTime? endDate;
-  
+
   /// Whether to include summary statistics
   final bool includeSummary;
-  
+
   /// Whether to include expired notifications
   final bool includeExpired;
 
@@ -58,14 +58,14 @@ class NotificationsQuery {
       'includeSummary': includeSummary.toString(),
       'includeExpired': includeExpired.toString(),
     };
-    
+
     if (isRead != null) params['isRead'] = isRead.toString();
     if (type != null) params['type'] = type!.value;
     if (priority != null) params['priority'] = priority!.value;
     if (category != null) params['category'] = category!;
     if (startDate != null) params['startDate'] = startDate!.toIso8601String();
     if (endDate != null) params['endDate'] = endDate!.toIso8601String();
-    
+
     return params;
   }
 
@@ -100,7 +100,7 @@ class NotificationsQuery {
 /// Repository interface for notification operations
 abstract class NotificationRepository {
   /// Get notifications for the authenticated user with filtering and pagination
-  /// 
+  ///
   /// Returns a NotificationsResponse with items and pagination metadata
   Future<Either<Failure, NotificationsResponse>> getNotifications({
     NotificationsQuery query = const NotificationsQuery(),
@@ -126,18 +126,16 @@ abstract class NotificationRepository {
 
   /// Get notification statistics
   Future<Either<Failure, NotificationCountStatistics>> getNotificationStatistics();
-  
+
   /// Get notification settings for the current user
   Future<Either<Failure, NotificationSettings>> getNotificationSettings();
-  
+
   /// Update notification settings
-  Future<Either<Failure, NotificationSettings>> updateNotificationSettings(
-    NotificationSettings settings,
-  );
-  
+  Future<Either<Failure, NotificationSettings>> updateNotificationSettings(NotificationSettings settings);
+
   /// Get the real-time notification stream
   Stream<AppNotification> getNotificationStream();
-  
+
   /// Get the unread notification count stream
   Stream<int> getUnreadCountStream();
 }

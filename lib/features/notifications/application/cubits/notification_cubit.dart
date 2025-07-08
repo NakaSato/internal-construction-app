@@ -3,10 +3,11 @@ import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:injectable/injectable.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/services/realtime_api_streams.dart';
-import '../../../core/error/failures.dart';
+import '../../../../core/errors/failures.dart';
 import '../../domain/entities/notification.dart';
 import '../../domain/entities/notifications_response.dart';
 import '../../domain/repositories/notification_repository.dart';
@@ -65,10 +66,10 @@ class NotificationCubit extends Cubit<NotificationState> {
     if (state is NotificationLoaded) {
       final currentState = state as NotificationLoaded;
       final updatedNotifications = List<AppNotification>.from(currentState.notifications);
-      
+
       // Check if this notification is already in the list
       final index = updatedNotifications.indexWhere((n) => n.id == notification.id);
-      
+
       if (index >= 0) {
         // Update existing notification
         updatedNotifications[index] = notification;
@@ -76,19 +77,13 @@ class NotificationCubit extends Cubit<NotificationState> {
         // Add new notification at the beginning (most recent first)
         updatedNotifications.insert(0, notification);
       }
-      
-      emit(currentState.copyWith(
-        notifications: updatedNotifications,
-        hasNewNotifications: true,
-      ));
+
+      emit(currentState.copyWith(notifications: updatedNotifications, hasNewNotifications: true));
     }
   }
 
   /// Fetch notifications with optional filtering and pagination
-  Future<void> fetchNotifications({
-    bool refresh = false,
-    NotificationsQuery? query,
-  }) async {
+  Future<void> fetchNotifications({bool refresh = false, NotificationsQuery? query}) async {
     if (refresh) {
       emit(NotificationLoading());
     } else if (state is NotificationLoaded) {
@@ -102,15 +97,12 @@ class NotificationCubit extends Cubit<NotificationState> {
     final notificationsQuery = query ?? const NotificationsQuery(includeSummary: true);
 
     final result = await _repository.getNotifications(query: notificationsQuery);
-    
+
     result.fold(
       (failure) {
         if (state is NotificationLoaded && !refresh) {
           final currentState = state as NotificationLoaded;
-          emit(currentState.copyWith(
-            isLoadingMore: false,
-            error: _mapFailureToMessage(failure),
-          ));
+          emit(currentState.copyWith(isLoadingMore: false, error: _mapFailureToMessage(failure)));
         } else {
           emit(NotificationError(_mapFailureToMessage(failure)));
         }
@@ -118,24 +110,28 @@ class NotificationCubit extends Cubit<NotificationState> {
       (response) {
         if (state is NotificationLoaded && !refresh) {
           final currentState = state as NotificationLoaded;
-          emit(NotificationLoaded(
-            notifications: currentState.notifications + response.items,
-            unreadCount: currentState.unreadCount,
-            hasMoreToLoad: response.hasNextPage,
-            currentPage: response.pageNumber,
-            totalItems: response.totalCount,
-            summary: response.summary,
-            isLoadingMore: false,
-          ));
+          emit(
+            NotificationLoaded(
+              notifications: currentState.notifications + response.items,
+              unreadCount: currentState.unreadCount,
+              hasMoreToLoad: response.hasNextPage,
+              currentPage: response.pageNumber,
+              totalItems: response.totalCount,
+              summary: response.summary,
+              isLoadingMore: false,
+            ),
+          );
         } else {
-          emit(NotificationLoaded(
-            notifications: response.items,
-            unreadCount: response.summary?.unreadCount ?? 0,
-            hasMoreToLoad: response.hasNextPage,
-            currentPage: response.pageNumber,
-            totalItems: response.totalCount,
-            summary: response.summary,
-          ));
+          emit(
+            NotificationLoaded(
+              notifications: response.items,
+              unreadCount: response.summary?.unreadCount ?? 0,
+              hasMoreToLoad: response.hasNextPage,
+              currentPage: response.pageNumber,
+              totalItems: response.totalCount,
+              summary: response.summary,
+            ),
+          );
         }
       },
     );
@@ -145,17 +141,14 @@ class NotificationCubit extends Cubit<NotificationState> {
   Future<void> loadMoreNotifications() async {
     if (state is NotificationLoaded) {
       final currentState = state as NotificationLoaded;
-      
+
       if (!currentState.hasMoreToLoad || currentState.isLoadingMore) {
         return;
       }
-      
+
       // Create query for next page
-      final query = NotificationsQuery(
-        pageNumber: currentState.currentPage + 1,
-        includeSummary: false,
-      );
-      
+      final query = NotificationsQuery(pageNumber: currentState.currentPage + 1, includeSummary: false);
+
       await fetchNotifications(query: query);
     }
   }
@@ -163,14 +156,12 @@ class NotificationCubit extends Cubit<NotificationState> {
   /// Mark a notification as read
   Future<void> markAsRead(String notificationId) async {
     final result = await _repository.markAsRead(notificationId);
-    
+
     result.fold(
       (failure) {
         if (state is NotificationLoaded) {
           final currentState = state as NotificationLoaded;
-          emit(currentState.copyWith(
-            error: 'Failed to mark notification as read: ${_mapFailureToMessage(failure)}',
-          ));
+          emit(currentState.copyWith(error: 'Failed to mark notification as read: ${_mapFailureToMessage(failure)}'));
         }
       },
       (updatedNotification) {
@@ -182,11 +173,13 @@ class NotificationCubit extends Cubit<NotificationState> {
             }
             return notification;
           }).toList();
-          
-          emit(currentState.copyWith(
-            notifications: updatedNotifications,
-            unreadCount: currentState.unreadCount > 0 ? currentState.unreadCount - 1 : 0,
-          ));
+
+          emit(
+            currentState.copyWith(
+              notifications: updatedNotifications,
+              unreadCount: currentState.unreadCount > 0 ? currentState.unreadCount - 1 : 0,
+            ),
+          );
         }
       },
     );
@@ -197,26 +190,24 @@ class NotificationCubit extends Cubit<NotificationState> {
     if (state is NotificationLoaded) {
       final currentState = state as NotificationLoaded;
       emit(currentState.copyWith(isUpdating: true));
-      
+
       final result = await _repository.markAllAsRead();
-      
+
       result.fold(
         (failure) {
-          emit(currentState.copyWith(
-            isUpdating: false,
-            error: 'Failed to mark all notifications as read: ${_mapFailureToMessage(failure)}',
-          ));
+          emit(
+            currentState.copyWith(
+              isUpdating: false,
+              error: 'Failed to mark all notifications as read: ${_mapFailureToMessage(failure)}',
+            ),
+          );
         },
         (bulkResult) {
           final updatedNotifications = currentState.notifications.map((notification) {
             return notification.copyWith(isRead: true, readAt: DateTime.now());
           }).toList();
-          
-          emit(currentState.copyWith(
-            notifications: updatedNotifications,
-            unreadCount: 0,
-            isUpdating: false,
-          ));
+
+          emit(currentState.copyWith(notifications: updatedNotifications, unreadCount: 0, isUpdating: false));
         },
       );
     }
@@ -227,42 +218,47 @@ class NotificationCubit extends Cubit<NotificationState> {
     if (state is NotificationLoaded) {
       final currentState = state as NotificationLoaded;
       emit(currentState.copyWith(isUpdating: true));
-      
+
       final result = await _repository.deleteNotification(notificationId);
-      
+
       result.fold(
         (failure) {
-          emit(currentState.copyWith(
-            isUpdating: false,
-            error: 'Failed to delete notification: ${_mapFailureToMessage(failure)}',
-          ));
+          emit(
+            currentState.copyWith(
+              isUpdating: false,
+              error: 'Failed to delete notification: ${_mapFailureToMessage(failure)}',
+            ),
+          );
         },
         (_) {
           final updatedNotifications = currentState.notifications
               .where((notification) => notification.id != notificationId)
               .toList();
-          
+
           // Update unread count if the deleted notification was unread
-          final wasUnread = currentState.notifications
-              .firstWhere((n) => n.id == notificationId, orElse: () => const AppNotification(
-                id: '',
-                title: '',
-                message: '',
-                type: NotificationType.info,
-                createdAt: null,
-                isRead: true,
-              ))
-              .isRead == false;
-          
+          final wasUnread =
+              currentState.notifications
+                  .firstWhere(
+                    (n) => n.id == notificationId,
+                    orElse: () => AppNotification(
+                      id: '',
+                      title: '',
+                      message: '',
+                      type: NotificationType.info,
+                      createdAt: DateTime.now(),
+                      isRead: true,
+                    ),
+                  )
+                  .isRead ==
+              false;
+
           final newUnreadCount = wasUnread && currentState.unreadCount > 0
               ? currentState.unreadCount - 1
               : currentState.unreadCount;
-          
-          emit(currentState.copyWith(
-            notifications: updatedNotifications,
-            unreadCount: newUnreadCount,
-            isUpdating: false,
-          ));
+
+          emit(
+            currentState.copyWith(notifications: updatedNotifications, unreadCount: newUnreadCount, isUpdating: false),
+          );
         },
       );
     }
@@ -271,7 +267,7 @@ class NotificationCubit extends Cubit<NotificationState> {
   /// Fetch notification statistics
   Future<void> _fetchStatistics() async {
     final result = await _repository.getNotificationStatistics();
-    
+
     result.fold(
       (failure) {
         // We don't show error for statistics failure, just log it
@@ -312,21 +308,21 @@ class NotificationCubit extends Cubit<NotificationState> {
   /// Set up app focus listener to refresh data when app comes back to foreground
   void _setupAppFocusListener() {
     _appFocusSubscription?.cancel();
-    
+
     try {
       final realtimeStreams = getIt<RealtimeApiStreams>();
-      
+
       _appFocusSubscription = realtimeStreams.appFocusStream.listen((hasFocus) {
         if (kDebugMode) {
-          debugPrint('📱 NotificationCubit: App focus returned, refreshing notifications');
+          debugPrint('NotificationCubit: App focus returned, refreshing notifications');
         }
-        
+
         // Refresh notifications when app focus returns
-        loadAllNotifications();
+        fetchNotifications(refresh: true);
       });
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('❌ NotificationCubit: Failed to setup app focus listener: $e');
+        debugPrint('NotificationCubit: Failed to setup app focus listener: $e');
       }
     }
   }

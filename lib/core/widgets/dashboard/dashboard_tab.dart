@@ -5,8 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../app_header.dart';
 import '../../../features/authentication/application/auth_state.dart';
 import '../../../features/projects/application/project_bloc.dart';
-import '../../../features/notifications/application/notification_bloc.dart';
-import '../../../features/notifications/infrastructure/mock_notification_repository.dart';
+import '../../../features/notifications/application/cubits/notification_cubit.dart';
 
 import 'project_list_section.dart';
 import 'dashboard_search_section.dart';
@@ -24,69 +23,61 @@ class DashboardTab extends StatefulWidget {
 }
 
 class _DashboardTabState extends State<DashboardTab> {
-  late final NotificationBloc _notificationBloc;
-
   static const double _defaultPadding = DashboardConstants.defaultPadding;
 
   @override
   void initState() {
     super.initState();
-    _notificationBloc = NotificationBloc(MockNotificationRepository())..add(const LoadNotifications());
   }
 
   @override
   void dispose() {
-    _notificationBloc.close();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider.value(
-      value: _notificationBloc,
-      child: BlocBuilder<NotificationBloc, NotificationState>(
-        bloc: _notificationBloc,
-        builder: (context, notificationState) {
-          final unreadCount = notificationState is NotificationLoaded ? notificationState.unreadCount : 0;
+    return BlocBuilder<NotificationCubit, NotificationState>(
+      builder: (context, notificationState) {
+        final unreadCount = notificationState.unreadCount;
 
-          return Scaffold(
-            appBar: AppHeader(
-              user: widget.authState.user,
-              title: 'Projects',
-              heroContext: 'dashboard',
-              showNotificationBadge: unreadCount > 0,
-              notificationCount: unreadCount,
-              showUserRole: true,
-              showOnlineStatus: true,
-              onProfileTap: widget.onProfileTap,
-              onNotificationTap: () => context.push('/notifications'),
-            ),
-            body: RefreshIndicator(
-              onRefresh: () async => _refreshDashboard(context),
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(_defaultPadding),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Search Bar Section
-                    DashboardSearchSection(
-                      onSearchChanged: (value) {
-                        // TODO: Implement search functionality
-                      },
-                    ),
-                    const SizedBox(height: DashboardConstants.mediumSpacing),
+        return Scaffold(
+          appBar: AppHeader(
+            user: widget.authState.user,
+            title: 'Projects',
+            heroContext: 'dashboard',
+            showNotificationBadge: unreadCount > 0,
+            notificationCount: unreadCount,
+            showUserRole: true,
+            showOnlineStatus: true,
+            onProfileTap: widget.onProfileTap,
+            onNotificationTap: () => context.push('/notifications'),
+          ),
+          body: RefreshIndicator(
+            onRefresh: () async => _refreshDashboard(context),
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(_defaultPadding),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Search Bar Section
+                  DashboardSearchSection(
+                    onSearchChanged: (value) {
+                      // TODO: Implement search functionality
+                    },
+                  ),
+                  const SizedBox(height: DashboardConstants.mediumSpacing),
 
-                    // Projects Section
-                    const ProjectListSection(),
-                    const SizedBox(height: _defaultPadding),
-                  ],
-                ),
+                  // Projects Section
+                  const ProjectListSection(),
+                  const SizedBox(height: _defaultPadding),
+                ],
               ),
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -98,7 +89,8 @@ class _DashboardTabState extends State<DashboardTab> {
       projectBloc.add(const LoadProjectsRequested());
 
       // Refresh notifications
-      _notificationBloc.add(const LoadNotifications());
+      final notificationCubit = context.read<NotificationCubit>();
+      notificationCubit.fetchNotifications(refresh: true);
 
       // Wait a moment to show refresh indicator
       await Future.delayed(DashboardConstants.refreshDelay);

@@ -6,7 +6,7 @@ import '../../features/authentication/application/auth_bloc.dart';
 import '../../features/authentication/application/auth_state.dart';
 import '../../features/authentication/presentation/screens/forgot_password_screen.dart';
 import '../../features/authentication/presentation/screens/login_screen.dart';
-import '../../features/authentication/presentation/screens/register_screen.dart';
+
 import '../../features/calendar/presentation/screens/calendar_management_screen.dart';
 import '../../features/calendar/presentation/screens/modern_schedule_screen.dart';
 import '../../features/notifications/presentation/screens/notifications_screen.dart';
@@ -19,7 +19,6 @@ import '../widgets/main_app_screen.dart';
 class AppRoutes {
   // Authentication routes
   static const String login = '/login';
-  static const String register = '/register';
   static const String forgotPassword = '/forgot-password';
 
   // Main app routes
@@ -64,7 +63,6 @@ class AppRouter {
         name: 'login',
         builder: (context, state) => const LoginScreen(), // Use enhanced login screen
       ),
-      GoRoute(path: AppRoutes.register, name: 'register', builder: (context, state) => const RegisterScreen()),
       GoRoute(
         path: AppRoutes.forgotPassword,
         name: 'forgot-password',
@@ -192,9 +190,7 @@ class AppRouter {
 
   /// Check if the current route is an authentication route
   static bool _isAuthenticationRoute(String location) {
-    return location.startsWith(AppRoutes.login) ||
-        location.startsWith(AppRoutes.register) ||
-        location.startsWith(AppRoutes.forgotPassword);
+    return location.startsWith(AppRoutes.login) || location.startsWith(AppRoutes.forgotPassword);
   }
 
   // Private constructor to prevent instantiation

@@ -1,17 +1,15 @@
 import 'dart:async';
-import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 
-import '../../../../core/error/exceptions.dart';
-import '../../../../core/error/failures.dart';
+import '../../../../core/errors/exceptions.dart';
 import '../../../../core/network/api_client.dart';
 import '../../domain/entities/notification.dart';
 import '../../domain/entities/notification_settings.dart';
 import '../../domain/entities/notifications_response.dart';
 import '../../domain/repositories/notification_repository.dart';
 
-/// Remote data source for notifications 
+/// Remote data source for notifications
 /// Handles all API calls to the notifications endpoints
 @LazySingleton()
 class NotificationRemoteDataSource {
@@ -21,31 +19,21 @@ class NotificationRemoteDataSource {
   NotificationRemoteDataSource(this._apiClient);
 
   /// Fetch notifications with filtering and pagination
-  Future<NotificationsResponse> getNotifications({
-    NotificationsQuery query = const NotificationsQuery(),
-  }) async {
+  Future<NotificationsResponse> getNotifications({NotificationsQuery query = const NotificationsQuery()}) async {
     try {
       final queryParams = query.toQueryParameters();
-      final response = await _apiClient.dio.get(
-        _baseUrl,
-        queryParameters: queryParams,
-      );
+      final response = await _apiClient.dio.get(_baseUrl, queryParameters: queryParams);
 
       if (response.statusCode == 200) {
         final data = response.data['data'];
         return NotificationsResponse.fromJson(data);
       } else {
-        throw ServerException(
-          message: response.data['message'] ?? 'Failed to fetch notifications',
-        );
+        throw ServerException(response.data['message'] ?? 'Failed to fetch notifications');
       }
     } on DioException catch (e) {
-      throw ServerException(
-        message: e.response?.data?['message'] ?? 'Network error occurred',
-        statusCode: e.response?.statusCode,
-      );
+      throw ServerException(e.response?.data?['message'] ?? 'Network error occurred');
     } catch (e) {
-      throw ServerException(message: e.toString());
+      throw ServerException(e.toString());
     }
   }
 
@@ -58,17 +46,12 @@ class NotificationRemoteDataSource {
         final data = response.data['data'];
         return AppNotification.fromJson(data);
       } else {
-        throw ServerException(
-          message: response.data['message'] ?? 'Failed to fetch notification',
-        );
+        throw ServerException(response.data['message'] ?? 'Failed to fetch notification');
       }
     } on DioException catch (e) {
-      throw ServerException(
-        message: e.response?.data?['message'] ?? 'Network error occurred',
-        statusCode: e.response?.statusCode,
-      );
+      throw ServerException(e.response?.data?['message'] ?? 'Network error occurred');
     } catch (e) {
-      throw ServerException(message: e.toString());
+      throw ServerException(e.toString());
     }
   }
 
@@ -81,43 +64,30 @@ class NotificationRemoteDataSource {
         final data = response.data['data'];
         return AppNotification.fromJson(data);
       } else {
-        throw ServerException(
-          message: response.data['message'] ?? 'Failed to mark notification as read',
-        );
+        throw ServerException(response.data['message'] ?? 'Failed to mark notification as read');
       }
     } on DioException catch (e) {
-      throw ServerException(
-        message: e.response?.data?['message'] ?? 'Network error occurred',
-        statusCode: e.response?.statusCode,
-      );
+      throw ServerException(e.response?.data?['message'] ?? 'Network error occurred');
     } catch (e) {
-      throw ServerException(message: e.toString());
+      throw ServerException(e.toString());
     }
   }
 
   /// Mark multiple notifications as read
   Future<BulkNotificationResult> markMultipleAsRead(List<String> notificationIds) async {
     try {
-      final response = await _apiClient.dio.patch(
-        '$_baseUrl/bulk-read',
-        data: {'notificationIds': notificationIds},
-      );
+      final response = await _apiClient.dio.patch('$_baseUrl/bulk-read', data: {'notificationIds': notificationIds});
 
       if (response.statusCode == 200) {
         final data = response.data['data'];
         return BulkNotificationResult.fromJson(data);
       } else {
-        throw ServerException(
-          message: response.data['message'] ?? 'Failed to mark notifications as read',
-        );
+        throw ServerException(response.data['message'] ?? 'Failed to mark notifications as read');
       }
     } on DioException catch (e) {
-      throw ServerException(
-        message: e.response?.data?['message'] ?? 'Network error occurred',
-        statusCode: e.response?.statusCode,
-      );
+      throw ServerException(e.response?.data?['message'] ?? 'Network error occurred');
     } catch (e) {
-      throw ServerException(message: e.toString());
+      throw ServerException(e.toString());
     }
   }
 
@@ -130,17 +100,12 @@ class NotificationRemoteDataSource {
         final data = response.data['data'];
         return BulkNotificationResult.fromJson(data);
       } else {
-        throw ServerException(
-          message: response.data['message'] ?? 'Failed to mark all notifications as read',
-        );
+        throw ServerException(response.data['message'] ?? 'Failed to mark all notifications as read');
       }
     } on DioException catch (e) {
-      throw ServerException(
-        message: e.response?.data?['message'] ?? 'Network error occurred',
-        statusCode: e.response?.statusCode,
-      );
+      throw ServerException(e.response?.data?['message'] ?? 'Network error occurred');
     } catch (e) {
-      throw ServerException(message: e.toString());
+      throw ServerException(e.toString());
     }
   }
 
@@ -150,43 +115,30 @@ class NotificationRemoteDataSource {
       final response = await _apiClient.dio.delete('$_baseUrl/$notificationId');
 
       if (response.statusCode != 200) {
-        throw ServerException(
-          message: response.data['message'] ?? 'Failed to delete notification',
-        );
+        throw ServerException(response.data['message'] ?? 'Failed to delete notification');
       }
     } on DioException catch (e) {
-      throw ServerException(
-        message: e.response?.data?['message'] ?? 'Network error occurred',
-        statusCode: e.response?.statusCode,
-      );
+      throw ServerException(e.response?.data?['message'] ?? 'Network error occurred');
     } catch (e) {
-      throw ServerException(message: e.toString());
+      throw ServerException(e.toString());
     }
   }
 
   /// Delete multiple notifications
   Future<BulkNotificationResult> deleteMultipleNotifications(List<String> notificationIds) async {
     try {
-      final response = await _apiClient.dio.delete(
-        '$_baseUrl/bulk-delete',
-        data: {'notificationIds': notificationIds},
-      );
+      final response = await _apiClient.dio.delete('$_baseUrl/bulk-delete', data: {'notificationIds': notificationIds});
 
       if (response.statusCode == 200) {
         final data = response.data['data'];
         return BulkNotificationResult.fromJson(data);
       } else {
-        throw ServerException(
-          message: response.data['message'] ?? 'Failed to delete notifications',
-        );
+        throw ServerException(response.data['message'] ?? 'Failed to delete notifications');
       }
     } on DioException catch (e) {
-      throw ServerException(
-        message: e.response?.data?['message'] ?? 'Network error occurred',
-        statusCode: e.response?.statusCode,
-      );
+      throw ServerException(e.response?.data?['message'] ?? 'Network error occurred');
     } catch (e) {
-      throw ServerException(message: e.toString());
+      throw ServerException(e.toString());
     }
   }
 
@@ -199,17 +151,12 @@ class NotificationRemoteDataSource {
         final data = response.data['data'];
         return NotificationCountStatistics.fromJson(data);
       } else {
-        throw ServerException(
-          message: response.data['message'] ?? 'Failed to fetch notification statistics',
-        );
+        throw ServerException(response.data['message'] ?? 'Failed to fetch notification statistics');
       }
     } on DioException catch (e) {
-      throw ServerException(
-        message: e.response?.data?['message'] ?? 'Network error occurred',
-        statusCode: e.response?.statusCode,
-      );
+      throw ServerException(e.response?.data?['message'] ?? 'Network error occurred');
     } catch (e) {
-      throw ServerException(message: e.toString());
+      throw ServerException(e.toString());
     }
   }
 
@@ -222,43 +169,30 @@ class NotificationRemoteDataSource {
         final data = response.data['data'];
         return NotificationSettings.fromJson(data);
       } else {
-        throw ServerException(
-          message: response.data['message'] ?? 'Failed to fetch notification settings',
-        );
+        throw ServerException(response.data['message'] ?? 'Failed to fetch notification settings');
       }
     } on DioException catch (e) {
-      throw ServerException(
-        message: e.response?.data?['message'] ?? 'Network error occurred',
-        statusCode: e.response?.statusCode,
-      );
+      throw ServerException(e.response?.data?['message'] ?? 'Network error occurred');
     } catch (e) {
-      throw ServerException(message: e.toString());
+      throw ServerException(e.toString());
     }
   }
 
   /// Update notification settings
   Future<NotificationSettings> updateNotificationSettings(NotificationSettings settings) async {
     try {
-      final response = await _apiClient.dio.put(
-        '$_baseUrl/settings',
-        data: settings.toJson(),
-      );
+      final response = await _apiClient.dio.put('$_baseUrl/settings', data: settings.toJson());
 
       if (response.statusCode == 200) {
         final data = response.data['data'];
         return NotificationSettings.fromJson(data);
       } else {
-        throw ServerException(
-          message: response.data['message'] ?? 'Failed to update notification settings',
-        );
+        throw ServerException(response.data['message'] ?? 'Failed to update notification settings');
       }
     } on DioException catch (e) {
-      throw ServerException(
-        message: e.response?.data?['message'] ?? 'Network error occurred',
-        statusCode: e.response?.statusCode,
-      );
+      throw ServerException(e.response?.data?['message'] ?? 'Network error occurred');
     } catch (e) {
-      throw ServerException(message: e.toString());
+      throw ServerException(e.toString());
     }
   }
 
@@ -281,17 +215,12 @@ class NotificationRemoteDataSource {
       );
 
       if (response.statusCode != 200) {
-        throw ServerException(
-          message: response.data['message'] ?? 'Failed to register device',
-        );
+        throw ServerException(response.data['message'] ?? 'Failed to register device');
       }
     } on DioException catch (e) {
-      throw ServerException(
-        message: e.response?.data?['message'] ?? 'Network error occurred',
-        statusCode: e.response?.statusCode,
-      );
+      throw ServerException(e.response?.data?['message'] ?? 'Network error occurred');
     } catch (e) {
-      throw ServerException(message: e.toString());
+      throw ServerException(e.toString());
     }
   }
 }

@@ -14,10 +14,6 @@ abstract class AuthApiService {
   @POST('/api/v1/auth/login')
   Future<LoginResponseApiResponse> login(@Body() LoginRequestModel request);
 
-  /// Register a new user
-  @POST('/api/v1/auth/register')
-  Future<UserDtoApiResponse> register(@Body() RegisterRequestModel request);
-
   /// Refresh authentication token
   @POST('/api/v1/auth/refresh')
   Future<StringApiResponse> refreshToken(@Body() String refreshToken);

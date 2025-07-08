@@ -13,7 +13,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   AuthBloc(this._authRepositoryFactory, this._tokenService, this._securityService) : super(const AuthInitial()) {
     on<AuthCheckRequested>(_onAuthCheckRequested);
     on<AuthSignInRequested>(_onSignInRequested);
-    on<AuthRegisterRequested>(_onRegisterRequested);
     on<AuthPasswordResetRequested>(_onPasswordResetRequested);
     on<AuthSignOutRequested>(_onSignOutRequested);
     on<AuthEmailVerificationRequested>(_onEmailVerificationRequested);
@@ -55,22 +54,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final user = await _authRepository.signInWithEmailAndPassword(
         email: event.username, // username field contains email
         password: event.password,
-      );
-      emit(AuthAuthenticated(user: user));
-    } catch (e) {
-      emit(AuthFailure(message: e.toString()));
-    }
-  }
-
-  /// Handle user registration
-  Future<void> _onRegisterRequested(AuthRegisterRequested event, Emitter<AuthState> emit) async {
-    emit(const AuthLoading());
-
-    try {
-      final user = await _authRepository.registerWithEmailAndPassword(
-        email: event.email,
-        password: event.password,
-        name: event.fullName,
       );
       emit(AuthAuthenticated(user: user));
     } catch (e) {

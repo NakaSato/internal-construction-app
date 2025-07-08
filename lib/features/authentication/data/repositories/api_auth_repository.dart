@@ -8,7 +8,6 @@ import 'package:get_it/get_it.dart';
 
 import '../../../../core/network/api_client.dart';
 import '../../../../core/utils/api_error_parser.dart';
-import '../../../../core/utils/username_utils.dart';
 import '../../domain/entities/user.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../models/auth_response_model.dart';
@@ -68,58 +67,6 @@ class ApiAuthRepository implements AuthRepository {
       throw Exception(errorMessage);
     } catch (e) {
       throw Exception('Login failed: $e');
-    }
-  }
-
-  @override
-  Future<User> registerWithEmailAndPassword({
-    required String email,
-    required String password,
-    required String name,
-  }) async {
-    try {
-      // Generate a valid username from email using utility function
-      final username = UsernameUtils.generateUsernameFromEmail(email);
-
-      final request = RegisterRequestModel(
-        username: username,
-        email: email,
-        password: password,
-        fullName: name,
-        roleId: 3, // Default role ID for Users
-      );
-
-      final response = await _apiService.register(request);
-
-      if (!response.success || response.data == null) {
-        throw Exception(response.message);
-      }
-
-      // Registration only returns user data, not tokens
-      // User needs to login after registration
-      final user = response.data!.toEntity();
-      await _cacheUser(user);
-
-      return user;
-    } on DioException catch (e) {
-      if (e.response?.statusCode == 409) {
-        throw Exception('User already exists');
-      }
-
-      // Debug logging for API responses
-      if (kDebugMode) {
-        debugPrint('=== Registration API Error Debug ===');
-        debugPrint('Status Code: ${e.response?.statusCode}');
-        debugPrint('Response Data: ${e.response?.data}');
-        debugPrint('Response Headers: ${e.response?.headers}');
-        debugPrint('=====================================');
-      }
-
-      // Use ApiErrorParser to extract meaningful error messages from validation responses
-      final errorMessage = ApiErrorParser.parseError(e);
-      throw Exception(errorMessage);
-    } catch (e) {
-      throw Exception('Registration failed: $e');
     }
   }
 

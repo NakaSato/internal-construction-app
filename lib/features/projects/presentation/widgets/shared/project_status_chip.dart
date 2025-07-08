@@ -261,13 +261,7 @@ class ProjectStatusChip extends StatelessWidget {
         ? ProjectStatusChipSize.medium
         : ProjectStatusChipSize.large;
 
-    return ProjectStatusChip(
-      key: key,
-      status: status,
-      size: size,
-      showText: showText,
-      showIcon: showIcon,
-    );
+    return ProjectStatusChip(key: key, status: status, size: size, showText: showText, showIcon: showIcon);
   }
 
   /// Creates a compact ProjectStatusChip (icon only)
@@ -276,13 +270,7 @@ class ProjectStatusChip extends StatelessWidget {
     required String status,
     ProjectStatusChipSize size = ProjectStatusChipSize.small,
   }) {
-    return ProjectStatusChip(
-      key: key,
-      status: status,
-      size: size,
-      showText: false,
-      showIcon: true,
-    );
+    return ProjectStatusChip(key: key, status: status, size: size, showText: false, showIcon: true);
   }
 
   /// Creates a text-only ProjectStatusChip (no icon)
@@ -291,13 +279,7 @@ class ProjectStatusChip extends StatelessWidget {
     required String status,
     ProjectStatusChipSize size = ProjectStatusChipSize.medium,
   }) {
-    return ProjectStatusChip(
-      key: key,
-      status: status,
-      size: size,
-      showText: true,
-      showIcon: false,
-    );
+    return ProjectStatusChip(key: key, status: status, size: size, showText: true, showIcon: false);
   }
 
   /// Creates a small but highly visible ProjectStatusChip
@@ -320,9 +302,7 @@ class ProjectStatusChip extends StatelessWidget {
   final ProjectStatusChipSize size;
   final bool showText;
   final bool showIcon;
-  @Deprecated(
-    'Use size parameter instead. This will be removed in future versions.',
-  )
+  @Deprecated('Use size parameter instead. This will be removed in future versions.')
   final bool compact;
 
   @override
@@ -342,34 +322,16 @@ class ProjectStatusChip extends StatelessWidget {
           vertical: effectiveSize.verticalPadding,
         ),
         decoration: BoxDecoration(
-          color: statusColor.withValues(
-            alpha: 0.12,
-          ), // Slightly increased opacity for small size
+          color: statusColor.withValues(alpha: 0.12), // Slightly increased opacity for small size
           borderRadius: BorderRadius.circular(effectiveSize.borderRadius),
           border: Border.all(
-            color: statusColor.withValues(
-              alpha: 0.35,
-            ), // Slightly darker border for better definition
-            width: effectiveSize == ProjectStatusChipSize.small
-                ? 1.2
-                : 1, // Thicker border for small size
+            color: statusColor.withValues(alpha: 0.35), // Slightly darker border for better definition
+            width: effectiveSize == ProjectStatusChipSize.small ? 1.2 : 1, // Thicker border for small size
           ),
           boxShadow: effectiveSize == ProjectStatusChipSize.extraLarge
-              ? [
-                  BoxShadow(
-                    color: statusColor.withValues(alpha: 0.1),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
+              ? [BoxShadow(color: statusColor.withValues(alpha: 0.1), blurRadius: 4, offset: const Offset(0, 2))]
               : effectiveSize == ProjectStatusChipSize.small
-              ? [
-                  BoxShadow(
-                    color: statusColor.withValues(alpha: 0.08),
-                    blurRadius: 2,
-                    offset: const Offset(0, 1),
-                  ),
-                ]
+              ? [BoxShadow(color: statusColor.withValues(alpha: 0.08), blurRadius: 2, offset: const Offset(0, 1))]
               : null,
         ),
         child: Row(
@@ -377,11 +339,7 @@ class ProjectStatusChip extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (showIcon) ...[
-              Icon(
-                projectStatus.icon,
-                color: statusColor,
-                size: effectiveSize.iconSize,
-              ),
+              Icon(projectStatus.icon, color: statusColor, size: effectiveSize.iconSize),
               if (showText) SizedBox(width: effectiveSize.spacing),
             ],
             if (showText) ...[
@@ -395,8 +353,7 @@ class ProjectStatusChip extends StatelessWidget {
                               .w700 // Bolder text for small size
                         : FontWeight.w600,
                     fontSize: effectiveSize.fontSize,
-                    letterSpacing:
-                        effectiveSize == ProjectStatusChipSize.extraLarge
+                    letterSpacing: effectiveSize == ProjectStatusChipSize.extraLarge
                         ? 0.5
                         : effectiveSize == ProjectStatusChipSize.small
                         ? 0.2 // Slight letter spacing for small size readability
@@ -416,12 +373,7 @@ class ProjectStatusChip extends StatelessWidget {
 
 /// Simplified status indicator using just a colored dot
 class ProjectStatusDot extends StatelessWidget {
-  const ProjectStatusDot({
-    super.key,
-    required this.status,
-    this.size = 8.0,
-    this.withBorder = false,
-  });
+  const ProjectStatusDot({super.key, required this.status, this.size = 8.0, this.withBorder = false});
 
   final String status;
   final double size;
@@ -448,17 +400,9 @@ class ProjectStatusDot extends StatelessWidget {
       decoration: BoxDecoration(
         color: statusColor,
         shape: BoxShape.circle,
-        border: withBorder
-            ? Border.all(color: statusColor.withValues(alpha: 0.3), width: 1)
-            : null,
+        border: withBorder ? Border.all(color: statusColor.withValues(alpha: 0.3), width: 1) : null,
         boxShadow: withBorder
-            ? [
-                BoxShadow(
-                  color: statusColor.withValues(alpha: 0.2),
-                  blurRadius: 2,
-                  offset: const Offset(0, 1),
-                ),
-              ]
+            ? [BoxShadow(color: statusColor.withValues(alpha: 0.2), blurRadius: 2, offset: const Offset(0, 1))]
             : null,
       ),
     );
@@ -543,8 +487,7 @@ class ProjectStatusBar extends StatelessWidget {
     final screenWidth = MediaQuery.of(context).size.width;
 
     // Responsive sizing
-    final effectiveWidth =
-        width ?? (compact ? screenWidth * 0.8 : double.infinity);
+    final effectiveWidth = width ?? (compact ? screenWidth * 0.8 : double.infinity);
     final effectiveHeight = compact ? height * 0.8 : height;
     final labelStyle = theme.textTheme.bodySmall?.copyWith(
       color: statusColor,
@@ -560,8 +503,7 @@ class ProjectStatusBar extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final availableWidth = constraints.maxWidth;
-        final shouldShowPercentage =
-            showPercentage && (availableWidth > 200 || !showLabel);
+        final shouldShowPercentage = showPercentage && (availableWidth > 200 || !showLabel);
 
         return SizedBox(
           width: effectiveWidth == double.infinity ? null : effectiveWidth,
@@ -584,12 +526,7 @@ class ProjectStatusBar extends StatelessWidget {
                         ),
                       ),
                     ],
-                    if (shouldShowPercentage) ...[
-                      Text(
-                        '${(progressValue * 100).toInt()}%',
-                        style: percentageStyle,
-                      ),
-                    ],
+                    if (shouldShowPercentage) ...[Text('${(progressValue * 100).toInt()}%', style: percentageStyle)],
                   ],
                 ),
                 SizedBox(height: compact ? 3 : 4),
@@ -619,20 +556,13 @@ class ProjectStatusBar extends StatelessWidget {
                                   gradient: LinearGradient(
                                     begin: Alignment.centerLeft,
                                     end: Alignment.centerRight,
-                                    colors: [
-                                      statusColor,
-                                      statusColor.withValues(alpha: 0.8),
-                                    ],
+                                    colors: [statusColor, statusColor.withValues(alpha: 0.8)],
                                   ),
-                                  borderRadius: BorderRadius.circular(
-                                    effectiveHeight / 2,
-                                  ),
+                                  borderRadius: BorderRadius.circular(effectiveHeight / 2),
                                   boxShadow: progressValue > 0.1
                                       ? [
                                           BoxShadow(
-                                            color: statusColor.withValues(
-                                              alpha: 0.3,
-                                            ),
+                                            color: statusColor.withValues(alpha: 0.3),
                                             blurRadius: 2,
                                             offset: const Offset(0, 1),
                                           ),
@@ -651,20 +581,13 @@ class ProjectStatusBar extends StatelessWidget {
                               gradient: LinearGradient(
                                 begin: Alignment.centerLeft,
                                 end: Alignment.centerRight,
-                                colors: [
-                                  statusColor,
-                                  statusColor.withValues(alpha: 0.8),
-                                ],
+                                colors: [statusColor, statusColor.withValues(alpha: 0.8)],
                               ),
-                              borderRadius: BorderRadius.circular(
-                                effectiveHeight / 2,
-                              ),
+                              borderRadius: BorderRadius.circular(effectiveHeight / 2),
                               boxShadow: progressValue > 0.1
                                   ? [
                                       BoxShadow(
-                                        color: statusColor.withValues(
-                                          alpha: 0.3,
-                                        ),
+                                        color: statusColor.withValues(alpha: 0.3),
                                         blurRadius: 2,
                                         offset: const Offset(0, 1),
                                       ),
@@ -681,10 +604,7 @@ class ProjectStatusBar extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   _getStatusDescription(projectStatus, progressValue),
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                    fontSize: 10,
-                  ),
+                  style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant, fontSize: 10),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -802,9 +722,7 @@ class ProjectStatusCircle extends StatelessWidget {
             child: CircularProgressIndicator(
               value: 1.0,
               strokeWidth: strokeWidth,
-              valueColor: AlwaysStoppedAnimation<Color>(
-                statusColor.withValues(alpha: 0.2),
-              ),
+              valueColor: AlwaysStoppedAnimation<Color>(statusColor.withValues(alpha: 0.2)),
               backgroundColor: Colors.transparent,
             ),
           ),
@@ -907,42 +825,7 @@ class ProjectStatusGrid extends StatelessWidget {
           itemCount: statuses.length,
           itemBuilder: (context, index) {
             final statusData = statuses[index];
-            return Card(
-              elevation: 1,
-              child: Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    if (showProgress) ...[
-                      ProjectStatusCircle.responsive(
-                        status: statusData.status,
-                        context: context,
-                        progress: statusData.progress,
-                        showPercentage: true,
-                        animated: animated,
-                      ),
-                      const SizedBox(height: 8),
-                    ] else ...[
-                      ProjectStatusChip.responsive(
-                        status: statusData.status,
-                        context: context,
-                      ),
-                      const SizedBox(height: 4),
-                    ],
-                    if (statusData.label != null) ...[
-                      Text(
-                        statusData.label!,
-                        style: Theme.of(context).textTheme.bodySmall,
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            );
+            return _ProjectStatusGridItem(statusData: statusData, showProgress: showProgress, animated: animated);
           },
         );
       },
@@ -957,4 +840,55 @@ class ProjectStatusData {
   final String status;
   final double? progress;
   final String? label;
+}
+
+/// Optimized grid item widget for better performance
+///
+/// This widget can leverage Flutter's optimization pipeline as a separate
+/// widget class and can be const when appropriate.
+class _ProjectStatusGridItem extends StatelessWidget {
+  const _ProjectStatusGridItem({required this.statusData, required this.showProgress, required this.animated});
+
+  final ProjectStatusData statusData;
+  final bool showProgress;
+  final bool animated;
+
+  @override
+  Widget build(BuildContext context) {
+    return RepaintBoundary(
+      child: Card(
+        elevation: 1,
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (showProgress) ...[
+                ProjectStatusCircle.responsive(
+                  status: statusData.status,
+                  context: context,
+                  progress: statusData.progress,
+                  showPercentage: true,
+                  animated: animated,
+                ),
+                const SizedBox(height: 8),
+              ] else ...[
+                ProjectStatusChip.responsive(status: statusData.status, context: context),
+                const SizedBox(height: 4),
+              ],
+              if (statusData.label != null) ...[
+                Text(
+                  statusData.label!,
+                  style: Theme.of(context).textTheme.bodySmall,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

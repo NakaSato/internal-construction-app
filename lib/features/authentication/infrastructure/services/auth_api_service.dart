@@ -2,7 +2,6 @@ import 'package:dio/dio.dart';
 import '../../../../core/api/api_config.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/models/api_response.dart';
-import '../../domain/entities/user.dart';
 import '../models/auth_models.dart';
 
 /// Enhanced authentication API service
@@ -22,26 +21,6 @@ class AuthApiService {
       return ApiResponse.fromJson(response.data, (json) => LoginResponse.fromJson(json as Map<String, dynamic>));
     } on DioException catch (e) {
       return _handleAuthError<LoginResponse>(e);
-    }
-  }
-
-  /// User registration
-  Future<ApiResponse<User>> register({
-    required String username,
-    required String email,
-    required String password,
-    required String fullName,
-    required int roleId,
-  }) async {
-    try {
-      final response = await _apiClient.dio.post(
-        ApiConfig.authRegister,
-        data: {'username': username, 'email': email, 'password': password, 'fullName': fullName, 'roleId': roleId},
-      );
-
-      return ApiResponse.fromJson(response.data, (json) => User.fromJson(json as Map<String, dynamic>));
-    } on DioException catch (e) {
-      return _handleAuthError<User>(e);
     }
   }
 

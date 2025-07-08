@@ -31,7 +31,6 @@ class ApiConfig {
 
   /// Authentication endpoints
   static const String authLogin = '/api/v1/auth/login';
-  static const String authRegister = '/api/v1/auth/register';
   static const String authRefresh = '/api/v1/auth/refresh';
   static const String authLogout = '/api/v1/auth/logout';
   static const String authProfile = '/api/v1/auth/profile';
@@ -178,7 +177,6 @@ class ApiConfig {
       'endpoints': {
         'auth': {
           'login': buildUrl(authLogin),
-          'register': buildUrl(authRegister),
           'profile': buildUrl(authProfile),
           'refresh': buildUrl(authRefresh),
           'logout': buildUrl(authLogout),

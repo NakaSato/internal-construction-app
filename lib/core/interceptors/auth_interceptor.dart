@@ -5,6 +5,7 @@ import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 
 import '../services/session_validation_service.dart';
+import '../services/token_service.dart';
 import '../navigation/app_router.dart';
 
 /// Enhanced interceptor that handles authentication errors with automatic token refresh
@@ -42,6 +43,21 @@ class AuthInterceptor extends Interceptor {
         );
         handler.reject(error);
         return;
+      }
+
+      // Session is valid, add Authorization header
+      final tokenService = GetIt.instance.get<TokenService>();
+      final accessToken = await tokenService.getAccessToken();
+
+      if (accessToken != null) {
+        options.headers['Authorization'] = 'Bearer $accessToken';
+        if (kDebugMode) {
+          debugPrint('✅ [AUTH_INTERCEPTOR] Added Authorization header to request: ${options.method} ${options.path}');
+        }
+      } else {
+        if (kDebugMode) {
+          debugPrint('⚠️ [AUTH_INTERCEPTOR] No access token available for request: ${options.method} ${options.path}');
+        }
       }
 
       // Session is valid, proceed with the request

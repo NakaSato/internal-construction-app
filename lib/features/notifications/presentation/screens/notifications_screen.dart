@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../application/notification_bloc.dart';
 import '../../infrastructure/mock_notification_repository.dart';
+import '../../infrastructure/notification_repository_adapter.dart';
 import '../../domain/entities/notification.dart';
 import '../widgets/notification_card.dart';
 import '../widgets/notification_filter_chip.dart';
@@ -15,8 +16,7 @@ class NotificationsScreen extends StatefulWidget {
   State<NotificationsScreen> createState() => _NotificationsScreenState();
 }
 
-class _NotificationsScreenState extends State<NotificationsScreen>
-    with SingleTickerProviderStateMixin {
+class _NotificationsScreenState extends State<NotificationsScreen> with SingleTickerProviderStateMixin {
   late final NotificationBloc _notificationBloc;
   late final TabController _tabController;
   String _selectedFilter = 'All';
@@ -25,8 +25,12 @@ class _NotificationsScreenState extends State<NotificationsScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _notificationBloc = NotificationBloc(MockNotificationRepository())
-      ..add(const LoadNotifications());
+
+    // Create repository and adapter
+    final repository = MockNotificationRepository();
+    final adapter = NotificationRepositoryAdapter(repository);
+
+    _notificationBloc = NotificationBloc(adapter)..add(const LoadNotifications());
   }
 
   @override
@@ -46,18 +50,14 @@ class _NotificationsScreenState extends State<NotificationsScreen>
           elevation: 0,
           backgroundColor: Theme.of(context).colorScheme.surface,
           foregroundColor: Theme.of(context).colorScheme.onSurface,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => context.pop(),
-          ),
+          leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop()),
           actions: [
             BlocBuilder<NotificationBloc, NotificationState>(
               builder: (context, state) {
                 if (state is NotificationLoaded && state.unreadCount > 0) {
                   return IconButton(
                     icon: const Icon(Icons.mark_email_read),
-                    onPressed: () =>
-                        _notificationBloc.add(const MarkAllAsRead()),
+                    onPressed: () => _notificationBloc.add(const MarkAllAsRead()),
                     tooltip: 'Mark all as read',
                   );
                 }
@@ -96,29 +96,25 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                     NotificationFilterChip(
                       label: 'Info',
                       isSelected: _selectedFilter == 'Info',
-                      onSelected: () =>
-                          setState(() => _selectedFilter = 'Info'),
+                      onSelected: () => setState(() => _selectedFilter = 'Info'),
                     ),
                     const SizedBox(width: 8),
                     NotificationFilterChip(
                       label: 'Warning',
                       isSelected: _selectedFilter == 'Warning',
-                      onSelected: () =>
-                          setState(() => _selectedFilter = 'Warning'),
+                      onSelected: () => setState(() => _selectedFilter = 'Warning'),
                     ),
                     const SizedBox(width: 8),
                     NotificationFilterChip(
                       label: 'Error',
                       isSelected: _selectedFilter == 'Error',
-                      onSelected: () =>
-                          setState(() => _selectedFilter = 'Error'),
+                      onSelected: () => setState(() => _selectedFilter = 'Error'),
                     ),
                     const SizedBox(width: 8),
                     NotificationFilterChip(
                       label: 'Success',
                       isSelected: _selectedFilter == 'Success',
-                      onSelected: () =>
-                          setState(() => _selectedFilter = 'Success'),
+                      onSelected: () => setState(() => _selectedFilter = 'Success'),
                     ),
                   ],
                 ),
@@ -152,28 +148,20 @@ class _NotificationsScreenState extends State<NotificationsScreen>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.error_outline,
-                  size: 64,
-                  color: Theme.of(context).colorScheme.error,
-                ),
+                Icon(Icons.error_outline, size: 64, color: Theme.of(context).colorScheme.error),
                 const SizedBox(height: 16),
-                Text(
-                  'Error loading notifications',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
+                Text('Error loading notifications', style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 8),
                 Text(
                   state.message,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton(
-                  onPressed: () =>
-                      _notificationBloc.add(const LoadNotifications()),
+                  onPressed: () => _notificationBloc.add(const LoadNotifications()),
                   child: const Text('Retry'),
                 ),
               ],
@@ -192,11 +180,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
           // Filter by type
           if (_selectedFilter != 'All') {
             notifications = notifications
-                .where(
-                  (n) =>
-                      n.type.toString().split('.').last.toLowerCase() ==
-                      _selectedFilter.toLowerCase(),
-                )
+                .where((n) => n.type.toString().split('.').last.toLowerCase() == _selectedFilter.toLowerCase())
                 .toList();
           }
 
@@ -206,29 +190,23 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
-                    showOnlyUnread
-                        ? Icons.mark_email_read
-                        : Icons.notifications_none,
+                    showOnlyUnread ? Icons.mark_email_read : Icons.notifications_none,
                     size: 64,
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    showOnlyUnread
-                        ? 'No unread notifications'
-                        : 'No notifications',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                    showOnlyUnread ? 'No unread notifications' : 'No notifications',
+                    style: Theme.of(
+                      context,
+                    ).textTheme.titleMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    showOnlyUnread
-                        ? 'You\'re all caught up!'
-                        : 'Notifications will appear here',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                    showOnlyUnread ? 'You\'re all caught up!' : 'Notifications will appear here',
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
                   ),
                 ],
               ),
@@ -236,8 +214,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
           }
 
           return RefreshIndicator(
-            onRefresh: () async =>
-                _notificationBloc.add(const LoadNotifications()),
+            onRefresh: () async => _notificationBloc.add(const LoadNotifications()),
             child: ListView.builder(
               padding: const EdgeInsets.all(16),
               itemCount: notifications.length,
@@ -246,13 +223,8 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                 return NotificationCard(
                   notification: notification,
                   onTap: () => _handleNotificationTap(notification),
-                  onMarkAsRead: notification.isRead
-                      ? null
-                      : () =>
-                            _notificationBloc.add(MarkAsRead(notification.id)),
-                  onDelete: () => _notificationBloc.add(
-                    DeleteNotification(notification.id),
-                  ),
+                  onMarkAsRead: notification.isRead ? null : () => _notificationBloc.add(MarkAsRead(notification.id)),
+                  onDelete: () => _notificationBloc.add(DeleteNotification(notification.id)),
                 );
               },
             ),

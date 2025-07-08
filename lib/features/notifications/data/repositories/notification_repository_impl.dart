@@ -2,10 +2,9 @@ import 'dart:async';
 import 'package:dartz/dartz.dart';
 import 'package:injectable/injectable.dart';
 
-import '../../../../core/error/exceptions.dart';
-import '../../../../core/error/failures.dart';
+import '../../../../core/errors/exceptions.dart';
+import '../../../../core/errors/failures.dart';
 import '../../../../core/mixins/realtime_api_mixin.dart';
-import '../../../../core/services/realtime_api_streams.dart';
 import '../datasources/notification_remote_data_source.dart';
 import '../models/realtime_notification_update.dart';
 import '../../domain/entities/notification.dart';
@@ -17,20 +16,12 @@ import '../../domain/repositories/notification_repository.dart';
 @Injectable(env: [Environment.test]) // Only use in test environment
 class NotificationRepositoryImpl with RealtimeApiMixin implements NotificationRepository {
   final NotificationRemoteDataSource _remoteDataSource;
-  final RealtimeApiStreams _realtimeStreams;
-  
-  final StreamController<AppNotification> _notificationStreamController = 
-      StreamController<AppNotification>.broadcast();
-  
-  final StreamController<int> _unreadCountStreamController = 
-      StreamController<int>.broadcast();
-  
-  int _cachedUnreadCount = 0;
 
-  NotificationRepositoryImpl(
-    this._remoteDataSource,
-    this._realtimeStreams,
-  ) {
+  final StreamController<AppNotification> _notificationStreamController = StreamController<AppNotification>.broadcast();
+
+  final StreamController<int> _unreadCountStreamController = StreamController<int>.broadcast();
+
+  NotificationRepositoryImpl(this._remoteDataSource) {
     // Start listening to real-time notification updates
     _initializeRealTimeUpdates();
   }
@@ -52,7 +43,7 @@ class NotificationRepositoryImpl with RealtimeApiMixin implements NotificationRe
   }
 
   void _handleRealtimeUpdate(RealtimeNotificationUpdate update) {
-    switch (update.type) {
+    switch (update.updateType) {
       case RealtimeNotificationUpdateType.added:
       case RealtimeNotificationUpdateType.updated:
         if (update.notification != null) {
@@ -61,7 +52,6 @@ class NotificationRepositoryImpl with RealtimeApiMixin implements NotificationRe
         break;
       case RealtimeNotificationUpdateType.countChanged:
         if (update.unreadCount != null) {
-          _cachedUnreadCount = update.unreadCount!;
           _unreadCountStreamController.add(update.unreadCount!);
         }
         break;
@@ -82,7 +72,7 @@ class NotificationRepositoryImpl with RealtimeApiMixin implements NotificationRe
       final response = await _remoteDataSource.getNotifications(query: query);
       return Right(response);
     } on ServerException catch (e) {
-      return Left(ServerFailure(message: e.message));
+      return Left(ServerFailure(e.message));
     } catch (e) {
       return Left(UnknownFailure(e.toString()));
     }
@@ -94,7 +84,7 @@ class NotificationRepositoryImpl with RealtimeApiMixin implements NotificationRe
       final notification = await _remoteDataSource.getNotificationById(notificationId);
       return Right(notification);
     } on ServerException catch (e) {
-      return Left(ServerFailure(message: e.message));
+      return Left(ServerFailure(e.message));
     } catch (e) {
       return Left(UnknownFailure(e.toString()));
     }
@@ -106,7 +96,7 @@ class NotificationRepositoryImpl with RealtimeApiMixin implements NotificationRe
       final notification = await _remoteDataSource.markAsRead(notificationId);
       return Right(notification);
     } on ServerException catch (e) {
-      return Left(ServerFailure(message: e.message));
+      return Left(ServerFailure(e.message));
     } catch (e) {
       return Left(UnknownFailure(e.toString()));
     }
@@ -118,7 +108,7 @@ class NotificationRepositoryImpl with RealtimeApiMixin implements NotificationRe
       final result = await _remoteDataSource.markMultipleAsRead(notificationIds);
       return Right(result);
     } on ServerException catch (e) {
-      return Left(ServerFailure(message: e.message));
+      return Left(ServerFailure(e.message));
     } catch (e) {
       return Left(UnknownFailure(e.toString()));
     }
@@ -130,7 +120,7 @@ class NotificationRepositoryImpl with RealtimeApiMixin implements NotificationRe
       final result = await _remoteDataSource.markAllAsRead();
       return Right(result);
     } on ServerException catch (e) {
-      return Left(ServerFailure(message: e.message));
+      return Left(ServerFailure(e.message));
     } catch (e) {
       return Left(UnknownFailure(e.toString()));
     }
@@ -142,7 +132,7 @@ class NotificationRepositoryImpl with RealtimeApiMixin implements NotificationRe
       await _remoteDataSource.deleteNotification(notificationId);
       return const Right(null);
     } on ServerException catch (e) {
-      return Left(ServerFailure(message: e.message));
+      return Left(ServerFailure(e.message));
     } catch (e) {
       return Left(UnknownFailure(e.toString()));
     }
@@ -154,7 +144,7 @@ class NotificationRepositoryImpl with RealtimeApiMixin implements NotificationRe
       final result = await _remoteDataSource.deleteMultipleNotifications(notificationIds);
       return Right(result);
     } on ServerException catch (e) {
-      return Left(ServerFailure(message: e.message));
+      return Left(ServerFailure(e.message));
     } catch (e) {
       return Left(UnknownFailure(e.toString()));
     }
@@ -164,14 +154,11 @@ class NotificationRepositoryImpl with RealtimeApiMixin implements NotificationRe
   Future<Either<Failure, NotificationCountStatistics>> getNotificationStatistics() async {
     try {
       final statistics = await _remoteDataSource.getNotificationStatistics();
-      // Update cached unread count based on statistics
-      if (_cachedUnreadCount != statistics.unreadCount) {
-        _cachedUnreadCount = statistics.unreadCount;
-        _unreadCountStreamController.add(_cachedUnreadCount);
-      }
+      // Always send updated unread count to stream
+      _unreadCountStreamController.add(statistics.unreadCount);
       return Right(statistics);
     } on ServerException catch (e) {
-      return Left(ServerFailure(message: e.message));
+      return Left(ServerFailure(e.message));
     } catch (e) {
       return Left(UnknownFailure(e.toString()));
     }
@@ -183,21 +170,19 @@ class NotificationRepositoryImpl with RealtimeApiMixin implements NotificationRe
       final settings = await _remoteDataSource.getNotificationSettings();
       return Right(settings);
     } on ServerException catch (e) {
-      return Left(ServerFailure(message: e.message));
+      return Left(ServerFailure(e.message));
     } catch (e) {
       return Left(UnknownFailure(e.toString()));
     }
   }
 
   @override
-  Future<Either<Failure, NotificationSettings>> updateNotificationSettings(
-    NotificationSettings settings,
-  ) async {
+  Future<Either<Failure, NotificationSettings>> updateNotificationSettings(NotificationSettings settings) async {
     try {
       final updatedSettings = await _remoteDataSource.updateNotificationSettings(settings);
       return Right(updatedSettings);
     } on ServerException catch (e) {
-      return Left(ServerFailure(message: e.message));
+      return Left(ServerFailure(e.message));
     } catch (e) {
       return Left(UnknownFailure(e.toString()));
     }
@@ -213,7 +198,6 @@ class NotificationRepositoryImpl with RealtimeApiMixin implements NotificationRe
     return _unreadCountStreamController.stream;
   }
 
-  @override
   void dispose() {
     // Clean up resources
     disposeRealtime();
