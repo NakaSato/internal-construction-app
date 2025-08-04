@@ -100,7 +100,6 @@ class LoadProjectsByManagerRequested extends ProjectEvent {
   List<Object?> get props => [managerId, userRole];
 }
 
-// Real-time events
 /// Receive real-time project update
 class RealTimeProjectUpdateReceived extends ProjectEvent {
   const RealTimeProjectUpdateReceived({required this.project});
@@ -132,7 +131,9 @@ class RealTimeProjectDeletedReceived extends ProjectEvent {
 }
 
 /// Initialize real-time connection
-class InitializeRealTimeConnection extends ProjectEvent {}
+class InitializeRealTimeConnection extends ProjectEvent {
+  const InitializeRealTimeConnection();
+}
 
 /// Refresh projects with cache clear
 class RefreshProjectsWithCacheClear extends ProjectEvent {
@@ -148,18 +149,28 @@ class RefreshProjectsWithCacheClear extends ProjectEvent {
 
 /// Start live project updates
 class StartLiveProjectUpdates extends ProjectEvent {
-  const StartLiveProjectUpdates({this.userRole, this.query, this.maxRetries = 3});
+  const StartLiveProjectUpdates({
+    this.userRole,
+    this.query,
+    this.maxRetries = 3,
+    this.updateInterval,
+    this.includeDeltas = false,
+  });
 
   final String? userRole;
   final ProjectsQuery? query;
   final int maxRetries;
+  final Duration? updateInterval;
+  final bool includeDeltas;
 
   @override
-  List<Object?> get props => [userRole, query, maxRetries];
+  List<Object?> get props => [userRole, query, maxRetries, updateInterval, includeDeltas];
 }
 
 /// Stop live project updates
-class StopLiveProjectUpdates extends ProjectEvent {}
+class StopLiveProjectUpdates extends ProjectEvent {
+  const StopLiveProjectUpdates();
+}
 
 /// Receive live project update
 class LiveProjectUpdateReceived extends ProjectEvent {
@@ -193,14 +204,17 @@ class StartProjectRealtimeUpdates extends ProjectEvent {
 }
 
 /// Stop project realtime updates
-class StopProjectRealtimeUpdates extends ProjectEvent {}
+class StopProjectRealtimeUpdates extends ProjectEvent {
+  const StopProjectRealtimeUpdates();
+}
 
 /// Refresh projects after detail view
 class RefreshProjectsAfterDetailView extends ProjectEvent {
-  const RefreshProjectsAfterDetailView({this.userRole});
+  const RefreshProjectsAfterDetailView({this.userRole, this.recentProjectId});
 
   final String? userRole;
+  final String? recentProjectId;
 
   @override
-  List<Object?> get props => [userRole];
+  List<Object?> get props => [userRole, recentProjectId];
 }
